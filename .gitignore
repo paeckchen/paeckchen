@@ -1,0 +1,9 @@
+/index.js
+/index.d.ts
+/node_modules
+*.js.map
+/tests/*-test.js
+coverage/
+.nyc_output/
+npm-debug.log
+dist

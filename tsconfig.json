@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "declaration": true,
+    "pretty": true
+  },
+  "exclude": [
+    "index.d.ts",
+    "node_modules"
+  ]
+}
