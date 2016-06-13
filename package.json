@@ -47,6 +47,15 @@
     "tslint": "3.7.1",
     "typescript": "1.8.9"
   },
+  "dependencies": {
+    "acorn": "3.1.0",
+    "ast-types": "0.8.16",
+    "astring": "0.6.1",
+    "minimist": "1.2.0"
+  },
+  "publishConfig": {
+    "tag": "next"
+  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
@@ -58,11 +67,5 @@
       "dist/test",
       "test"
     ]
-  },
-  "dependencies": {
-    "acorn": "3.1.0",
-    "ast-types": "0.8.16",
-    "astring": "0.6.1",
-    "minimist": "1.2.0"
   }
 }
