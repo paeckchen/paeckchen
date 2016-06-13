@@ -10,3 +10,13 @@
 [![Standard Version](https://img.shields.io/badge/release-standard%20version-brightgreen.svg)](https://github.com/conventional-changelog/standard-version)
 
 An incremental module bundler for ES6-modules (and otheres)
+
+# Features
+
+* Incremental bundling
+
+# ToDos
+
+* CLI interface
+* Config file
+* CommonJS support
