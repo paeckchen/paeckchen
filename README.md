@@ -19,4 +19,4 @@ An incremental module bundler for ES6-modules (and otheres)
 
 * CLI interface
 * Config file
-* CommonJS support
+* watch mode

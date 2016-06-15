@@ -68,7 +68,6 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
     ranges: true
   });
 
-  // TODO: Add require (aka commonjs) plugin
   Object.keys(plugins).forEach(plugin => {
     plugins[plugin](moduleAst, moduleName, modules);
   });
