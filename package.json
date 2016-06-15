@@ -38,17 +38,17 @@
   "devDependencies": {
     "chai": "3.5.0",
     "coveralls": "2.11.9",
-    "cz-conventional-changelog": "1.1.5",
+    "cz-conventional-changelog": "1.1.6",
     "in-publish": "2.0.0",
-    "mocha": "2.4.5",
-    "nyc": "6.2.1",
+    "mocha": "2.5.3",
+    "nyc": "6.6.1",
     "rimraf": "2.5.2",
     "source-map-support": "0.4.0",
-    "tslint": "3.7.1",
-    "typescript": "1.8.9"
+    "tslint": "3.11.0",
+    "typescript": "1.8.10"
   },
   "dependencies": {
-    "acorn": "3.1.0",
+    "acorn": "3.2.0",
     "ast-types": "0.8.16",
     "astring": "0.6.1",
     "minimist": "1.2.0"
