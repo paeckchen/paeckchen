@@ -15,6 +15,87 @@ function moduleExportsExpression(id: string): any {
   );
 }
 
+/**
+ * var identifier = modules[moduleIndex]();
+ */
+function importModule(identifier: ESTree.Identifier, moduleIndex: number): ESTree.VariableDeclaration {
+  return b.variableDeclaration(
+    'var',
+    [
+      b.variableDeclarator(
+        identifier,
+        b.callExpression(
+          b.memberExpression(
+            b.identifier('modules'),
+            b.identifier(moduleIndex.toString()),
+            true
+          ),
+          []
+        )
+      )
+    ]
+  );
+}
+
+/**
+ * Object.keys(identifier).forEach(function(key) {
+ *   module.exports[key] = identifier.exports[key];
+ * });
+ */
+function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatement {
+  return b.expressionStatement(
+    b.callExpression(
+      b.memberExpression(
+        b.callExpression(
+          b.memberExpression(
+            b.identifier('Object'),
+            b.identifier('keys'),
+            false
+          ),
+          [
+            identifier
+          ]
+        ),
+        b.identifier('forEach'),
+        false
+      ),
+      [
+        b.functionExpression(
+          null,
+          [
+            b.identifier('key')
+          ],
+          b.blockStatement([
+            b.expressionStatement(
+              b.assignmentExpression(
+                '=',
+                b.memberExpression(
+                  b.memberExpression(
+                    b.identifier('module'),
+                    b.identifier('exports'),
+                    false
+                  ),
+                  b.identifier('key'),
+                  true
+                ),
+                b.memberExpression(
+                  b.memberExpression(
+                    identifier,
+                    b.identifier('exports'),
+                    false
+                  ),
+                  b.identifier('key'),
+                  true
+                )
+              )
+            )
+          ])
+        )
+      ]
+    )
+  );
+}
+
 export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleName: string,
   modules: (ESTree.Expression | ESTree.SpreadElement)[]): void {
   visit(program, {
@@ -27,73 +108,8 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
       const tempIdentifier = b.identifier(`__export${reexportModuleIndex}_${loc(path.node.loc.start)}`);
 
       path.replace(
-        b.variableDeclaration(
-          'var',
-          [
-            b.variableDeclarator(
-              tempIdentifier,
-              b.callExpression(
-                b.memberExpression(
-                  b.identifier('modules'),
-                  b.identifier(reexportModuleIndex.toString()),
-                  true
-                ),
-                []
-              )
-            )
-          ]
-        ),
-        b.expressionStatement(
-          b.callExpression(
-            b.memberExpression(
-              b.callExpression(
-                b.memberExpression(
-                  b.identifier('Object'),
-                  b.identifier('keys'),
-                  false
-                ),
-                [
-                  tempIdentifier
-                ]
-              ),
-              b.identifier('forEach'),
-              false
-            ),
-            [
-              b.functionExpression(
-                null,
-                [
-                  b.identifier('key')
-                ],
-                b.blockStatement([
-                  b.expressionStatement(
-                    b.assignmentExpression(
-                      '=',
-                      b.memberExpression(
-                        b.memberExpression(
-                          b.identifier('module'),
-                          b.identifier('exports'),
-                          false
-                        ),
-                        b.identifier('key'),
-                        true
-                      ),
-                      b.memberExpression(
-                        b.memberExpression(
-                          tempIdentifier,
-                          b.identifier('exports'),
-                          false
-                        ),
-                        b.identifier('key'),
-                        true
-                      )
-                    )
-                  )
-                ])
-              )
-            ]
-          )
-        )
+        importModule(tempIdentifier, reexportModuleIndex),
+        exportAllKeys(tempIdentifier)
       );
 
       wrapModule(reexportModuleName, modules);
