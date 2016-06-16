@@ -39,15 +39,15 @@ declare module 'ast-types' {
   }
 
   export namespace builders {
-    export function literal(value: any): any;
-    export function identifier(name: string): any;
-    export function assignmentExpression(operator: string, left: any, right: any): any;
-    export function memberExpression(object: any, property: any, computed: boolean): any;
-    export function callExpression(callee: any, arguments: any[]): any;
-    export function functionExpression(id: any, params: any, body: any): any;
-    export function expressionStatement(expression: any): any;
-    export function blockStatement(body: any[]): any;
-    export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): any;
-    export function variableDeclarator(id: any, init?: any): any;
+    export function literal(value: any): ESTree.Literal;
+    export function identifier(name: string): ESTree.Identifier;
+    export function assignmentExpression(operator: string, left: any, right: any): ESTree.AssignmentExpression;
+    export function memberExpression(object: any, property: any, computed: boolean): ESTree.MemberExpression;
+    export function callExpression(callee: any, arguments: any[]): ESTree.CallExpression;
+    export function functionExpression(id: any, params: any, body: any): ESTree.FunctionExpression;
+    export function expressionStatement(expression: any): ESTree.ExpressionStatement;
+    export function blockStatement(body: any[]): ESTree.BlockStatement;
+    export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): ESTree.VariableDeclaration;
+    export function variableDeclarator(id: any, init?: any): ESTree.VariableDeclarator;
   }
 }
