@@ -8,6 +8,7 @@ interface IWrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
+  inProcess: boolean;
 }
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
@@ -21,9 +22,21 @@ export function getModuleIndex(name: string): number {
   const index = nextModuleIndex++;
   wrappedModules[moduleName] = {
     index,
-    name: moduleName
+    name: moduleName,
+    inProcess: false
   };
   return index;
+}
+
+function isModuleReadyOrInProgress(name: string): boolean {
+  return Boolean(wrappedModules[name] && (wrappedModules[name].inProcess || wrappedModules[name].ast));
+}
+
+export function updateModule(name: string): void {
+  if (wrappedModules[name]) {
+    wrappedModules[name].ast = undefined;
+    wrappedModules[name].inProcess = false;
+  }
 }
 
 function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedModule {
@@ -52,15 +65,21 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
   return {
     index,
     name,
-    ast: wrapperAst
+    ast: wrapperAst,
+    inProcess: false
   };
 }
 
 export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     plugins: any = defaultPlugins, host: IHost = new DefaultHost()): void {
   const moduleName = path.resolve(modulePath).replace(/\..*?$/, '');
+  // Short cut for already processed imports
+  if (isModuleReadyOrInProgress(moduleName)) {
+    return;
+  }
   // Prefill module indices
   getModuleIndex(moduleName);
+  wrappedModules[moduleName].inProcess = true;
   const moduleAst = parse(host.readFile(modulePath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
@@ -75,4 +94,5 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
   const wrappedModule = createModuleWrapper(moduleName, moduleAst);
   wrappedModules[wrappedModule.name] = wrappedModule;
   modules[wrappedModule.index] = wrappedModule.ast;
+  wrappedModules[moduleName].inProcess = false;
 }

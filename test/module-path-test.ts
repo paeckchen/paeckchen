@@ -15,6 +15,9 @@ class TestHost implements IHost {
   public fileExists(path: string): boolean {
     return this.files.indexOf(path) > -1;
   };
+  public isFile(path: string): boolean {
+    return this.files.indexOf(path) > -1;
+  }
   public readFile(path: string): string { return '{"main": "./main.js"}'; };
   public joinPath(...paths: string[]): string { return join(...paths); };
   public dirname(path: string): string { return dirname(path); };

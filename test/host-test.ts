@@ -19,6 +19,14 @@ describe('DefaultHost', () => {
     assert.isFalse(host.fileExists('./package.json2'));
   });
 
+  it('isFile should return true for file', () => {
+    assert.isTrue(host.isFile('./package.json'));
+  });
+
+  it('isFile should return false for directory', () => {
+    assert.isFalse(host.isFile('./node_modules'));
+  });
+
   it('readFile should return the file content', () => {
     const path = join(process.cwd(), 'package.json');
     assert.deepEqual(host.readFile(path), readFileSync(path).toString());
