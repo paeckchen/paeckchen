@@ -1,10 +1,11 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, statSync } from 'fs';
 import { join, dirname, sep } from 'path';
 
 export interface IHost {
   pathSep: string;
 
   fileExists(path: string): boolean;
+  isFile(path: string): boolean;
   readFile(path: string): string;
   joinPath(...paths: string[]): string;
   dirname(path: string): string;
@@ -13,6 +14,10 @@ export interface IHost {
 export class DefaultHost implements IHost {
   public fileExists(path: string): boolean {
     return existsSync(path);
+  }
+
+  public isFile(path: string): boolean {
+    return statSync(path).isFile();
   }
 
   public readFile(path: string): string {

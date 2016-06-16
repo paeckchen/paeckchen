@@ -1,21 +1,22 @@
 import { IHost, DefaultHost } from './host';
+import * as nodeCoreLibs from 'node-libs-browser';
 
 export function getModulePath(currentModule: string, importPath: string, host: IHost = new DefaultHost()): string {
   function notFound(): void {
     throw new Error(`Module ${importPath} not found`);
   }
   function resolveAsFile(file: string): string {
-    if (host.fileExists(file)) {
+    if (host.fileExists(file) && host.isFile(file)) {
       return file;
     }
     const filePath = file + '.js';
-    if (host.fileExists(filePath)) {
+    if (host.fileExists(filePath) && host.isFile(filePath)) {
       return filePath;
     }
   }
   function resolveAsDirectory(dir: string): string {
     const pkg = host.joinPath(dir, 'package.json');
-    if (host.fileExists(pkg)) {
+    if (host.fileExists(pkg) && host.isFile(pkg)) {
       const main = JSON.parse(host.readFile(pkg).toString())['main'];
       if (main) {
         const result = resolveAsFile(host.joinPath(dir, main));
@@ -25,7 +26,7 @@ export function getModulePath(currentModule: string, importPath: string, host: I
       }
     }
     const index = host.joinPath(dir, 'index.js');
-    if (host.fileExists(index)) {
+    if (host.fileExists(index) && host.isFile(index)) {
       return index;
     }
   }
@@ -41,9 +42,9 @@ export function getModulePath(currentModule: string, importPath: string, host: I
       const parts = start.split(host.pathSep);
       let i = parts.length - 1;
       const dirs: string[] = [];
-      while (i > 0) {
+      while (i > -1) {
         if (parts[i] !== 'node_modules') {
-          dirs.push(host.joinPath(parts.slice(0, i).join(host.pathSep), 'node_modules'));
+          dirs.push(host.joinPath(parts.slice(0, i + 1).join(host.pathSep), 'node_modules'));
         }
         i--;
       }
@@ -59,7 +60,9 @@ export function getModulePath(currentModule: string, importPath: string, host: I
   }
 
   if (importPath.charAt(0) === '.' || importPath.charAt(0) === '/') {
-    const fileOrPath = host.joinPath(host.dirname(currentModule), importPath);
+    const fileOrPath = importPath.charAt(0) === '/'
+      ? importPath
+      : host.joinPath(host.dirname(currentModule), importPath);
     const result = resolveAsFileOrDirectory(fileOrPath);
     if (result) {
       return result;
@@ -68,6 +71,11 @@ export function getModulePath(currentModule: string, importPath: string, host: I
   const result = resolveAsNodeModule(currentModule, importPath);
   if (result) {
     return result;
+  }
+  // Check for node core modules
+  const coreLib = (nodeCoreLibs as any)[importPath];
+  if (coreLib) {
+    return coreLib;
   }
   notFound();
 }

@@ -1,8 +1,8 @@
 import { assert } from 'chai';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 
 import { IHost } from '../src/host';
-import { getModuleIndex, wrapModule } from '../src/modules';
+import { getModuleIndex, wrapModule, updateModule } from '../src/modules';
 
 class TestHost implements IHost {
   constructor(public files: {[path: string]: string}) {}
@@ -12,6 +12,9 @@ class TestHost implements IHost {
   public fileExists(path: string): boolean {
     return Object.keys(this.files).indexOf(path) > -1;
   };
+  public isFile(path: string): boolean {
+    return Object.keys(this.files).indexOf(path) > -1;
+  }
   public readFile(path: string): string { return this.files[path]; };
   public joinPath(...paths: string[]): string { return join(...paths); };
   public dirname(path: string): string { return dirname(path); };
@@ -35,6 +38,10 @@ describe('getModuleIndex', () => {
 });
 
 describe('wrapModule', () => {
+  beforeEach(() => {
+    updateModule(resolve('some/mod').replace(/\..*?$/, ''));
+  });
+
   it('should wrap a module', () => {
     const modules: any[] = [];
     const plugins = {};
