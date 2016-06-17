@@ -145,52 +145,67 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
           );
         }
       } else {
-        // e.g. export {a as b} from './c';
-        const reexportModuleName = getModulePath(moduleName, path.node.source.value as string);
-        const reexportModuleIndex = getModuleIndex(reexportModuleName);
+        if (path.node.source) {
+          // e.g. export {a as b} from './c';
+          const reexportModuleName = getModulePath(moduleName, path.node.source.value as string);
+          const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
-        const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
-        const tempIdentifier = b.identifier(`__export${reexportModuleIndex}_${loc(path.node.loc.start)}`);
-        const exports = path.node.specifiers
-          .map(specifier =>
-            b.expressionStatement(
-              b.assignmentExpression(
-                '=',
-                moduleExportsExpression(specifier.exported.name),
-                b.memberExpression(
+          const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
+          const tempIdentifier = b.identifier(`__export${reexportModuleIndex}_${loc(path.node.loc.start)}`);
+          const exports = path.node.specifiers
+            .map(specifier =>
+              b.expressionStatement(
+                b.assignmentExpression(
+                  '=',
+                  moduleExportsExpression(specifier.exported.name),
                   b.memberExpression(
-                    tempIdentifier,
-                    b.identifier('exports'),
-                    false
-                  ),
-                  b.literal(specifier.local.name),
-                  true
+                    b.memberExpression(
+                      tempIdentifier,
+                      b.identifier('exports'),
+                      false
+                    ),
+                    b.literal(specifier.local.name),
+                    true
+                  )
                 )
               )
-            )
+            );
+
+          path.replace(
+            b.variableDeclaration(
+              'var',
+              [
+                b.variableDeclarator(
+                  tempIdentifier,
+                  b.callExpression(
+                    b.memberExpression(
+                      b.identifier('modules'),
+                      b.identifier(reexportModuleIndex.toString()),
+                      true
+                    ),
+                    []
+                  )
+                )
+              ]
+            ),
+            ...exports
           );
 
-        path.replace(
-          b.variableDeclaration(
-            'var',
-            [
-              b.variableDeclarator(
-                tempIdentifier,
-                b.callExpression(
-                  b.memberExpression(
-                    b.identifier('modules'),
-                    b.identifier(reexportModuleIndex.toString()),
-                    true
-                  ),
-                  []
+          wrapModule(reexportModuleName, modules);
+        } else {
+          // e.g. export {a as b};
+          const exports = path.node.specifiers
+            .map(specifier =>
+              b.expressionStatement(
+                b.assignmentExpression(
+                  '=',
+                  moduleExportsExpression(specifier.exported.name),
+                  b.literal(specifier.local.name)
                 )
               )
-            ]
-          ),
-          ...exports
-        );
-
-        wrapModule(reexportModuleName, modules);
+            );
+          path.replace(...exports);
+        }
       }
       return false;
     },
