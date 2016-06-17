@@ -39,7 +39,7 @@ describe('getModuleIndex', () => {
 
 describe('wrapModule', () => {
   beforeEach(() => {
-    updateModule(resolve('some/mod').replace(/\..*?$/, ''));
+    updateModule(resolve('some/mod').replace(/\.js$/, ''));
   });
 
   it('should wrap a module', () => {

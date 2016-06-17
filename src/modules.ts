@@ -15,7 +15,7 @@ const wrappedModules: {[name: string]: IWrappedModule} = {};
 let nextModuleIndex = 0;
 
 export function getModuleIndex(name: string): number {
-  const moduleName = name.replace(/\..*?$/, '');
+  const moduleName = name.replace(/\.js$/, '');
   if (wrappedModules[moduleName]) {
     return wrappedModules[moduleName].index;
   }
@@ -72,7 +72,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 
 export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     plugins: any = defaultPlugins, host: IHost = new DefaultHost()): void {
-  const moduleName = path.resolve(modulePath).replace(/\..*?$/, '');
+  const moduleName = path.resolve(modulePath).replace(/\.js$/, '');
   // Short cut for already processed imports
   if (isModuleReadyOrInProgress(moduleName)) {
     return;
