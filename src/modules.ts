@@ -84,7 +84,8 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
-    ranges: true
+    ranges: true,
+    allowHashBang: true
   });
 
   Object.keys(plugins).forEach(plugin => {
