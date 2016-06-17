@@ -4,6 +4,7 @@ declare module 'ast-types' {
     node: T;
     replace(...newNode: any[]): void;
     insertAfter(newNode: any): void;
+    prune(): void;
   }
 
   export function visit(ast: ESTree.Node, visitors: any): void;
