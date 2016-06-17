@@ -1,6 +1,12 @@
 import { IHost, DefaultHost } from './host';
 import * as nodeCoreLibs from 'node-libs-browser';
 
+/**
+ * node resolve algorithms with some specialities:
+ * 
+ * * package.json entries are considered in this order: 'jsnext:main', 'browser', 'main'
+ * * node core libraries are resolved against node-libs-browser (from webpack)
+ */
 export function getModulePath(currentModule: string, importPath: string, host: IHost = new DefaultHost()): string {
   function notFound(): void {
     throw new Error(`Module ${importPath} not found`);
@@ -15,9 +21,10 @@ export function getModulePath(currentModule: string, importPath: string, host: I
     }
   }
   function resolveAsDirectory(dir: string): string {
-    const pkg = host.joinPath(dir, 'package.json');
-    if (host.fileExists(pkg) && host.isFile(pkg)) {
-      const main = JSON.parse(host.readFile(pkg).toString())['main'];
+    const pkgFile = host.joinPath(dir, 'package.json');
+    if (host.fileExists(pkgFile) && host.isFile(pkgFile)) {
+      const pkg = JSON.parse(host.readFile(pkgFile).toString());
+      const main = pkg['jsnext:main'] || (typeof pkg.browser === 'string' ? pkg.browser : undefined) || pkg.main;
       if (main) {
         const result = resolveAsFile(host.joinPath(dir, main));
         if (result) {
