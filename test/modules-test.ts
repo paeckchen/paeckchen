@@ -1,24 +1,8 @@
 import { assert } from 'chai';
-import { join, dirname, resolve } from 'path';
+import { resolve } from 'path';
 
-import { IHost } from '../src/host';
+import { HostMock } from './helper';
 import { getModuleIndex, wrapModule, updateModule } from '../src/modules';
-
-class TestHost implements IHost {
-  constructor(public files: {[path: string]: string}) {}
-
-  public pathSep: string = '/';
-
-  public fileExists(path: string): boolean {
-    return Object.keys(this.files).indexOf(path) > -1;
-  };
-  public isFile(path: string): boolean {
-    return Object.keys(this.files).indexOf(path) > -1;
-  }
-  public readFile(path: string): string { return this.files[path]; };
-  public joinPath(...paths: string[]): string { return join(...paths); };
-  public dirname(path: string): string { return dirname(path); };
-}
 
 describe('getModuleIndex', () => {
   it('should return a new index per requested file', () => {
@@ -45,11 +29,11 @@ describe('wrapModule', () => {
   it('should wrap a module', () => {
     const modules: any[] = [];
     const plugins = {};
-    const host = new TestHost({
+    const host = new HostMock({
       'some/mod.js': 'console.log("test");'
     });
 
-    wrapModule('some/mod.js', modules, plugins, host);
+    wrapModule('some/mod.js', modules, host, plugins);
 
     assert.lengthOf(Object.keys(modules), 1);
   });
@@ -61,11 +45,11 @@ describe('wrapModule', () => {
       a: function(): void { pluginCalls++; },
       b: function(): void { pluginCalls++; }
     };
-    const host = new TestHost({
+    const host = new HostMock({
       'some/mod.js': 'console.log("test");'
     });
 
-    wrapModule('some/mod.js', modules, plugins, host);
+    wrapModule('some/mod.js', modules, host, plugins);
 
     assert.equal(pluginCalls, 2);
   });
