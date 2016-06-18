@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { parse } from 'acorn';
 
-import { IHost, DefaultHost } from './host';
+import { IHost } from './host';
 import * as defaultPlugins from './plugins';
 
 interface IWrappedModule {
@@ -13,6 +13,11 @@ interface IWrappedModule {
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
 let nextModuleIndex = 0;
+
+export function reset(): void {
+  Object.keys(wrappedModules).forEach(key => delete wrappedModules[key]);
+  nextModuleIndex = 0;
+}
 
 export function getModuleIndex(name: string): number {
   const moduleName = name.replace(/\.js$/, '');
@@ -71,7 +76,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 }
 
 export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    plugins: any = defaultPlugins, host: IHost = new DefaultHost()): void {
+    host: IHost, plugins: any = defaultPlugins): void {
   const moduleName = path.resolve(modulePath).replace(/\.js$/, '');
   // Short cut for already processed imports
   if (isModuleReadyOrInProgress(moduleName)) {
@@ -89,7 +94,7 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
   });
 
   Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, moduleName, modules);
+    plugins[plugin](moduleAst, moduleName, modules, host);
   });
 
   const wrappedModule = createModuleWrapper(moduleName, moduleAst);

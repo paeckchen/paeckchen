@@ -2,6 +2,7 @@ import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 
 import { getModuleIndex, wrapModule } from '../modules';
 import { getModulePath } from '../module-path';
+import { IHost } from '../host';
 
 function moduleExportsExpression(id: string): any {
   return b.memberExpression(
@@ -97,11 +98,11 @@ function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatemen
 }
 
 export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleName: string,
-  modules: (ESTree.Expression | ESTree.SpreadElement)[]): void {
+  modules: (ESTree.Expression | ESTree.SpreadElement)[], host: IHost): void {
   visit(program, {
     visitExportAllDeclaration: function(path: IPath<ESTree.ExportAllDeclaration>): boolean {
       // e.g. export * from './a';
-      const reexportModuleName = getModulePath(moduleName, path.node.source.value as string);
+      const reexportModuleName = getModulePath(moduleName, path.node.source.value as string, host);
       const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
       const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
@@ -112,7 +113,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
         exportAllKeys(tempIdentifier)
       );
 
-      wrapModule(reexportModuleName, modules);
+      wrapModule(reexportModuleName, modules, host);
       return false;
     },
     visitExportNamedDeclaration: function (path: IPath<ESTree.ExportNamedDeclaration>): boolean {
@@ -147,7 +148,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
       } else {
         if (path.node.source) {
           // e.g. export {a as b} from './c';
-          const reexportModuleName = getModulePath(moduleName, path.node.source.value as string);
+          const reexportModuleName = getModulePath(moduleName, path.node.source.value as string, host);
           const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
           const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
@@ -191,7 +192,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
             ...exports
           );
 
-          wrapModule(reexportModuleName, modules);
+          wrapModule(reexportModuleName, modules, host);
         } else {
           // e.g. export {a as b};
           const exports = path.node.specifiers

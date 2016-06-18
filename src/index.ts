@@ -5,6 +5,7 @@ import { parse } from 'acorn';
 import * as astringNode from 'astring';
 const astring: typeof astringNode = astringNode as any;
 
+import { DefaultHost } from './host';
 import { wrapModule } from './modules';
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
@@ -22,7 +23,7 @@ function bundle(argv: minimistNode.ParsedArgs): string {
   `;
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  wrapModule(argv['entry'], modules);
+  wrapModule(argv['entry'], modules, new DefaultHost());
   return astring(paeckchenAst, {comments: true});
 }
 
