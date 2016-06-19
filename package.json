@@ -22,7 +22,7 @@
     "postversion": "git push && git push --tags",
     "prepublish": "not-in-install && npm run build || echo 'In install cycle, skipping prepublish'",
     "precoverage": "npm run clean && tsc --inlineSourceMap",
-    "coverage": "nyc --reporter lcov ./node_modules/.bin/ava"
+    "coverage": "nyc --reporter lcov ava"
   },
   "repository": {
     "type": "git",
