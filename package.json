@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "#postinstall": "postinstall hook is required to 'fix' ava d.ts file",
+    "#postinstall": "Remove bundled typings to use patched version without Promise support",
     "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
