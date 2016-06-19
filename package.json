@@ -9,18 +9,20 @@
     "src"
   ],
   "scripts": {
+    "#postinstall": "postinstall hook is required to 'fix' ava d.ts file",
+    "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap",
     "pretest": "npm run build",
-    "test": "mocha --require source-map-support/register --recursive dist/test",
+    "test": "ava",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w",
     "preversion": "npm test",
     "version": "npm run build && conventional-changelog -p angular -v -r 0 > CHANGELOG.md && git add -A .",
     "postversion": "git push && git push --tags",
     "prepublish": "not-in-install && npm run build || echo 'In install cycle, skipping prepublish'",
     "precoverage": "npm run clean && tsc --inlineSourceMap",
-    "coverage": "nyc --reporter lcov ./node_modules/.bin/mocha --recursive dist/test --all"
+    "coverage": "nyc --reporter lcov ./node_modules/.bin/ava"
   },
   "repository": {
     "type": "git",
@@ -36,6 +38,7 @@
   },
   "homepage": "https://github.com/knisterpeter/paeckchen#readme",
   "devDependencies": {
+    "ava": "0.15.2",
     "chai": "3.5.0",
     "common-tags": "1.2.2",
     "coveralls": "2.11.9",
@@ -62,6 +65,17 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "ava": {
+    "files": [
+      "dist/test/**/*-test.js"
+    ],
+    "source": [
+      "dist/src/**/*.js"
+    ],
+    "require": [
+      "source-map-support/register"
+    ]
   },
   "nyc": {
     "exclude": [

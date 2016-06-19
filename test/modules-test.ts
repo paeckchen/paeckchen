@@ -1,56 +1,53 @@
-import { assert } from 'chai';
+import test from 'ava';
+
 import { resolve } from 'path';
 
 import { HostMock } from './helper';
 import { getModuleIndex, wrapModule, updateModule } from '../src/modules';
 
-describe('getModuleIndex', () => {
-  it('should return a new index per requested file', () => {
-    assert.equal(getModuleIndex('a/b/c'), 0);
-    assert.equal(getModuleIndex('a/b/d'), 1);
-  });
-
-  it('should return the same index if duplicate request', () => {
-    assert.equal(getModuleIndex('a/b/c'), 0);
-    assert.equal(getModuleIndex('a/b/c'), 0);
-  });
-
-  it('should ignore file extension', () => {
-    assert.equal(getModuleIndex('a/b/c'), 0);
-    assert.equal(getModuleIndex('a/b/c.js'), 0);
-  });
+test('getModuleIndex should return a new index per requested file', t => {
+  t.deepEqual(getModuleIndex('a/b/c'), 0);
+  t.deepEqual(getModuleIndex('a/b/d'), 1);
 });
 
-describe('wrapModule', () => {
-  beforeEach(() => {
-    updateModule(resolve('some/mod').replace(/\.js$/, ''));
+test('getModuleIndex should return the same index if duplicate request', t => {
+  t.deepEqual(getModuleIndex('a/b/c'), 0);
+  t.deepEqual(getModuleIndex('a/b/c'), 0);
+});
+
+test('getModuleIndex should ignore file extension', t => {
+  t.deepEqual(getModuleIndex('a/b/c'), 0);
+  t.deepEqual(getModuleIndex('a/b/c.js'), 0);
+});
+
+test.beforeEach(() => {
+  updateModule(resolve('some/mod').replace(/\.js$/, ''));
+});
+
+test('wrapModule should wrap a module', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
   });
 
-  it('should wrap a module', () => {
-    const modules: any[] = [];
-    const plugins = {};
-    const host = new HostMock({
-      'some/mod.js': 'console.log("test");'
-    });
+  wrapModule('some/mod.js', modules, host, plugins);
 
-    wrapModule('some/mod.js', modules, host, plugins);
+  t.deepEqual(Object.keys(modules).length, 1);
+});
 
-    assert.lengthOf(Object.keys(modules), 1);
+test('wrapModule should call all given plugins', t => {
+  const modules: any[] = [];
+  let pluginCalls = 0;
+  const plugins = {
+    a: function(): void { pluginCalls++; },
+    b: function(): void { pluginCalls++; }
+  };
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
   });
 
-  it('should call all given plugins', () => {
-    const modules: any[] = [];
-    let pluginCalls = 0;
-    const plugins = {
-      a: function(): void { pluginCalls++; },
-      b: function(): void { pluginCalls++; }
-    };
-    const host = new HostMock({
-      'some/mod.js': 'console.log("test");'
-    });
+  wrapModule('some/mod.js', modules, host, plugins);
 
-    wrapModule('some/mod.js', modules, host, plugins);
-
-    assert.equal(pluginCalls, 2);
-  });
+  t.deepEqual(pluginCalls, 2);
 });
