@@ -24,7 +24,7 @@ export function getModulePath(currentModule: string, importPath: string, host: I
     const pkgFile = host.joinPath(dir, 'package.json');
     if (host.fileExists(pkgFile) && host.isFile(pkgFile)) {
       const pkg = JSON.parse(host.readFile(pkgFile).toString());
-      const main = pkg['jsnext:main'] || (typeof pkg.browser === 'string' ? pkg.browser : undefined) || pkg.main;
+      const main = (typeof pkg.browser === 'string' ? pkg.browser : undefined) || pkg['jsnext:main'] || pkg.main;
       if (main) {
         const result = resolveAsFile(host.joinPath(dir, main));
         if (result) {
