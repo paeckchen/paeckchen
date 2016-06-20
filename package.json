@@ -9,18 +9,20 @@
     "src"
   ],
   "scripts": {
+    "#postinstall": "Remove bundled typings to use patched version without Promise support",
+    "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap",
     "pretest": "npm run build",
-    "test": "mocha --require source-map-support/register --recursive dist/test",
+    "test": "ava",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w",
     "preversion": "npm test",
     "version": "npm run build && conventional-changelog -p angular -v -r 0 > CHANGELOG.md && git add -A .",
     "postversion": "git push && git push --tags",
     "prepublish": "not-in-install && npm run build || echo 'In install cycle, skipping prepublish'",
     "precoverage": "npm run clean && tsc --inlineSourceMap",
-    "coverage": "nyc --reporter lcov ./node_modules/.bin/mocha --recursive dist/test --all"
+    "coverage": "nyc --reporter lcov ava"
   },
   "repository": {
     "type": "git",
@@ -36,12 +38,11 @@
   },
   "homepage": "https://github.com/knisterpeter/paeckchen#readme",
   "devDependencies": {
-    "chai": "3.5.0",
+    "ava": "0.15.2",
     "common-tags": "1.2.2",
     "coveralls": "2.11.9",
     "cz-conventional-changelog": "1.1.6",
     "in-publish": "2.0.0",
-    "mocha": "2.5.3",
     "nyc": "6.6.1",
     "rimraf": "2.5.2",
     "source-map-support": "0.4.0",
@@ -62,6 +63,17 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "ava": {
+    "files": [
+      "dist/test/**/*-test.js"
+    ],
+    "source": [
+      "dist/src/**/*.js"
+    ],
+    "require": [
+      "source-map-support/register"
+    ]
   },
   "nyc": {
     "exclude": [
