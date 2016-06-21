@@ -54,7 +54,11 @@ function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatemen
             false
           ),
           [
-            identifier
+            b.memberExpression(
+              identifier,
+              b.identifier('exports'),
+              false
+            )
           ]
         ),
         b.identifier('forEach'),
@@ -212,6 +216,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
     },
     visitExportDefaultDeclaration: function(path: IPath<ESTree.ExportDefaultDeclaration>): boolean {
       const declaration = path.node.declaration;
+
       if (n.Identifier.check(declaration)) {
         // e.g. export default a;
         path.replace(
@@ -232,6 +237,17 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
               '=',
               moduleExportsExpression('default'),
               b.literal(declaration.id.name)
+            )
+          )
+        );
+      } else if (n.FunctionExpression.check(declaration)) {
+        // e.g. export default function() {}
+        path.replace(
+          b.expressionStatement(
+            b.assignmentExpression(
+              '=',
+              moduleExportsExpression('default'),
+              declaration
             )
           )
         );

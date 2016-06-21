@@ -1,7 +1,9 @@
 import { join, dirname } from 'path';
+import { runInNewContext } from 'vm';
 import { parse, IParseOptions } from 'acorn';
 import * as astringNode from 'astring';
 const astring: typeof astringNode = astringNode as any;
+import { merge } from 'lodash';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
@@ -32,4 +34,18 @@ export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void
   const ast = parse(input, acornOptions);
   fn(ast);
   return astring(ast).trim();
+}
+
+const defaultSandbox = {
+  console,
+  module: {
+    exports: {}
+  },
+  require
+};
+
+export function virtualModule(code: string, optionsSandbox = {}) {
+  const sandbox = merge({}, defaultSandbox, optionsSandbox);
+  runInNewContext(code, sandbox);
+  return sandbox.module.exports as {[name?: string]: any};
 }
