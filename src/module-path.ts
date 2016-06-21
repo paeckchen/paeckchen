@@ -1,6 +1,5 @@
 import { IHost, DefaultHost } from './host';
-import * as fs from 'fs';
-import * as browserResolve from 'browser-resolve';
+import { sync as browserResolveSync } from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
 
 /**
@@ -11,7 +10,7 @@ import * as nodeCoreLibs from 'node-libs-browser';
  * @param [host]
  */
 export function getModulePath(filename: string, importIdentifier: string, host: IHost = new DefaultHost()): string {
-  return browserResolve.sync(importIdentifier, {
+  return browserResolveSync(importIdentifier, {
     filename: filename,
     modules: nodeCoreLibs,
     packageFilter: pkg => {

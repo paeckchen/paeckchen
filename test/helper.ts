@@ -1,4 +1,4 @@
-import { join, dirname, resolve } from 'path';
+import { dirname, join, resolve } from 'path';
 import { runInNewContext } from 'vm';
 import { parse, IParseOptions } from 'acorn';
 import * as astringNode from 'astring';

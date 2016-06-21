@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { resolve } from 'path';
 import { parse } from 'acorn';
 
 import { IHost } from './host';
@@ -77,7 +77,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 
 export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any = defaultPlugins): void {
-  const resolvedPath = path.resolve(modulePath);
+  const resolvedPath = resolve(modulePath);
   const moduleName = resolvedPath.replace(/\.js$/, '');
   // Short cut for already processed imports
   if (isModuleReadyOrInProgress(moduleName)) {
