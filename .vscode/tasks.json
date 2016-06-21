@@ -12,16 +12,15 @@
 			"args": ["install"]
 		},
 		{
-			"taskName": "update",
-			"args": ["update"]
-		},
-		{
 			"taskName": "build",
-			"args": ["run", "build"]
+			"args": ["run", "build:watch"],
+      "isBuildCommand": true,
+      "isWatching": true
 		},
 		{
 			"taskName": "test",
-			"args": ["run", "test"]
+			"args": ["run", "test"],
+      "isTestCommand": true
 		}
 	]
 }
