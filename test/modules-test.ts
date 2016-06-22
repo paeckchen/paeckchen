@@ -3,7 +3,11 @@ import test from 'ava';
 import { resolve } from 'path';
 
 import { HostMock } from './helper';
-import { getModuleIndex, updateModule, enqueueModule, bundleNextModule } from '../src/modules';
+import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
+
+test.beforeEach(() => {
+  reset();
+});
 
 test('getModuleIndex should return a new index per requested file', t => {
   t.deepEqual(getModuleIndex('a/b/c'), 0);

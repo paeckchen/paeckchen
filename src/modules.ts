@@ -17,8 +17,12 @@ export function reset(): void {
   nextModuleIndex = 0;
 }
 
+function getModuleName(name: string): string {
+  return name.replace(/\.js$/, '');
+}
+
 export function getModuleIndex(name: string): number {
-  const moduleName = name.replace(/\.js$/, '');
+  const moduleName = getModuleName(name);
   if (wrappedModules[moduleName]) {
     return wrappedModules[moduleName].index;
   }
@@ -68,7 +72,9 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 
 const moduleBundleQueue: string[] = [];
 export function enqueueModule(modulePath: string): void {
-  moduleBundleQueue.push(modulePath);
+  if (moduleBundleQueue.indexOf(modulePath) === -1) {
+    moduleBundleQueue.push(modulePath);
+  }
 }
 
 export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
@@ -83,10 +89,15 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any): void {
-  const moduleName = modulePath.replace(/\.js$/, '');
+  const moduleName = getModuleName(modulePath);
 
   // Prefill module indices
   getModuleIndex(moduleName);
+  if (wrappedModules[moduleName].ast !== undefined) {
+    // Module is already up to date
+    return;
+  }
+
   const moduleAst = parse(host.readFile(modulePath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
