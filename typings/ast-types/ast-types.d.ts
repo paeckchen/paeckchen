@@ -22,6 +22,9 @@ declare module 'ast-types' {
     export namespace FunctionDeclaration {
       export function check(object: any): object is ESTree.FunctionDeclaration;
     }
+    export namespace FunctionExpression {
+      export function check(object: any): object is ESTree.FunctionExpression;
+    }
     export namespace ClassDeclaration {
       export function check(object: any): object is ESTree.ClassDeclaration;
     }

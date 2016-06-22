@@ -20,6 +20,9 @@ test('commonjs should rewrite require statements', t => {
   const host = new HostMock({
     'dependency.js': ''
   });
-  t.deepEqual(parseAndProcess(input,
-    ast => rewriteRequireStatements(ast, 'name', [], host)), expected);
+
+  const actual = parseAndProcess(input,
+    ast => rewriteRequireStatements(ast, 'name', [], host));
+
+  t.is(actual, expected);
 });
