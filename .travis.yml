@@ -1,4 +1,5 @@
 language: node_js
 node_js:
-  - "4.2.0"
+  - "4"
+before_script: 'npm run linter'
 after_script: 'npm run coverage && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls'
