@@ -1,7 +1,5 @@
 import test from 'ava';
 
-import { resolve } from 'path';
-
 import { HostMock } from './helper';
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
 
