@@ -1,4 +1,4 @@
-import { join, dirname } from 'path';
+import { dirname, join, resolve } from 'path';
 import { runInNewContext } from 'vm';
 import { parse, IParseOptions } from 'acorn';
 import * as astringNode from 'astring';
@@ -9,17 +9,49 @@ import { IHost } from '../src/host';
 export class HostMock implements IHost {
   public pathSep: string = '/';
 
-  constructor(public files: {[path: string]: string}) {}
+  private basePath: string = process.cwd()
+  private files: any = {};
 
-  public fileExists(path: string): boolean {
-    return Object.keys(this.files).indexOf(path) > -1;
-  };
-  public isFile(path: string): boolean {
-    return Object.keys(this.files).indexOf(path) > -1;
+  constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
+    this.fileExists = this.fileExists.bind(this);
+    this.isFile = this.isFile.bind(this);
+    this.readFile = this.readFile.bind(this);
+    this.joinPath = this.joinPath.bind(this);
+    this.dirname = this.dirname.bind(this);
+
+    this.basePath = basePath;
+
+    this.files = Object
+      .keys(files)
+      .reduce((registry: any, propertyName: string) => {
+        const resolved = resolve(this.basePath, propertyName);
+        registry[resolved] = files[propertyName];
+        return registry;
+      }, {});
   }
-  public readFile(path: string): string { return this.files[path]; };
-  public joinPath(...paths: string[]): string { return join(...paths); };
-  public dirname(path: string): string { return dirname(path); };
+
+  public fileExists(filePath: string): boolean {
+    return filePath in this.files;
+  }
+
+  public isFile(filePath: string): boolean {
+    return filePath in this.files;
+  }
+
+  public readFile(filePath: string): string {
+    if (this.fileExists(filePath)) {
+      return this.files[filePath];
+    }
+    throw new Error(`ENOENT: Could not read file ${filePath} from HostMock fs. Available files: ${Object.keys(this.files)}`);
+  }
+
+  public joinPath(...paths: string[]): string {
+    return join(...paths);
+  }
+
+  public dirname(filePath: string): string {
+    return dirname(filePath);
+  }
 }
 
 const acornOptions: IParseOptions = {

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { resolve } from 'path';
 import { parse } from 'acorn';
 
 import { IHost } from './host';
@@ -77,7 +77,8 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 
 export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any = defaultPlugins): void {
-  const moduleName = path.resolve(modulePath).replace(/\.js$/, '');
+  const resolvedPath = resolve(modulePath);
+  const moduleName = resolvedPath.replace(/\.js$/, '');
   // Short cut for already processed imports
   if (isModuleReadyOrInProgress(moduleName)) {
     return;
@@ -85,7 +86,7 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
   // Prefill module indices
   getModuleIndex(moduleName);
   wrappedModules[moduleName].inProcess = true;
-  const moduleAst = parse(host.readFile(modulePath).toString(), {
+  const moduleAst = parse(host.readFile(resolvedPath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,

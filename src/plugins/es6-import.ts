@@ -9,8 +9,8 @@ export function rewriteImportDeclaration(program: ESTree.Program, moduleName: st
   visit(program, {
     visitImportDeclaration: function(path: IPath<ESTree.ImportDeclaration>): boolean {
       const source = path.node.source;
+
       if (n.Literal.check(source)) {
-        // e.g. import { a as b, c } from './dep';
         const importModule = getModulePath(moduleName, source.value as string, host);
         const importModuleIndex = getModuleIndex(importModule);
 
@@ -18,6 +18,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, moduleName: st
         const tempIdentifier = b.identifier(`__import${importModuleIndex}_${loc(path.node.loc.start)}`);
         const imports = path.node.specifiers.map((specifier) => {
           if (n.ImportSpecifier.check(specifier)) {
+            // e.g. import { a as b, c } from './dep';
             return b.variableDeclarator(
               b.identifier(specifier.local.name),
               b.memberExpression(
@@ -31,6 +32,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, moduleName: st
               )
             );
           } else if (n.ImportDefaultSpecifier.check(specifier)) {
+            // e.g. import dep from './dep';
             return b.variableDeclarator(
               b.identifier(specifier.local.name),
               b.memberExpression(
@@ -44,6 +46,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, moduleName: st
               )
             );
           } else if (n.ImportNamespaceSpecifier.check(specifier)) {
+            // e.g. import * as dep from './dep';
             return b.variableDeclarator(
               b.identifier(specifier.local.name),
               b.memberExpression(
