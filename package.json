@@ -45,6 +45,7 @@
     "coveralls": "2.11.9",
     "cz-conventional-changelog": "1.1.6",
     "in-publish": "2.0.0",
+    "lodash": "4.13.1",
     "nyc": "6.6.1",
     "rimraf": "2.5.2",
     "source-map-support": "0.4.0",
@@ -55,7 +56,6 @@
     "acorn": "3.2.0",
     "ast-types": "0.8.16",
     "astring": "0.6.1",
-    "lodash": "4.13.1",
     "minimist": "1.2.0",
     "node-libs-browser": "1.0.0"
   },
