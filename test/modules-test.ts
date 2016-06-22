@@ -37,9 +37,9 @@ test('bundleNextModule should wrap a module', t => {
   const plugins = {};
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
-  });
+  }, '/');
 
-  enqueueModule('some/mod.js');
+  enqueueModule('/some/mod.js');
   bundleNextModule(modules, host, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
@@ -53,10 +53,10 @@ test('bundleNextModule should call all given plugins', t => {
     b: function(): void { pluginCalls++; }
   };
   const host = new HostMock({
-    'some/mod.js': 'console.log("test");'
-  });
+    '/some/mod.js': 'console.log("test");'
+  }, '/');
 
-  enqueueModule('some/mod.js');
+  enqueueModule('/some/mod.js');
   bundleNextModule(modules, host, plugins);
 
   t.deepEqual(pluginCalls, 2);

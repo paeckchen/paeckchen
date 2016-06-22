@@ -7,7 +7,6 @@ interface IWrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
-  inProcess: boolean;
 }
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
@@ -26,20 +25,14 @@ export function getModuleIndex(name: string): number {
   const index = nextModuleIndex++;
   wrappedModules[moduleName] = {
     index,
-    name: moduleName,
-    inProcess: false
+    name: moduleName
   };
   return index;
-}
-
-function isModuleReadyOrInProgress(name: string): boolean {
-  return Boolean(wrappedModules[name] && (wrappedModules[name].inProcess || wrappedModules[name].ast));
 }
 
 export function updateModule(name: string): void {
   if (wrappedModules[name]) {
     wrappedModules[name].ast = undefined;
-    wrappedModules[name].inProcess = false;
   }
 }
 
@@ -69,8 +62,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
   return {
     index,
     name,
-    ast: wrapperAst,
-    inProcess: false
+    ast: wrapperAst
   };
 }
 
@@ -90,15 +82,11 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
 }
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, plugins: any = defaultPlugins): void {
+    host: IHost, plugins: any): void {
   const moduleName = modulePath.replace(/\.js$/, '');
-  // Short cut for already processed imports
-  if (isModuleReadyOrInProgress(moduleName)) {
-    return;
-  }
+
   // Prefill module indices
   getModuleIndex(moduleName);
-  wrappedModules[moduleName].inProcess = true;
   const moduleAst = parse(host.readFile(modulePath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
@@ -106,7 +94,6 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
     ranges: true,
     allowHashBang: true
   });
-
   Object.keys(plugins).forEach(plugin => {
     plugins[plugin](moduleAst, modulePath, host);
   });
@@ -114,5 +101,4 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
   const wrappedModule = createModuleWrapper(moduleName, moduleAst);
   wrappedModules[wrappedModule.name] = wrappedModule;
   modules[wrappedModule.index] = wrappedModule.ast;
-  wrappedModules[moduleName].inProcess = false;
 }

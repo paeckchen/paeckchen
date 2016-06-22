@@ -9,7 +9,7 @@ import { IHost } from '../src/host';
 export class HostMock implements IHost {
   public pathSep: string = '/';
 
-  private basePath: string = process.cwd()
+  private basePath: string = process.cwd();
   private files: any = {};
 
   constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
