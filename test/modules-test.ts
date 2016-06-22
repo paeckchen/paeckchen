@@ -25,7 +25,7 @@ test('getModuleIndex should ignore file extension', t => {
 });
 
 test.beforeEach(() => {
-  updateModule(resolve('some/mod').replace(/\.js$/, ''));
+  updateModule('/some/mod.js');
 });
 
 test('bundleNextModule with empty queue return false', t => {
@@ -64,4 +64,52 @@ test('bundleNextModule should call all given plugins', t => {
   bundleNextModule(modules, host, plugins);
 
   t.deepEqual(pluginCalls, 2);
+});
+
+test('bundleNextModule should not rebundle modules if already up to date', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  const firstBundled = modules[0];
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+
+  t.is(modules[0], firstBundled);
+});
+
+test('bundleNextModule should rebundle modules if updated', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  const firstBundled = modules[0];
+
+  updateModule('/some/mod.js');
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+
+  t.not(modules[0], firstBundled);
+});
+
+test('enqueueModule should not accept duplicate entries', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  t.false(bundleNextModule(modules, host, plugins));
 });

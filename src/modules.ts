@@ -35,8 +35,9 @@ export function getModuleIndex(name: string): number {
 }
 
 export function updateModule(name: string): void {
-  if (wrappedModules[name]) {
-    wrappedModules[name].ast = undefined;
+  const moduleName = getModuleName(name);
+  if (wrappedModules[moduleName]) {
+    wrappedModules[moduleName].ast = undefined;
   }
 }
 
