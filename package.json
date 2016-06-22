@@ -12,6 +12,7 @@
     "#postinstall": "Remove bundled typings to use patched version without Promise support",
     "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist",
+    "linter": "tslint 'src/**/*.ts'",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap",
     "build:watch": "tsc --sourceMap --watch",
