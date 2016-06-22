@@ -101,11 +101,11 @@ function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatemen
   );
 }
 
-export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleName: string, host: IHost): void {
+export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string, host: IHost): void {
   visit(program, {
     visitExportAllDeclaration: function(path: IPath<ESTree.ExportAllDeclaration>): boolean {
       // e.g. export * from './a';
-      const reexportModuleName = getModulePath(moduleName, path.node.source.value as string, host);
+      const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, host);
       const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
       const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
@@ -151,7 +151,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
       } else {
         if (path.node.source) {
           // e.g. export {a as b} from './c';
-          const reexportModuleName = getModulePath(moduleName, path.node.source.value as string, host);
+          const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, host);
           const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
           const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;

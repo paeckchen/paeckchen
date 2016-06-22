@@ -4,7 +4,7 @@ import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
 import { IHost } from '../host';
 
-export function rewriteRequireStatements(program: ESTree.Program, moduleName: string, host: IHost): void {
+export function rewriteRequireStatements(program: ESTree.Program, currentModule: string, host: IHost): void {
   visit(program, {
     visitCallExpression(path: IPath<ESTree.CallExpression>): boolean {
       const callee = path.node.callee;
@@ -12,7 +12,7 @@ export function rewriteRequireStatements(program: ESTree.Program, moduleName: st
       if (n.Identifier.check(callee) && callee.name === 'require') {
         const importPath = path.node.arguments[0];
         if (n.Literal.check(importPath)) {
-          const modulePath = getModulePath(moduleName, (importPath as ESTree.Literal).value.toString(), host);
+          const modulePath = getModulePath(currentModule, (importPath as ESTree.Literal).value.toString(), host);
           const moduleIndex = getModuleIndex(modulePath);
 
           path.replace(

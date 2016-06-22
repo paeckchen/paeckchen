@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { join } from 'path';
 import * as minimistNode from 'minimist';
 const minimist: typeof minimistNode = minimistNode;
 import { parse } from 'acorn';
@@ -6,6 +6,7 @@ import * as astringNode from 'astring';
 const astring: typeof astringNode = astringNode as any;
 
 import { DefaultHost } from './host';
+import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
@@ -25,7 +26,8 @@ function bundle(argv: minimistNode.ParsedArgs): string {
   `;
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  enqueueModule(argv['entry']);
+  const absoluteEntryPath = join(process.cwd(), argv['entry']);
+  enqueueModule(getModulePath('.', absoluteEntryPath, host));
   while (bundleNextModule(modules, host)) {
     process.stderr.write('.');
   }
@@ -39,7 +41,7 @@ const argv = minimist(process.argv.slice(2), {
   string: ['config', 'entry'],
   boolean: ['watch'],
   default: {
-    config: path.join(__dirname, 'paeckchen.config.js'),
+    config: join(__dirname, 'paeckchen.config.js'),
     watch: false
   }
 });

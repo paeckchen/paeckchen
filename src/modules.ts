@@ -1,4 +1,3 @@
-import { resolve } from 'path';
 import { parse } from 'acorn';
 
 import { IHost } from './host';
@@ -77,7 +76,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 
 const moduleBundleQueue: string[] = [];
 export function enqueueModule(modulePath: string): void {
-  moduleBundleQueue.push(resolve(modulePath));
+  moduleBundleQueue.push(modulePath);
 }
 
 export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
@@ -92,8 +91,7 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any = defaultPlugins): void {
-  const resolvedPath = resolve(modulePath);
-  const moduleName = resolvedPath.replace(/\.js$/, '');
+  const moduleName = modulePath.replace(/\.js$/, '');
   // Short cut for already processed imports
   if (isModuleReadyOrInProgress(moduleName)) {
     return;
@@ -101,7 +99,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
   // Prefill module indices
   getModuleIndex(moduleName);
   wrappedModules[moduleName].inProcess = true;
-  const moduleAst = parse(host.readFile(resolvedPath).toString(), {
+  const moduleAst = parse(host.readFile(modulePath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
@@ -110,7 +108,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
   });
 
   Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, moduleName, host);
+    plugins[plugin](moduleAst, modulePath, host);
   });
 
   const wrappedModule = createModuleWrapper(moduleName, moduleAst);
