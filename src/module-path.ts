@@ -14,7 +14,7 @@ interface IPackage {
  *
  * @param pkg Package data
  */
-function normalizePackage(pkg: IPackage) {
+function normalizePackage(pkg: IPackage): IPackage {
   // .browser, use package data as is
   if ('browser' in pkg) {
     return pkg;
@@ -42,7 +42,7 @@ export function getModulePath(filename: string, importIdentifier: string, host: 
     filename: filename,
     modules: nodeCoreLibs,
     packageFilter: normalizePackage,
-    readFileSync: path => new Buffer(host.readFile(path)),
-    isFile: filePath => host.fileExists(filePath) && host.isFile(filePath)
+    readFileSync: (path: string): Buffer => new Buffer(host.readFile(path)),
+    isFile: (filePath: string): boolean => host.fileExists(filePath) && host.isFile(filePath)
   });
 }
