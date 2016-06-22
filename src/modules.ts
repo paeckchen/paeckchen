@@ -75,7 +75,22 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
   };
 }
 
-export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+const moduleBundleQueue: string[] = [];
+export function enqueueModule(modulePath: string): void {
+  moduleBundleQueue.push(resolve(modulePath));
+}
+
+export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    host: IHost, plugins: any = defaultPlugins): boolean {
+  if (moduleBundleQueue.length === 0) {
+    return false;
+  }
+  const modulePath = moduleBundleQueue.shift();
+  wrapModule(modulePath, modules, host, plugins);
+  return true;
+}
+
+function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any = defaultPlugins): void {
   const resolvedPath = resolve(modulePath);
   const moduleName = resolvedPath.replace(/\.js$/, '');
@@ -95,7 +110,7 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
   });
 
   Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, moduleName, modules, host);
+    plugins[plugin](moduleAst, moduleName, host);
   });
 
   const wrappedModule = createModuleWrapper(moduleName, moduleAst);

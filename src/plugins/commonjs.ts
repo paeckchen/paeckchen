@@ -1,11 +1,10 @@
 import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 
-import { getModuleIndex, wrapModule } from '../modules';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
 import { IHost } from '../host';
 
-export function rewriteRequireStatements(program: ESTree.Program, moduleName: string,
-    modules: (ESTree.Expression | ESTree.SpreadElement)[], host: IHost): void {
+export function rewriteRequireStatements(program: ESTree.Program, moduleName: string, host: IHost): void {
   visit(program, {
     visitCallExpression(path: IPath<ESTree.CallExpression>): boolean {
       const callee = path.node.callee;
@@ -31,7 +30,7 @@ export function rewriteRequireStatements(program: ESTree.Program, moduleName: st
             )
           );
 
-          wrapModule(modulePath, modules, host);
+          enqueueModule(modulePath);
         }
       }
       return false;

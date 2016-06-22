@@ -3,7 +3,7 @@ import test from 'ava';
 import { resolve } from 'path';
 
 import { HostMock } from './helper';
-import { getModuleIndex, wrapModule, updateModule } from '../src/modules';
+import { getModuleIndex, updateModule, enqueueModule, bundleNextModule } from '../src/modules';
 
 test('getModuleIndex should return a new index per requested file', t => {
   t.deepEqual(getModuleIndex('a/b/c'), 0);
@@ -24,19 +24,28 @@ test.beforeEach(() => {
   updateModule(resolve('some/mod').replace(/\.js$/, ''));
 });
 
-test('wrapModule should wrap a module', t => {
+test('bundleNextModule with empty queue return false', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({});
+
+  t.false(bundleNextModule(modules, host, plugins));
+});
+
+test('bundleNextModule should wrap a module', t => {
   const modules: any[] = [];
   const plugins = {};
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   });
 
-  wrapModule('some/mod.js', modules, host, plugins);
+  enqueueModule('some/mod.js');
+  bundleNextModule(modules, host, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
 });
 
-test('wrapModule should call all given plugins', t => {
+test('bundleNextModule should call all given plugins', t => {
   const modules: any[] = [];
   let pluginCalls = 0;
   const plugins = {
@@ -47,7 +56,8 @@ test('wrapModule should call all given plugins', t => {
     'some/mod.js': 'console.log("test");'
   });
 
-  wrapModule('some/mod.js', modules, host, plugins);
+  enqueueModule('some/mod.js');
+  bundleNextModule(modules, host, plugins);
 
   t.deepEqual(pluginCalls, 2);
 });

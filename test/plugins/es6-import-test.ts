@@ -1,16 +1,15 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
 import { HostMock, virtualModule, parseAndProcess } from '../helper';
-import { IHost } from '../../src/host';
 
 import { reset } from '../../src/modules';
 import { rewriteImportDeclaration } from '../../src/plugins/es6-import';
 
-function rewriteImports(input: string, files: any = {}) {
+function rewriteImports(input: string, files: any = {}): string {
   const host = new HostMock(files);
 
   return parseAndProcess(input, ast => {
-    return rewriteImportDeclaration(ast, 'name', [], host);
+    return rewriteImportDeclaration(ast, 'name', host);
   });
 }
 
@@ -55,7 +54,6 @@ test('es6-import plugin should rewrite import specifiers correctly', t => {
 
   t.deepEqual(actual, expected);
 });
-
 
 test('es6-import plugin should rewrite default import specifiers correctly', t => {
   const input = stripIndent`

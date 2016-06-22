@@ -1,6 +1,6 @@
 import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 
-import { getModuleIndex, wrapModule } from '../modules';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
 import { IHost } from '../host';
 
@@ -101,8 +101,7 @@ function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatemen
   );
 }
 
-export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleName: string,
-  modules: (ESTree.Expression | ESTree.SpreadElement)[], host: IHost): void {
+export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleName: string, host: IHost): void {
   visit(program, {
     visitExportAllDeclaration: function(path: IPath<ESTree.ExportAllDeclaration>): boolean {
       // e.g. export * from './a';
@@ -117,7 +116,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
         exportAllKeys(tempIdentifier)
       );
 
-      wrapModule(reexportModuleName, modules, host);
+      enqueueModule(reexportModuleName);
       return false;
     },
     visitExportNamedDeclaration: function (path: IPath<ESTree.ExportNamedDeclaration>): boolean {
@@ -196,7 +195,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, moduleNam
             ...exports
           );
 
-          wrapModule(reexportModuleName, modules, host);
+          enqueueModule(reexportModuleName);
         } else {
           // e.g. export {a as b};
           const exports = path.node.specifiers
