@@ -86,20 +86,25 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
   // Prefill module indices
   getModuleIndex(moduleName);
   wrappedModules[moduleName].inProcess = true;
-  const moduleAst = parse(host.readFile(resolvedPath).toString(), {
-    ecmaVersion: 7,
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    allowHashBang: true
-  });
+  try {
+    const moduleAst = parse(host.readFile(resolvedPath).toString(), {
+      ecmaVersion: 7,
+      sourceType: 'module',
+      locations: true,
+      ranges: true,
+      allowHashBang: true
+    });
 
-  Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, moduleName, modules, host);
-  });
+    Object.keys(plugins).forEach(plugin => {
+      plugins[plugin](moduleAst, moduleName, modules, host);
+    });
 
-  const wrappedModule = createModuleWrapper(moduleName, moduleAst);
-  wrappedModules[wrappedModule.name] = wrappedModule;
-  modules[wrappedModule.index] = wrappedModule.ast;
+    const wrappedModule = createModuleWrapper(moduleName, moduleAst);
+    wrappedModules[wrappedModule.name] = wrappedModule;
+    modules[wrappedModule.index] = wrappedModule.ast;
+  } catch (e) {
+    console.error(`Failed to process module '${modulePath}'`);
+    throw e;
+  }
   wrappedModules[moduleName].inProcess = false;
 }
