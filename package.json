@@ -15,6 +15,7 @@
     "linter": "tslint 'src/**/*.ts'",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap",
+    "prebuild:watch": "npm run clean",
     "build:watch": "tsc --sourceMap --watch",
     "pretest": "npm run build",
     "test": "ava",
