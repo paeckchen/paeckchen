@@ -36,13 +36,19 @@ function normalizePackage(pkg: IPackage): IPackage {
  * @param filename Path to file from where importPath is resolved
  * @param importIdentifier Identifier to resolve from filename
  * @param [host]
+ * @return either the absolute path to the requested module or undefined for core modules which has no shim
+ * @throws when failing to resolve requested module
  */
 export function getModulePath(filename: string, importIdentifier: string, host: IHost = new DefaultHost()): string {
-  return browserResolveSync(importIdentifier, {
+  const resolvedModulePath = browserResolveSync(importIdentifier, {
     filename: filename,
     modules: nodeCoreLibs,
     packageFilter: normalizePackage,
     readFileSync: (path: string): Buffer => new Buffer(host.readFile(path)),
     isFile: (filePath: string): boolean => host.fileExists(filePath) && host.isFile(filePath)
   });
+  if (resolvedModulePath === importIdentifier && resolvedModulePath.charAt(0) !== '/') {
+    return undefined;
+  }
+  return resolvedModulePath;
 }

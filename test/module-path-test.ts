@@ -4,7 +4,7 @@ import test from 'ava';
 import { HostMock } from './helper';
 import { getModulePath } from '../src/module-path';
 
-test('getModulePath should throw no non existing module', t => {
+test('getModulePath should throw on non existing module', t => {
   const host = new HostMock({});
   t.throws(() => getModulePath('some/where', './else', host));
 });
@@ -71,4 +71,9 @@ test('getModulePath should resolve from node_modules', t => {
     'dir/node_modules/mod/index.js': ''
   });
   t.deepEqual(getModulePath('dir/some/where', 'mod', host), path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
+});
+
+test('getModulePath should return undefined for core-modules where no shim is available', t => {
+  const host = new HostMock({});
+  t.is(getModulePath('/some/module.js', 'fs', host), undefined);
 });
