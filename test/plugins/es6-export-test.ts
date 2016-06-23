@@ -1,12 +1,11 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, parseAndProcess } from '../helper';
-import { IHost } from '../../src/host';
+import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 
 import { reset } from '../../src/modules';
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
-function rewriteExports(input: string, files: any = {}) {
+function rewriteExports(input: string, files: any = {}): string {
   const host = new HostMock(files);
 
   return parseAndProcess(input, ast => {
@@ -14,7 +13,7 @@ function rewriteExports(input: string, files: any = {}) {
   });
 }
 
-function executeExports(input: string, files: any = {}, settings: any = {}) {
+function executeExports(input: string, files: any = {}, settings: any = {}): virtualModuleResult {
   const processed = rewriteExports(input, files);
   return virtualModule(processed, settings);
 }
@@ -31,7 +30,7 @@ test('es6-export plugin should rewrite variable assignment exports correctly', t
     foo: 'bar',
     bar: 'foo'
   };
-  
+
   const actual = executeExports(input);
   t.deepEqual(actual, expected);
 });
@@ -88,7 +87,7 @@ test('es6-export plugin should rewrite named exports correctly', t => {
   const expected = {
     bar: 'foo'
   };
-  
+
   const actual = executeExports(input);
   t.deepEqual(actual, expected);
 });
@@ -103,11 +102,11 @@ test('es6-export plugin should rewrite named reexports correctly', t => {
       foo: 'bar',
     }
   };
-  
+
   const expected = {
     bar: 'bar'
   };
-  
+
   const actual = executeExports(input, {
     'dependency.js': ''
   }, {
@@ -115,7 +114,6 @@ test('es6-export plugin should rewrite named reexports correctly', t => {
   });
   t.deepEqual(actual, expected);
 });
-
 
 test('es6-export plugin should rewrite export-all declarations correctly', t => {
   const input = stripIndent`

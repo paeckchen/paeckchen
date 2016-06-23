@@ -70,7 +70,8 @@ test('getModulePath should resolve from node_modules', t => {
   const host = new HostMock({
     'dir/node_modules/mod/index.js': ''
   });
-  t.deepEqual(getModulePath('dir/some/where', 'mod', host), path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
+  t.deepEqual(getModulePath('dir/some/where', 'mod', host), path.resolve(process.cwd(),
+    'dir/node_modules/mod/index.js'));
 });
 
 test('getModulePath should return undefined for core-modules where no shim is available', t => {
