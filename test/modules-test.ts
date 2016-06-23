@@ -51,3 +51,13 @@ test('wrapModule should call all given plugins', t => {
 
   t.deepEqual(pluginCalls, 2);
 });
+
+test('wrapModule should throw if an error occurred', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({});
+
+  t.throws(() => {
+    wrapModule('some/mod.js', modules, host, plugins);
+  });
+});
