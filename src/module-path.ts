@@ -36,6 +36,8 @@ function normalizePackage(pkg: IPackage): IPackage {
  * @param filename Path to file from where importPath is resolved
  * @param importIdentifier Identifier to resolve from filename
  * @param [host]
+ * @return either the absolute path to the requested module or undefined for core modules which has no shim
+ * @throws when failing to resolve requested module
  */
 export function getModulePath(filename: string, importIdentifier: string, host: IHost): string {
   return browserResolveSync(importIdentifier, {

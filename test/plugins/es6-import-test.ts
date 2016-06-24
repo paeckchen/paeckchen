@@ -1,6 +1,6 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, parseAndProcess } from '../helper';
+import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 
 import { reset } from '../../src/modules';
 import { rewriteImportDeclaration } from '../../src/plugins/es6-import';
@@ -13,7 +13,7 @@ function rewriteImports(input: string, files: any = {}): string {
   });
 }
 
-function executeImports(input: string, files: any = {}, settings: any = {}) {
+function executeImports(input: string, files: any = {}, settings: any = {}): virtualModuleResult {
   const processed = rewriteImports(input, files);
   return virtualModule(processed, settings);
 }

@@ -4,6 +4,7 @@ import { parse, IParseOptions } from 'acorn';
 import * as astringNode from 'astring';
 const astring: typeof astringNode = astringNode as any;
 import { merge } from 'lodash';
+import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
@@ -42,7 +43,8 @@ export class HostMock implements IHost {
     if (this.fileExists(filePath)) {
       return this.files[filePath];
     }
-    throw new Error(`ENOENT: Could not read file ${filePath} from HostMock fs. Available files: ${Object.keys(this.files)}`);
+    throw new Error(oneLine`ENOENT: Could not read file ${filePath} from HostMock fs.
+      Available files: ${Object.keys(this.files)}`);
   }
 
   public joinPath(...paths: string[]): string {
@@ -76,8 +78,9 @@ const defaultSandbox = {
   require
 };
 
-export function virtualModule(code: string, optionsSandbox = {}) {
+export type virtualModuleResult = {[name: string]: any};
+export function virtualModule(code: string, optionsSandbox = {}): virtualModuleResult {
   const sandbox = merge({}, defaultSandbox, optionsSandbox);
   runInNewContext(code, sandbox);
-  return sandbox.module.exports as {[name?: string]: any};
+  return sandbox.module.exports;
 }
