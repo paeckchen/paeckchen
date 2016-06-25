@@ -43,26 +43,23 @@ export function updateModule(name: string): void {
 
 function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedModule {
   function getWrapperBlock(ast: any): ESTree.BlockStatement {
-    return (ast as ESTree.FunctionDeclaration).body as ESTree.BlockStatement;
+    return (ast as any).body.body[0].consequent.body[1].expression.callee.body;
   }
 
   const index = getModuleIndex(name);
   const wrapperSource = `
     function _${index}() {
-      var module = {
-        exports: {}
-      };
-      var exports = module.exports;
-      return module;
+      if (!_${index}.module) {
+        _${index}.module = {
+          exports: {}
+        };
+        (function(module, exports) {})(_${index}.module, _${index}.module.exports);
+      }
+      return _${index}.module;
     }
   `;
   const wrapperAst = parse(wrapperSource).body[0];
-
-  let wrapperBlock = getWrapperBlock(wrapperAst);
-  wrapperBlock.body = [
-    ...wrapperBlock.body.slice(0, wrapperBlock.body.length - 1),
-    ...moduleAst.body,
-    ...wrapperBlock.body.slice(wrapperBlock.body.length - 1)] as ESTree.Statement[];
+  getWrapperBlock(wrapperAst).body = moduleAst.body;
 
   return {
     index,
