@@ -9,7 +9,7 @@ function rewriteImports(input: string, files: any = {}): string {
   const host = new HostMock(files);
 
   return parseAndProcess(input, ast => {
-    return rewriteImportDeclaration(ast, 'name', [], host);
+    return rewriteImportDeclaration(ast, 'name', host);
   });
 }
 

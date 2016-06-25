@@ -1,9 +1,11 @@
 import test from 'ava';
 
-import { resolve } from 'path';
-
 import { HostMock } from './helper';
-import { getModuleIndex, wrapModule, updateModule } from '../src/modules';
+import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
+
+test.beforeEach(() => {
+  reset();
+});
 
 test('getModuleIndex should return a new index per requested file', t => {
   t.deepEqual(getModuleIndex('a/b/c'), 0);
@@ -21,22 +23,31 @@ test('getModuleIndex should ignore file extension', t => {
 });
 
 test.beforeEach(() => {
-  updateModule(resolve('some/mod').replace(/\.js$/, ''));
+  updateModule('/some/mod.js');
 });
 
-test('wrapModule should wrap a module', t => {
+test('bundleNextModule with empty queue return false', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({});
+
+  t.false(bundleNextModule(modules, host, plugins));
+});
+
+test('bundleNextModule should wrap a module', t => {
   const modules: any[] = [];
   const plugins = {};
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
-  });
+  }, '/');
 
-  wrapModule('some/mod.js', modules, host, plugins);
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
 });
 
-test('wrapModule should call all given plugins', t => {
+test('bundleNextModule should call all given plugins', t => {
   const modules: any[] = [];
   let pluginCalls = 0;
   const plugins = {
@@ -44,12 +55,61 @@ test('wrapModule should call all given plugins', t => {
     b: function(): void { pluginCalls++; }
   };
   const host = new HostMock({
-    'some/mod.js': 'console.log("test");'
-  });
+    '/some/mod.js': 'console.log("test");'
+  }, '/');
 
-  wrapModule('some/mod.js', modules, host, plugins);
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
 
   t.deepEqual(pluginCalls, 2);
+});
+
+test('bundleNextModule should not rebundle modules if already up to date', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  const firstBundled = modules[0];
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+
+  t.is(modules[0], firstBundled);
+});
+
+test('bundleNextModule should rebundle modules if updated', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  const firstBundled = modules[0];
+
+  updateModule('/some/mod.js');
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+
+  t.not(modules[0], firstBundled);
+});
+
+test('enqueueModule should not accept duplicate entries', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({
+    'some/mod.js': 'console.log("test");'
+  }, '/');
+
+  enqueueModule('/some/mod.js');
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, plugins);
+  t.false(bundleNextModule(modules, host, plugins));
 });
 
 test('wrapModule should throw if an error occurred', t => {
@@ -57,7 +117,8 @@ test('wrapModule should throw if an error occurred', t => {
   const plugins = {};
   const host = new HostMock({});
 
+  enqueueModule('/some/mod.js');
   t.throws(() => {
-    wrapModule('some/mod.js', modules, host, plugins);
+    bundleNextModule(modules, host, plugins);
   });
 });

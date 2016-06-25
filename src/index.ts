@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { join } from 'path';
 import * as minimistNode from 'minimist';
 const minimist: typeof minimistNode = minimistNode;
 import { parse } from 'acorn';
@@ -6,7 +6,8 @@ import * as astringNode from 'astring';
 const astring: typeof astringNode = astringNode as any;
 
 import { DefaultHost } from './host';
-import { wrapModule } from './modules';
+import { getModulePath } from './module-path';
+import { enqueueModule, bundleNextModule } from './modules';
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
   return (ast.body[0] as ESTree.VariableDeclaration).declarations[0].init as ESTree.ArrayExpression;
@@ -17,13 +18,20 @@ function bundle(argv: minimistNode.ParsedArgs): string {
     throw new Error('Missing --entry argument');
   }
 
+  const host = new DefaultHost();
+
   const paeckchenSource = `
     var modules = [];
     modules[0]();
   `;
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  wrapModule(argv['entry'], modules, new DefaultHost());
+  const absoluteEntryPath = join(process.cwd(), argv['entry']);
+  enqueueModule(getModulePath('.', absoluteEntryPath, host));
+  while (bundleNextModule(modules, host)) {
+    process.stderr.write('.');
+  }
+  process.stderr.write('\n');
   return astring(paeckchenAst, {comments: true});
 }
 
@@ -33,12 +41,12 @@ const argv = minimist(process.argv.slice(2), {
   string: ['config', 'entry'],
   boolean: ['watch'],
   default: {
-    config: path.join(__dirname, 'paeckchen.config.js'),
+    config: join(__dirname, 'paeckchen.config.js'),
     watch: false
   }
 });
 
 const startTime = new Date().getTime();
-console.log(bundle(argv));
+process.stdout.write(bundle(argv));
 const endTime = new Date().getTime();
-console.log(`Bundeling took ${(endTime - startTime) / 1000}s`);
+process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s`);

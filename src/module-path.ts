@@ -1,4 +1,4 @@
-import { IHost, DefaultHost } from './host';
+import { IHost } from './host';
 import { sync as browserResolveSync } from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
 
@@ -39,7 +39,7 @@ function normalizePackage(pkg: IPackage): IPackage {
  * @return either the absolute path to the requested module or the name of a node core module
  * @throws when failing to resolve requested module
  */
-export function getModulePath(filename: string, importIdentifier: string, host: IHost = new DefaultHost()): string {
+export function getModulePath(filename: string, importIdentifier: string, host: IHost): string {
   return browserResolveSync(importIdentifier, {
     filename: filename,
     modules: nodeCoreLibs,

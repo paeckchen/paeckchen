@@ -1,17 +1,16 @@
 import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 
-import { getModuleIndex, wrapModule } from '../modules';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
 import { IHost } from '../host';
 
-export function rewriteImportDeclaration(program: ESTree.Program, moduleName: string,
-    modules: (ESTree.Expression | ESTree.SpreadElement)[], host: IHost): void {
+export function rewriteImportDeclaration(program: ESTree.Program, currentModule: string, host: IHost): void {
   visit(program, {
     visitImportDeclaration: function(path: IPath<ESTree.ImportDeclaration>): boolean {
       const source = path.node.source;
 
       if (n.Literal.check(source)) {
-        const importModule = getModulePath(moduleName, source.value as string, host);
+        const importModule = getModulePath(currentModule, source.value as string, host);
         const importModuleIndex = getModuleIndex(importModule);
 
         const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
@@ -77,7 +76,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, moduleName: st
           )
         );
 
-        wrapModule(importModule, modules, host);
+        enqueueModule(importModule);
       }
       return false;
     }

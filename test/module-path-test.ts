@@ -74,7 +74,7 @@ test('getModulePath should resolve from node_modules', t => {
     'dir/node_modules/mod/index.js'));
 });
 
-test('getModulePath should return the input name for core-modules where no shim is available', t => {
+test('getModulePath should return the core-modules name where no shim is available', t => {
   const host = new HostMock({});
   t.is(getModulePath('/some/module.js', 'fs', host), 'fs');
 });

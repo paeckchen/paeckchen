@@ -1,4 +1,3 @@
-import { resolve } from 'path';
 import { parse } from 'acorn';
 
 import { IHost } from './host';
@@ -8,7 +7,6 @@ interface IWrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
-  inProcess: boolean;
 }
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
@@ -19,28 +17,27 @@ export function reset(): void {
   nextModuleIndex = 0;
 }
 
+function getModuleName(name: string): string {
+  return name.replace(/\.js$/, '');
+}
+
 export function getModuleIndex(name: string): number {
-  const moduleName = name.replace(/\.js$/, '');
+  const moduleName = getModuleName(name);
   if (wrappedModules[moduleName]) {
     return wrappedModules[moduleName].index;
   }
   const index = nextModuleIndex++;
   wrappedModules[moduleName] = {
     index,
-    name: moduleName,
-    inProcess: false
+    name: moduleName
   };
   return index;
 }
 
-function isModuleReadyOrInProgress(name: string): boolean {
-  return Boolean(wrappedModules[name] && (wrappedModules[name].inProcess || wrappedModules[name].ast));
-}
-
 export function updateModule(name: string): void {
-  if (wrappedModules[name]) {
-    wrappedModules[name].ast = undefined;
-    wrappedModules[name].inProcess = false;
+  const moduleName = getModuleName(name);
+  if (wrappedModules[moduleName]) {
+    wrappedModules[moduleName].ast = undefined;
   }
 }
 
@@ -70,33 +67,48 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
   return {
     index,
     name,
-    ast: wrapperAst,
-    inProcess: false
+    ast: wrapperAst
   };
 }
 
-export function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, plugins: any = defaultPlugins): void {
-  const resolvedPath = resolve(modulePath);
-  const moduleName = resolvedPath.replace(/\.js$/, '');
-  // Short cut for already processed imports
-  if (isModuleReadyOrInProgress(moduleName)) {
-    return;
+const moduleBundleQueue: string[] = [];
+export function enqueueModule(modulePath: string): void {
+  if (moduleBundleQueue.indexOf(modulePath) === -1) {
+    moduleBundleQueue.push(modulePath);
   }
+}
+
+export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    host: IHost, plugins: any = defaultPlugins): boolean {
+  if (moduleBundleQueue.length === 0) {
+    return false;
+  }
+  const modulePath = moduleBundleQueue.shift();
+  wrapModule(modulePath, modules, host, plugins);
+  return true;
+}
+
+function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    host: IHost, plugins: any): void {
+  const moduleName = getModuleName(modulePath);
+
   // Prefill module indices
   getModuleIndex(moduleName);
-  wrappedModules[moduleName].inProcess = true;
+  if (wrappedModules[moduleName].ast !== undefined) {
+    // Module is already up to date
+    return;
+  }
+
   try {
-    const moduleAst = parse(host.readFile(resolvedPath).toString(), {
+    const moduleAst = parse(host.readFile(modulePath).toString(), {
       ecmaVersion: 7,
       sourceType: 'module',
       locations: true,
       ranges: true,
       allowHashBang: true
     });
-
     Object.keys(plugins).forEach(plugin => {
-      plugins[plugin](moduleAst, moduleName, modules, host);
+      plugins[plugin](moduleAst, modulePath, host);
     });
 
     const wrappedModule = createModuleWrapper(moduleName, moduleAst);
@@ -106,5 +118,4 @@ export function wrapModule(modulePath: string, modules: (ESTree.Expression | EST
     console.error(`Failed to process module '${modulePath}'`);
     throw e;
   }
-  wrappedModules[moduleName].inProcess = false;
 }
