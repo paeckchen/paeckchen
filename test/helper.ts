@@ -56,7 +56,6 @@ export class HostMock implements IHost {
   }
 }
 
-
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {
   const comments: any[] = [];
   const tokens: any[] = [];
