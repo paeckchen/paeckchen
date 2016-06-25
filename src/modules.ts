@@ -1,5 +1,6 @@
 import { parse } from 'acorn';
 import { attachComments } from 'estraverse';
+import { builders as b } from 'ast-types';
 
 import { IHost } from './host';
 import * as defaultPlugins from './plugins';
@@ -112,21 +113,30 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
   }
 
   try {
-    const comments: any[] = [];
-    const tokens: any[] = [];
-    const moduleAst = parse(host.readFile(modulePath).toString(), {
-      ecmaVersion: 7,
-      sourceType: 'module',
-      locations: true,
-      ranges: true,
-      allowHashBang: true,
-      onComment: comments,
-      onToken: tokens
-    });
-    attachComments(moduleAst, comments, tokens);
-    Object.keys(plugins).forEach(plugin => {
-      plugins[plugin](moduleAst, modulePath, host);
-    });
+    let moduleAst: ESTree.Program;
+    if (!host.fileExists(modulePath)) {
+      moduleAst = b.program([
+        b.throwStatement(
+          b.literal(`Module ${modulePath} not found`)
+        )
+      ]);
+    } else {
+      const comments: any[] = [];
+      const tokens: any[] = [];
+      moduleAst = parse(host.readFile(modulePath).toString(), {
+        ecmaVersion: 7,
+        sourceType: 'module',
+        locations: true,
+        ranges: true,
+        allowHashBang: true,
+        onComment: comments,
+        onToken: tokens
+      });
+      attachComments(moduleAst, comments, tokens);
+      Object.keys(plugins).forEach(plugin => {
+        plugins[plugin](moduleAst, modulePath, host);
+      });
+    }
 
     const wrappedModule = createModuleWrapper(moduleName, moduleAst);
     wrappedModules[wrappedModule.name] = wrappedModule;
