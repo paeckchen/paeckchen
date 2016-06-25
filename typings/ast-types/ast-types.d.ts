@@ -43,6 +43,7 @@ declare module 'ast-types' {
   }
 
   export namespace builders {
+    export function program(body: ESTree.Statement[]): ESTree.Program;
     export function literal(value: any): ESTree.Literal;
     export function identifier(name: string): ESTree.Identifier;
     export function assignmentExpression(operator: string, left: any, right: any): ESTree.AssignmentExpression;
@@ -51,6 +52,7 @@ declare module 'ast-types' {
     export function functionExpression(id: any, params: any, body: any): ESTree.FunctionExpression;
     export function expressionStatement(expression: any): ESTree.ExpressionStatement;
     export function blockStatement(body: any[]): ESTree.BlockStatement;
+    export function throwStatement(argument: ESTree.Expression): ESTree.ThrowStatement;
     export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): ESTree.VariableDeclaration;
     export function variableDeclarator(id: any, init?: any): ESTree.VariableDeclarator;
     export function ifStatement(test: ESTree.Expression, consequent: ESTree.Statement, alternate?: ESTree.Statement): ESTree.IfStatement;
