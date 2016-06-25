@@ -17,12 +17,7 @@ export function reset(): void {
   nextModuleIndex = 0;
 }
 
-function getModuleName(name: string): string {
-  return name.replace(/\.js$/, '');
-}
-
-export function getModuleIndex(name: string): number {
-  const moduleName = getModuleName(name);
+export function getModuleIndex(moduleName: string): number {
   if (wrappedModules[moduleName]) {
     return wrappedModules[moduleName].index;
   }
@@ -34,8 +29,7 @@ export function getModuleIndex(name: string): number {
   return index;
 }
 
-export function updateModule(name: string): void {
-  const moduleName = getModuleName(name);
+export function updateModule(moduleName: string): void {
   if (wrappedModules[moduleName]) {
     wrappedModules[moduleName].ast = undefined;
   }
@@ -90,11 +84,9 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     host: IHost, plugins: any): void {
-  const moduleName = getModuleName(modulePath);
-
   // Prefill module indices
-  getModuleIndex(moduleName);
-  if (wrappedModules[moduleName].ast !== undefined) {
+  getModuleIndex(modulePath);
+  if (wrappedModules[modulePath].ast !== undefined) {
     // Module is already up to date
     return;
   }
@@ -111,7 +103,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
       plugins[plugin](moduleAst, modulePath, host);
     });
 
-    const wrappedModule = createModuleWrapper(moduleName, moduleAst);
+    const wrappedModule = createModuleWrapper(modulePath, moduleAst);
     wrappedModules[wrappedModule.name] = wrappedModule;
     modules[wrappedModule.index] = wrappedModule.ast;
   } catch (e) {
