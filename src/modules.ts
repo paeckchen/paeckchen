@@ -99,18 +99,23 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
     return;
   }
 
-  const moduleAst = parse(host.readFile(modulePath).toString(), {
-    ecmaVersion: 7,
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    allowHashBang: true
-  });
-  Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, modulePath, host);
-  });
+  try {
+    const moduleAst = parse(host.readFile(modulePath).toString(), {
+      ecmaVersion: 7,
+      sourceType: 'module',
+      locations: true,
+      ranges: true,
+      allowHashBang: true
+    });
+    Object.keys(plugins).forEach(plugin => {
+      plugins[plugin](moduleAst, modulePath, host);
+    });
 
-  const wrappedModule = createModuleWrapper(moduleName, moduleAst);
-  wrappedModules[wrappedModule.name] = wrappedModule;
-  modules[wrappedModule.index] = wrappedModule.ast;
+    const wrappedModule = createModuleWrapper(moduleName, moduleAst);
+    wrappedModules[wrappedModule.name] = wrappedModule;
+    modules[wrappedModule.index] = wrappedModule.ast;
+  } catch (e) {
+    console.error(`Failed to process module '${modulePath}'`);
+    throw e;
+  }
 }

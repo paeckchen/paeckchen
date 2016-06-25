@@ -111,3 +111,14 @@ test('enqueueModule should not accept duplicate entries', t => {
   bundleNextModule(modules, host, plugins);
   t.false(bundleNextModule(modules, host, plugins));
 });
+
+test('wrapModule should throw if an error occurred', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({});
+
+  enqueueModule('/some/mod.js');
+  t.throws(() => {
+    bundleNextModule(modules, host, plugins);
+  });
+});

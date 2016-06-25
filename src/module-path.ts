@@ -36,7 +36,7 @@ function normalizePackage(pkg: IPackage): IPackage {
  * @param filename Path to file from where importPath is resolved
  * @param importIdentifier Identifier to resolve from filename
  * @param [host]
- * @return either the absolute path to the requested module or undefined for core modules which has no shim
+ * @return either the absolute path to the requested module or the name of a node core module
  * @throws when failing to resolve requested module
  */
 export function getModulePath(filename: string, importIdentifier: string, host: IHost): string {
