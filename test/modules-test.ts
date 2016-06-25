@@ -1,4 +1,5 @@
 import test from 'ava';
+import { visit } from 'ast-types';
 
 import { HostMock } from './helper';
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
@@ -112,13 +113,33 @@ test('enqueueModule should not accept duplicate entries', t => {
   t.false(bundleNextModule(modules, host, plugins));
 });
 
-test('wrapModule should throw if an error occurred', t => {
+test('bundleNextModule should throw if an error occurred', t => {
   const modules: any[] = [];
   const plugins = {};
-  const host = new HostMock({});
+  const host = new HostMock({
+    '/some/mod.js': '/'
+  });
 
   enqueueModule('/some/mod.js');
   t.throws(() => {
     bundleNextModule(modules, host, plugins);
   });
+});
+
+test('bundleNextModule should bundle an error for unavailable modules', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const host = new HostMock({});
+
+  enqueueModule('fs');
+  bundleNextModule(modules, host, plugins);
+
+  let throws = false;
+  visit(modules[0], {
+    visitThrowStatement: function(): boolean {
+      throws = true;
+      return false;
+    }
+  });
+  t.true(throws);
 });

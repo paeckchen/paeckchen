@@ -1,6 +1,8 @@
 import { parse } from 'acorn';
+import { builders as b } from 'ast-types';
 
 import { IHost } from './host';
+import { isCoreModule } from './module-path';
 import * as defaultPlugins from './plugins';
 
 interface IWrappedModule {
@@ -100,16 +102,25 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
   }
 
   try {
-    const moduleAst = parse(host.readFile(modulePath).toString(), {
-      ecmaVersion: 7,
-      sourceType: 'module',
-      locations: true,
-      ranges: true,
-      allowHashBang: true
-    });
-    Object.keys(plugins).forEach(plugin => {
-      plugins[plugin](moduleAst, modulePath, host);
-    });
+    let moduleAst: ESTree.Program;
+    if (!host.fileExists(modulePath)) {
+      moduleAst = b.program([
+        b.throwStatement(
+          b.literal(`Module ${modulePath} not found`)
+        )
+      ]);
+    } else {
+      moduleAst = parse(host.readFile(modulePath).toString(), {
+        ecmaVersion: 7,
+        sourceType: 'module',
+        locations: true,
+        ranges: true,
+        allowHashBang: true
+      });
+      Object.keys(plugins).forEach(plugin => {
+        plugins[plugin](moduleAst, modulePath, host);
+      });
+    }
 
     const wrappedModule = createModuleWrapper(moduleName, moduleAst);
     wrappedModules[wrappedModule.name] = wrappedModule;
