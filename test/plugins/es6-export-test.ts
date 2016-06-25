@@ -58,25 +58,24 @@ test('es6-export plugin should rewrite anonymous function default export correct
   t.truthy(typeof actual['default'] === 'function');
 });
 
-// Failing
-// test.only('es6-export plugin should rewrite class default export correctly', t => {
-//   const input = stripIndent`
-//     export default class Foo() {}
-//   `;
-//
-//   const actual = executeExports(input);
-//   t.truthy(typeof actual['default'] === 'function');
-// });
+test('es6-export plugin should rewrite class default export correctly', t => {
+  const input = `
+    'use strict';
+    export default class Foo {}
+  `;
 
-// Failing
-// test.only('es6-export plugin should rewrite named function default export correctly', t => {
-//   const input = stripIndent`
-//     export default function foo () {}
-//   `;
-//
-//   const actual = executeExports(input);
-//   t.truthy(typeof actual['default'] === 'function');
-// });
+  const actual = executeExports(input);
+  t.truthy(typeof actual['default'] === 'function');
+});
+
+test('es6-export plugin should rewrite named function default export correctly', t => {
+  const input = stripIndent`
+    export default function foo () {}
+  `;
+
+  const actual = executeExports(input);
+  t.truthy(typeof actual['default'] === 'function');
+});
 
 test('es6-export plugin should rewrite named exports correctly', t => {
   const input = stripIndent`
