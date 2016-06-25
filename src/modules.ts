@@ -1,4 +1,5 @@
 import { parse } from 'acorn';
+import { attachComments } from 'estraverse';
 import { builders as b } from 'ast-types';
 
 import { IHost } from './host';
@@ -42,7 +43,9 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
   }
 
   const index = getModuleIndex(name);
+  // TODO: Add relative path as comment
   const wrapperSource = `
+    // ${name}
     function _${index}() {
       if (!_${index}.module) {
         _${index}.module = {
@@ -53,7 +56,16 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
       return _${index}.module;
     }
   `;
-  const wrapperAst = parse(wrapperSource).body[0];
+  const comments: any[] = [];
+  const tokens: any[] = [];
+  const wrapperAst = parse(wrapperSource, {
+    sourceType: 'module',
+    locations: true,
+    ranges: true,
+    onComment: comments,
+    onToken: tokens
+  }).body[0];
+  attachComments(wrapperAst, comments, tokens);
   getWrapperBlock(wrapperAst).body = moduleAst.body;
 
   return {
@@ -98,13 +110,18 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
         )
       ]);
     } else {
+      const comments: any[] = [];
+      const tokens: any[] = [];
       moduleAst = parse(host.readFile(modulePath).toString(), {
         ecmaVersion: 7,
         sourceType: 'module',
         locations: true,
         ranges: true,
-        allowHashBang: true
+        allowHashBang: true,
+        onComment: comments,
+        onToken: tokens
       });
+      attachComments(moduleAst, comments, tokens);
       Object.keys(plugins).forEach(plugin => {
         plugins[plugin](moduleAst, modulePath, host);
       });

@@ -1,8 +1,7 @@
 import { dirname, join, resolve } from 'path';
 import { runInNewContext } from 'vm';
 import { parse, IParseOptions } from 'acorn';
-import * as astringNode from 'astring';
-const astring: typeof astringNode = astringNode as any;
+import { generate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
@@ -67,7 +66,7 @@ const acornOptions: IParseOptions = {
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {
   const ast = parse(input, acornOptions);
   fn(ast);
-  return astring(ast).trim();
+  return generate(ast).trim();
 }
 
 const defaultSandbox = {

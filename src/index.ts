@@ -2,8 +2,7 @@ import { join } from 'path';
 import * as minimistNode from 'minimist';
 const minimist: typeof minimistNode = minimistNode;
 import { parse } from 'acorn';
-import * as astringNode from 'astring';
-const astring: typeof astringNode = astringNode as any;
+import { generate } from 'escodegen';
 
 import { DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -32,7 +31,9 @@ function bundle(argv: minimistNode.ParsedArgs): string {
     process.stderr.write('.');
   }
   process.stderr.write('\n');
-  return astring(paeckchenAst, {comments: true});
+  return generate(paeckchenAst, {
+    comment: true
+  });
 }
 
 // TODO: create config file

@@ -11,8 +11,8 @@ declare module 'acorn' {
     allowImportExportEverywhere?: boolean;
     allowHashBang?: boolean;
     locations?: boolean;
-    onToken?: Function;
-    onComment?: Function;
+    onToken?: Function | any[];
+    onComment?: Function | any[];
     ranges?: boolean;
     program?: ESTree.Program;
     sourceFile?: string;
