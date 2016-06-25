@@ -18,11 +18,6 @@ test('getModuleIndex should return the same index if duplicate request', t => {
   t.deepEqual(getModuleIndex('a/b/c'), 0);
 });
 
-test('getModuleIndex should ignore file extension', t => {
-  t.deepEqual(getModuleIndex('a/b/c'), 0);
-  t.deepEqual(getModuleIndex('a/b/c.js'), 0);
-});
-
 test.beforeEach(() => {
   updateModule('/some/mod.js');
 });
