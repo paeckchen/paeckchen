@@ -57,8 +57,9 @@
   "dependencies": {
     "acorn": "3.2.0",
     "ast-types": "0.8.16",
-    "astring": "0.6.1",
     "browser-resolve": "1.11.2",
+    "escodegen": "1.8.0",
+    "estraverse": "4.2.0",
     "minimist": "1.2.0",
     "node-libs-browser": "1.0.0"
   },
