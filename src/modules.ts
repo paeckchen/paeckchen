@@ -2,7 +2,6 @@ import { parse } from 'acorn';
 import { builders as b } from 'ast-types';
 
 import { IHost } from './host';
-import { isCoreModule } from './module-path';
 import * as defaultPlugins from './plugins';
 
 interface IWrappedModule {

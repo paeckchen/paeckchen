@@ -48,11 +48,3 @@ export function getModulePath(filename: string, importIdentifier: string, host: 
     isFile: (filePath: string): boolean => host.fileExists(filePath) && host.isFile(filePath)
   });
 }
-
-/**
- * @param moduleName The module name to check
- * @return true if the given (resolved) moduleName is a core module (e.g. fs), false otherwise.
- */
-export function isCoreModule(moduleName: string): boolean {
-  return moduleName in nodeCoreLibs;
-}
