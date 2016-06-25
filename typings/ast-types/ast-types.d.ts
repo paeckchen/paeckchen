@@ -55,5 +55,10 @@ declare module 'ast-types' {
     export function throwStatement(argument: ESTree.Expression): ESTree.ThrowStatement;
     export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): ESTree.VariableDeclaration;
     export function variableDeclarator(id: any, init?: any): ESTree.VariableDeclarator;
+    export function ifStatement(test: ESTree.Expression, consequent: ESTree.Statement, alternate?: ESTree.Statement): ESTree.IfStatement;
+    export function unaryExpression(operator: ESTree.UnaryOperator, argument: ESTree.Expression): ESTree.UnaryExpression;
+    export function objectExpression(properties: ESTree.Property[]): ESTree.ObjectExpression;
+    export function property(kind: 'init'|'get'|'set', key: ESTree.Literal|ESTree.Identifier, value: ESTree.Expression): ESTree.Property;
+    export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
   }
 }
