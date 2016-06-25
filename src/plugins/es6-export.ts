@@ -235,7 +235,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
             b.assignmentExpression(
               '=',
               moduleExportsExpression('default'),
-              b.literal(declaration.id.name)
+              b.identifier(declaration.id.name)
             )
           )
         );
