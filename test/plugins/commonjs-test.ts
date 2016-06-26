@@ -26,3 +26,21 @@ test('commonjs should rewrite require statements', t => {
 
   t.is(actual, expected);
 });
+
+test('commonjs should rewrite require statements which are nested inside call chains', t => {
+  const input = stripIndent`
+    require('./dependency')();
+  `;
+  const expected = stripIndent`
+    modules[0]().exports();
+  `;
+
+  const host = new HostMock({
+    'dependency.js': ''
+  });
+
+  const actual = parseAndProcess(input,
+    ast => rewriteRequireStatements(ast, 'name', host));
+
+  t.is(actual, expected);
+});

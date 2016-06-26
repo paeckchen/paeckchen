@@ -32,8 +32,9 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
 
           enqueueModule(modulePath);
         }
+        return false;
       }
-      return false;
+      this.traverse(path);
     }
   });
 }
