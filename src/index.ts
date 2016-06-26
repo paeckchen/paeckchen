@@ -7,6 +7,7 @@ import { generate } from 'escodegen';
 import { DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
+import { IDetectedGlobals, injectGlobals } from './globals';
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
   return (ast.body[0] as ESTree.VariableDeclaration).declarations[0].init as ESTree.ArrayExpression;
@@ -18,6 +19,9 @@ function bundle(argv: minimistNode.ParsedArgs): string {
   }
 
   const host = new DefaultHost();
+  const detectedGlobals: IDetectedGlobals = {
+    process: false
+  };
 
   const paeckchenSource = `
     var modules = [];
@@ -27,10 +31,12 @@ function bundle(argv: minimistNode.ParsedArgs): string {
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(process.cwd(), argv['entry']);
   enqueueModule(getModulePath('.', absoluteEntryPath, host));
-  while (bundleNextModule(modules, host)) {
+  while (bundleNextModule(modules, host, detectedGlobals)) {
     process.stderr.write('.');
   }
   process.stderr.write('\n');
+  injectGlobals(detectedGlobals, paeckchenAst);
+
   return generate(paeckchenAst, {
     comment: true
   });

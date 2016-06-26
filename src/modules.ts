@@ -4,6 +4,7 @@ import { builders as b } from 'ast-types';
 
 import { IHost } from './host';
 import * as defaultPlugins from './plugins';
+import { checkGlobals, IDetectedGlobals } from './globals';
 
 interface IWrappedModule {
   index: number;
@@ -83,17 +84,17 @@ export function enqueueModule(modulePath: string): void {
 }
 
 export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, plugins: any = defaultPlugins): boolean {
+    host: IHost, detectedGlobals: IDetectedGlobals, plugins: any = defaultPlugins): boolean {
   if (moduleBundleQueue.length === 0) {
     return false;
   }
   const modulePath = moduleBundleQueue.shift();
-  wrapModule(modulePath, modules, host, plugins);
+  wrapModule(modulePath, modules, host, detectedGlobals, plugins);
   return true;
 }
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, plugins: any): void {
+    host: IHost, detectedGlobals: IDetectedGlobals, plugins: any): void {
   // Prefill module indices
   getModuleIndex(modulePath);
   if (wrappedModules[modulePath].ast !== undefined) {
@@ -110,6 +111,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
         )
       ]);
     } else {
+      // parse...
       const comments: any[] = [];
       const tokens: any[] = [];
       moduleAst = parse(host.readFile(modulePath).toString(), {
@@ -122,6 +124,11 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
         onToken: tokens
       });
       attachComments(moduleAst, comments, tokens);
+
+      // ... check for global features...
+      checkGlobals(detectedGlobals, moduleAst);
+
+      // ... and rewrite ast
       Object.keys(plugins).forEach(plugin => {
         plugins[plugin](moduleAst, modulePath, host);
       });

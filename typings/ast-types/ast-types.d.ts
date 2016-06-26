@@ -1,8 +1,25 @@
 declare module 'ast-types' {
 
+  export interface IScope {
+    didScan: boolean;
+    declares(name: string): boolean;
+    declaresType(name: string): boolean;
+    declareTemporary(prefix: string): ESTree.Identifier;
+    injectTemporary(identifier: ESTree.Identifier, init?: ESTree.Expression): ESTree.Identifier;
+    scan(force?: boolean): void;
+    getBindings(): any;
+    getTypes(): any;
+    lookup(name: string): IScope;
+    lookupType(name: string): IScope;
+    getGlobalScope(): IScope;
+  }
+
   export interface IPath<T> {
     node: T;
+    scope: IScope;
+    get<CT>(...name: (string|number)[]): IPath<CT>;
     replace(...newNode: any[]): void;
+    insertBefore(newNode: any): void;
     insertAfter(newNode: any): void;
     prune(): void;
   }
@@ -46,7 +63,7 @@ declare module 'ast-types' {
     export function program(body: ESTree.Statement[]): ESTree.Program;
     export function literal(value: any): ESTree.Literal;
     export function identifier(name: string): ESTree.Identifier;
-    export function assignmentExpression(operator: string, left: any, right: any): ESTree.AssignmentExpression;
+    export function assignmentExpression(operator: ESTree.AssignmentOperator, left: ESTree.Pattern, right: ESTree.Expression): ESTree.AssignmentExpression;
     export function memberExpression(object: any, property: any, computed: boolean): ESTree.MemberExpression;
     export function callExpression(callee: any, arguments: any[]): ESTree.CallExpression;
     export function functionExpression(id: any, params: any, body: any): ESTree.FunctionExpression;
@@ -54,7 +71,7 @@ declare module 'ast-types' {
     export function blockStatement(body: any[]): ESTree.BlockStatement;
     export function throwStatement(argument: ESTree.Expression): ESTree.ThrowStatement;
     export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): ESTree.VariableDeclaration;
-    export function variableDeclarator(id: any, init?: any): ESTree.VariableDeclarator;
+    export function variableDeclarator(id: ESTree.Pattern, init?: ESTree.Expression): ESTree.VariableDeclarator;
     export function ifStatement(test: ESTree.Expression, consequent: ESTree.Statement, alternate?: ESTree.Statement): ESTree.IfStatement;
     export function unaryExpression(operator: ESTree.UnaryOperator, argument: ESTree.Expression): ESTree.UnaryExpression;
     export function objectExpression(properties: ESTree.Property[]): ESTree.ObjectExpression;
