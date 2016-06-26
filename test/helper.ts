@@ -1,6 +1,7 @@
 import { dirname, join, resolve } from 'path';
 import { runInNewContext } from 'vm';
 import { parse, IParseOptions } from 'acorn';
+import { attachComments } from 'estraverse';
 import { generate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
@@ -55,18 +56,22 @@ export class HostMock implements IHost {
   }
 }
 
-const acornOptions: IParseOptions = {
-  ecmaVersion: 7,
-  sourceType: 'module',
-  locations: true,
-  ranges: true,
-  allowHashBang: true
-};
-
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {
+  const comments: any[] = [];
+  const tokens: any[] = [];
+  const acornOptions: IParseOptions = {
+    ecmaVersion: 7,
+    sourceType: 'module',
+    locations: true,
+    ranges: true,
+    allowHashBang: true,
+    onComment: comments,
+    onToken: tokens
+  };
   const ast = parse(input, acornOptions);
+  attachComments(ast, comments, tokens);
   fn(ast);
-  return generate(ast).trim();
+  return generate(ast, {comment: true}).trim();
 }
 
 const defaultSandbox = {
