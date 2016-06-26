@@ -14,7 +14,7 @@ test('commonjs should rewrite require statements', t => {
     var a = require('./dependency');
   `;
   const expected = stripIndent`
-    var a = modules[0]().exports;
+    var a = __paeckchen_require__(0).exports;
   `;
 
   const host = new HostMock({
@@ -32,7 +32,7 @@ test('commonjs should rewrite require statements which are nested inside call ch
     require('./dependency')();
   `;
   const expected = stripIndent`
-    modules[0]().exports();
+    __paeckchen_require__(0).exports();
   `;
 
   const host = new HostMock({

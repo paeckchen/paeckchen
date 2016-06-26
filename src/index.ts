@@ -8,11 +8,11 @@ import { DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
 
-function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
-  return (ast.body[0] as ESTree.VariableDeclaration).declarations[0].init as ESTree.ArrayExpression;
-}
-
 function bundle(argv: minimistNode.ParsedArgs): string {
+  function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
+    return (ast as any).body[2].declarations[0].init;
+  }
+
   if (!argv['entry']) {
     throw new Error('Missing --entry argument');
   }
@@ -20,8 +20,20 @@ function bundle(argv: minimistNode.ParsedArgs): string {
   const host = new DefaultHost();
 
   const paeckchenSource = `
+    var __paeckchen_cache__ = [];
+    function __paeckchen_require__(index) {
+      if (!__paeckchen_cache__[index]) {
+        __paeckchen_cache__[index] = {
+          module: {
+            exports: {}
+          }
+        };
+        modules[index](__paeckchen_cache__[index].module, __paeckchen_cache__[index].module.exports);
+      }
+      return __paeckchen_cache__[index].module;
+    }
     var modules = [];
-    modules[0]();
+    __paeckchen_require__(0);
   `;
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
