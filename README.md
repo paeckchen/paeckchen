@@ -55,9 +55,9 @@ See [Roadmap](#Roadmap) for upcoming stuff.
 paeckchen is under active development, expect the items on this list to move to
 [Features](#features) over time.
 
-* [ ] Separate Command line interface module
-* [ ] Support for file based configuration
-* [ ] Watch mode
+* [ ] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
+* [ ] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
+* [ ] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
 
 ---
 paeckchen is built by KnisterPeter and [contributors](https://github.com/KnisterPeter/paeckchen/graphs/contributors)
