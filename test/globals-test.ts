@@ -43,12 +43,25 @@ test('injectGlobals should define global if not already in scope', t => {
   }, ast, host);
 
   const sandbox: any = {
+    console,
     __paeckchen_require__: function(idx: number): any {
-      return {
-        exports: {
-          isBuffer: function(): void { /*noop*/ }
-        }
-      };
+      if (idx === 0) {
+        // process
+        return {
+          exports: {
+            env: {}
+          }
+        };
+      } else if (idx === 1) {
+        // Buffer
+        return {
+          exports: {
+            Buffer: {
+              isBuffer: function(): void { /*noop*/ }
+            }
+          }
+        };
+      }
     }
   };
   runInNewContext(generate(ast), sandbox);

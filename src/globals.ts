@@ -51,10 +51,13 @@ function injectGlobal(ast: ESTree.Program): void {
   });
 }
 
-function injectProcess(ast: ESTree.Program): void {
+function injectProcess(ast: ESTree.Program, host: IHost): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('process') === null) {
+        const processPath = getModulePath('.', 'process', host);
+        const processIndex = getModuleIndex(processPath);
+
         const body = path.get<ESTree.Statement[]>('body');
         body.get(body.value.length - 1).insertBefore(
           b.variableDeclaration(
@@ -62,19 +65,21 @@ function injectProcess(ast: ESTree.Program): void {
             [
               b.variableDeclarator(
                 b.identifier('process'),
-                b.objectExpression(
-                  [
-                    b.property(
-                      'init',
-                      b.identifier('env'),
-                      b.objectExpression([])
-                    )
-                  ]
+                b.memberExpression(
+                  b.callExpression(
+                    b.identifier('__paeckchen_require__'),
+                    [
+                      b.literal(processIndex)
+                    ]
+                  ),
+                  b.identifier('exports'),
+                  false
                 )
               )
             ]
           )
         );
+        enqueueModule(processPath);
       }
       return false;
     }
@@ -96,13 +101,17 @@ function injectBuffer(ast: ESTree.Program, host: IHost): void {
               b.variableDeclarator(
                 b.identifier('Buffer'),
                 b.memberExpression(
-                  b.callExpression(
-                    b.identifier('__paeckchen_require__'),
-                    [
-                      b.literal(bufferIndex)
-                    ]
+                  b.memberExpression(
+                    b.callExpression(
+                      b.identifier('__paeckchen_require__'),
+                      [
+                        b.literal(bufferIndex)
+                      ]
+                    ),
+                    b.identifier('exports'),
+                    false
                   ),
-                  b.identifier('exports'),
+                  b.identifier('Buffer'),
                   false
                 )
               )
@@ -121,7 +130,7 @@ export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Pro
     injectGlobal(ast);
   }
   if (detectedGlobals.process) {
-    injectProcess(ast);
+    injectProcess(ast, host);
   }
   if (detectedGlobals.buffer) {
     injectBuffer(ast, host);

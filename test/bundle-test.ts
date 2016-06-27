@@ -39,9 +39,11 @@ test('bundle should bundle global dependencies', t => {
       Buffer.isBuffer();
     `,
     [join(process.cwd(), ...'../../node_modules/node-libs-browser/node_modules/buffer/index.js'.split('/'))]: `
-      export function isBuffer() {
-        callme();
-      }
+      export const Buffer = {
+        isBuffer() {
+          callme();
+        }
+      };
     `
   }, '/');
 
