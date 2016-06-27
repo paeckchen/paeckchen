@@ -66,6 +66,7 @@ declare module 'ast-types' {
     export function assignmentExpression(operator: ESTree.AssignmentOperator, left: ESTree.Pattern, right: ESTree.Expression): ESTree.AssignmentExpression;
     export function memberExpression(object: any, property: any, computed: boolean): ESTree.MemberExpression;
     export function callExpression(callee: any, arguments: any[]): ESTree.CallExpression;
+    export function thisExpression(): ESTree.ThisExpression;
     export function functionExpression(id: any, params: any, body: any): ESTree.FunctionExpression;
     export function expressionStatement(expression: any): ESTree.ExpressionStatement;
     export function blockStatement(body: any[]): ESTree.BlockStatement;

@@ -13,6 +13,7 @@ export function bundle(entryPoint: string, host: IHost = new DefaultHost()): str
   }
 
   const detectedGlobals: IDetectedGlobals = {
+    global: false,
     process: false
   };
 
