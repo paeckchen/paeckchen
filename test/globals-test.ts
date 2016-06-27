@@ -40,7 +40,7 @@ test('injectGlobals should define global if not already in scope', t => {
     global: true,
     process: true,
     buffer: true
-  }, ast, host);
+  }, ast, { config: {} as any, host });
 
   const sandbox: any = {
     console,

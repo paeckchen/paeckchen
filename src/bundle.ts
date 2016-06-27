@@ -24,6 +24,11 @@ export interface IConfig {
   watchMode: boolean;
 }
 
+export interface IPaeckchenContext {
+  config: IConfig;
+  host: IHost;
+}
+
 function createConfig(options: IBundleOptions, host: IHost): IConfig {
   const config: IConfig = {} as any;
 
@@ -62,7 +67,10 @@ const paeckchenSource = `
 `;
 
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost()): string {
-  const config = createConfig(options, host);
+  const context: IPaeckchenContext = {
+    config: createConfig(options, host),
+    host
+  };
 
   const detectedGlobals: IDetectedGlobals = {
     global: false,
@@ -71,16 +79,16 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   };
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  const absoluteEntryPath = join(host.cwd(), config.entryPoint);
+  const absoluteEntryPath = join(host.cwd(), context.config.entryPoint);
   // start bundling...
-  enqueueModule(getModulePath('.', absoluteEntryPath, host));
-  while (bundleNextModule(modules, host, detectedGlobals)) {
+  enqueueModule(getModulePath('.', absoluteEntryPath, context));
+  while (bundleNextModule(modules, context, detectedGlobals)) {
     process.stderr.write('.');
   }
   // ... when ready inject globals...
-  injectGlobals(detectedGlobals, paeckchenAst, host);
+  injectGlobals(detectedGlobals, paeckchenAst, context);
   // ... and bundle global dependencies
-  while (bundleNextModule(modules, host, detectedGlobals)) {
+  while (bundleNextModule(modules, context, detectedGlobals)) {
     process.stderr.write('.');
   }
   process.stderr.write('\n');

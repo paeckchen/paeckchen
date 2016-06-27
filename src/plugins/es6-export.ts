@@ -2,7 +2,7 @@ import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 
 import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
-import { IHost } from '../host';
+import { IPaeckchenContext } from '../bundle';
 
 function moduleExportsExpression(id: string): any {
   return b.memberExpression(
@@ -99,11 +99,12 @@ function exportAllKeys(identifier: ESTree.Identifier): ESTree.ExpressionStatemen
   );
 }
 
-export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string, host: IHost): void {
+export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string,
+    context: IPaeckchenContext): void {
   visit(program, {
     visitExportAllDeclaration: function(path: IPath<ESTree.ExportAllDeclaration>): boolean {
       // e.g. export * from './a';
-      const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, host);
+      const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, context);
       const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
       const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
@@ -149,7 +150,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
       } else {
         if (path.node.source) {
           // e.g. export {a as b} from './c';
-          const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, host);
+          const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, context);
           const reexportModuleIndex = getModuleIndex(reexportModuleName);
 
           const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;

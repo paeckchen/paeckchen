@@ -1,7 +1,7 @@
 import { visit, builders as b, IPath } from 'ast-types';
 import { getModulePath } from './module-path';
 import { getModuleIndex, enqueueModule } from './modules';
-import { IHost } from './host';
+import { IPaeckchenContext } from './bundle';
 
 export interface IDetectedGlobals {
   global: boolean;
@@ -51,11 +51,11 @@ function injectGlobal(ast: ESTree.Program): void {
   });
 }
 
-function injectProcess(ast: ESTree.Program, host: IHost): void {
+function injectProcess(ast: ESTree.Program, context: IPaeckchenContext): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('process') === null) {
-        const processPath = getModulePath('.', 'process', host);
+        const processPath = getModulePath('.', 'process', context);
         const processIndex = getModuleIndex(processPath);
 
         const body = path.get<ESTree.Statement[]>('body');
@@ -86,11 +86,11 @@ function injectProcess(ast: ESTree.Program, host: IHost): void {
   });
 }
 
-function injectBuffer(ast: ESTree.Program, host: IHost): void {
+function injectBuffer(ast: ESTree.Program, context: IPaeckchenContext): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('Buffer') === null) {
-        const bufferPath = getModulePath('.', 'buffer', host);
+        const bufferPath = getModulePath('.', 'buffer', context);
         const bufferIndex = getModuleIndex(bufferPath);
 
         const body = path.get<ESTree.Statement[]>('body');
@@ -125,14 +125,15 @@ function injectBuffer(ast: ESTree.Program, host: IHost): void {
   });
 }
 
-export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program, host: IHost): void {
+export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program,
+    context: IPaeckchenContext): void {
   if (detectedGlobals.global) {
     injectGlobal(ast);
   }
   if (detectedGlobals.process) {
-    injectProcess(ast, host);
+    injectProcess(ast, context);
   }
   if (detectedGlobals.buffer) {
-    injectBuffer(ast, host);
+    injectBuffer(ast, context);
   }
 }
