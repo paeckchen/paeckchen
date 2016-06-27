@@ -44,7 +44,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
     index,
     name,
     ast: b.functionExpression(
-      null,
+      b.identifier(`_${index}`),
       [
         b.identifier('module'),
         b.identifier('exports')

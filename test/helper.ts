@@ -31,6 +31,10 @@ export class HostMock implements IHost {
       }, {});
   }
 
+  public cwd(): string {
+    return this.basePath;
+  }
+
   public fileExists(filePath: string): boolean {
     return filePath in this.files;
   }

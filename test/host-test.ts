@@ -7,6 +7,10 @@ test.beforeEach(t => {
   t.context.host = new DefaultHost();
 });
 
+test('DefaultHost#cwd should return the current directory', t => {
+  t.is(t.context.host.cwd(), process.cwd());
+});
+
 test('DefaultHost#fileExists should return true for existing file', t => {
   t.true(t.context.host.fileExists('../../package.json'));
 });
