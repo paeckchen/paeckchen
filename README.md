@@ -11,12 +11,14 @@
 
 ## Rationale
 
-**TL;DR** paeckchen is an incremental, fast and efficient JavaScript module bundler [doing one thing well](https://en.wikipedia.org/wiki/Unix_philosophy#Do_One_Thing_and_Do_It_Well).
+**TL;DR** paeckchen (german for small parcel) is an incremental, fast and efficient JavaScript module bundler
+[doing one thing well](https://en.wikipedia.org/wiki/Unix_philosophy#Do_One_Thing_and_Do_It_Well).
 
-Most JavaScript module bundlers do a lot of things – being plugin pipelines, fulfilling development setup wishes, being development servers and so on. This breadth of features inevitably comes with tradeoffs.
+Most JavaScript module bundlers do a lot of things – being plugin pipelines, fulfilling development setup wishes, being
+development servers and so on. This breadth of features inevitably comes with tradeoffs.
 
-paeckchen on the other hand is designed to do exactly one thing: It bundles your JavaScript modules. This focus allows paeckchen to do its job fast and efficiently.
-
+paeckchen on the other hand is designed to do exactly one thing: It bundles your JavaScript modules. This focus allows
+paeckchen to do its job fast and efficiently.
 
 ## Installation
 
@@ -34,7 +36,7 @@ stay tuned
 
 ## API documentation
 
-```
+```javascript
 stay tuned
 ```
 
