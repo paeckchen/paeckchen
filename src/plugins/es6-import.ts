@@ -63,12 +63,10 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
               b.variableDeclarator(
                 tempIdentifier,
                 b.callExpression(
-                  b.memberExpression(
-                    b.identifier('modules'),
-                    b.identifier(importModuleIndex.toString()),
-                    true
-                  ),
-                  []
+                  b.identifier('__paeckchen_require__'),
+                  [
+                    b.literal(importModuleIndex)
+                  ]
                 )
               ),
               ...imports

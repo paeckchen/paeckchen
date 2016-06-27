@@ -13,9 +13,10 @@ function rewriteExports(input: string, files: any = {}): string {
   });
 }
 
-function executeExports(input: string, files: any = {}, settings: any = {}): virtualModuleResult {
+function executeExports(input: string, files: any = {}, settings: any = {},
+    requireResults: any[] = []): virtualModuleResult {
   const processed = rewriteExports(input, files);
-  return virtualModule(processed, settings);
+  return virtualModule(processed, settings, requireResults);
 }
 
 test.beforeEach(reset);
@@ -108,9 +109,7 @@ test('es6-export plugin should rewrite named reexports correctly', t => {
 
   const actual = executeExports(input, {
     'dependency.js': ''
-  }, {
-    modules: [() => exported]
-  });
+  }, {}, [exported]);
   t.deepEqual(actual, expected);
 });
 
@@ -128,7 +127,8 @@ test('es6-export plugin should rewrite export-all declarations correctly', t => 
 
   const actual = executeExports(input,
     {'dependency.js': ''},
-    {modules: [() => expected]}
+    {},
+    [expected]
   );
 
   t.deepEqual(actual, expected.exports);

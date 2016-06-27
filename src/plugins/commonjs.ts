@@ -18,12 +18,10 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
           path.replace(
             b.memberExpression(
               b.callExpression(
-                b.memberExpression(
-                  b.identifier('modules'),
-                  b.identifier(moduleIndex.toString()),
-                  true
-                ),
-                []
+                b.identifier('__paeckchen_require__'),
+                [
+                  b.literal(moduleIndex)
+                ]
               ),
               b.identifier('exports'),
               false

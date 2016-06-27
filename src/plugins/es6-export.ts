@@ -26,12 +26,10 @@ function importModule(identifier: ESTree.Identifier, moduleIndex: number): ESTre
       b.variableDeclarator(
         identifier,
         b.callExpression(
-          b.memberExpression(
-            b.identifier('modules'),
-            b.identifier(moduleIndex.toString()),
-            true
-          ),
-          []
+          b.identifier('__paeckchen_require__'),
+          [
+            b.literal(moduleIndex)
+          ]
         )
       )
     ]
@@ -182,12 +180,10 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
                 b.variableDeclarator(
                   tempIdentifier,
                   b.callExpression(
-                    b.memberExpression(
-                      b.identifier('modules'),
-                      b.identifier(reexportModuleIndex.toString()),
-                      true
-                    ),
-                    []
+                    b.identifier('__paeckchen_require__'),
+                    [
+                      b.literal(reexportModuleIndex)
+                    ]
                   )
                 )
               ]
