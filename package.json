@@ -4,9 +4,8 @@
   "description": "",
   "main": "dist/src/index.js",
   "files": [
-    "dist",
-    "index.d.ts",
-    "src"
+    "dist/src",
+    "index.d.ts"
   ],
   "scripts": {
     "#postinstall": "Remove bundled typings to use patched version without Promise support",
