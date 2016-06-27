@@ -9,14 +9,11 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
     visitIdentifier: function(path: IPath<ESTree.Identifier>): void {
       if (path.node.name === '__filename' && path.scope.lookup('__filename') === null) {
         detectedFilename = true;
-        if (detectedFilename && detectedDirname) {
-          this.abort();
-        }
       } else if (path.node.name === '__dirname' && path.scope.lookup('__dirname') === null) {
         detectedDirname = true;
-        if (detectedFilename && detectedDirname) {
-          this.abort();
-        }
+      }
+      if (detectedFilename && detectedDirname) {
+        this.abort();
       }
       this.traverse(path);
     }
