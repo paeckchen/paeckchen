@@ -1,7 +1,7 @@
 import test from 'ava';
 import { visit } from 'ast-types';
 
-import { HostMock } from './helper';
+import { HostMock, generate } from './helper';
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
 
 test.beforeEach(() => {
@@ -177,4 +177,25 @@ test('bundleNextModule should bundle an error for unavailable modules', t => {
     }
   });
   t.true(throws);
+});
+
+test('bundleNextModule should remove sourceMapping comments', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const globals = {
+    global: false,
+    process: false,
+    buffer: false
+  };
+  const host = new HostMock({
+    '/some/mod.js': `
+      var a = 0;
+      //# sourceMappingURL=foobar.js.map
+    `
+  });
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule(modules, host, globals, plugins);
+
+  t.is(generate(modules[0]).indexOf('# sourceMappingURL='), -1);
 });
