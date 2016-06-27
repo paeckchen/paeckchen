@@ -19,7 +19,7 @@ export function checkProcess(ast: ESTree.Program): boolean {
 }
 
 export function checkGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
-  detectedGlobals.process = checkProcess(ast);
+  detectedGlobals.process = detectedGlobals.process || checkProcess(ast);
 }
 
 export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
