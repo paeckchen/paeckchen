@@ -27,7 +27,7 @@ test('bundleNextModule with empty queue return false', t => {
   const plugins = {};
   const host = new HostMock({});
 
-  t.false(bundleNextModule(modules, host, plugins));
+  t.false(bundleNextModule(modules, host, {process: false}, plugins));
 });
 
 test('bundleNextModule should wrap a module', t => {
@@ -38,7 +38,7 @@ test('bundleNextModule should wrap a module', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
 });
@@ -55,7 +55,7 @@ test('bundleNextModule should call all given plugins', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
 
   t.deepEqual(pluginCalls, 2);
 });
@@ -68,11 +68,11 @@ test('bundleNextModule should not rebundle modules if already up to date', t => 
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
   const firstBundled = modules[0];
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
 
   t.is(modules[0], firstBundled);
 });
@@ -85,12 +85,12 @@ test('bundleNextModule should rebundle modules if updated', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
   const firstBundled = modules[0];
 
   updateModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
 
   t.not(modules[0], firstBundled);
 });
@@ -104,8 +104,8 @@ test('enqueueModule should not accept duplicate entries', t => {
 
   enqueueModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, plugins);
-  t.false(bundleNextModule(modules, host, plugins));
+  bundleNextModule(modules, host, {process: false}, plugins);
+  t.false(bundleNextModule(modules, host, {process: false}, plugins));
 });
 
 test('bundleNextModule should throw if an error occurred', t => {
@@ -117,7 +117,7 @@ test('bundleNextModule should throw if an error occurred', t => {
 
   enqueueModule('/some/mod.js');
   t.throws(() => {
-    bundleNextModule(modules, host, plugins);
+    bundleNextModule(modules, host, {process: false}, plugins);
   });
 });
 
@@ -127,7 +127,7 @@ test('bundleNextModule should bundle an error for unavailable modules', t => {
   const host = new HostMock({});
 
   enqueueModule('fs');
-  bundleNextModule(modules, host, plugins);
+  bundleNextModule(modules, host, {process: false}, plugins);
 
   let throws = false;
   visit(modules[0], {
