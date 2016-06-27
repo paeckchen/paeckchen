@@ -8,7 +8,7 @@ function rewriteExports(input: string, files: any = {}): string {
   const host = new HostMock(files, '/cwd');
 
   return parseAndProcess(input, ast => {
-    return rewriteGlobalLocals(ast, '/cwd/path/to/name', host);
+    return rewriteGlobalLocals(ast, '/cwd/path/to/name', { config: {} as any, host });
   });
 }
 

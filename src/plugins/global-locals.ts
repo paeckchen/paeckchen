@@ -1,8 +1,8 @@
 import { visit, builders as b, IPath } from 'ast-types';
 
-import { IHost } from '../host';
+import { IPaeckchenContext } from '../bundle';
 
-export function rewriteGlobalLocals(program: ESTree.Program, currentModule: string, host: IHost): void {
+export function rewriteGlobalLocals(program: ESTree.Program, currentModule: string, context: IPaeckchenContext): void {
   let detectedFilename = false;
   let detectedDirname = false;
   visit(program, {
@@ -34,8 +34,8 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
             )
           ),
           [
-            b.literal(currentModule.substring(host.cwd().length)),
-            b.literal(host.dirname(currentModule).substring(host.cwd().length))
+            b.literal(currentModule.substring(context.host.cwd().length)),
+            b.literal(context.host.dirname(currentModule).substring(context.host.cwd().length))
           ]
         )
       )

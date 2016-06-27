@@ -1,8 +1,8 @@
 import { visit, IPath } from 'ast-types';
 
-import { IHost } from '../host';
+import { IPaeckchenContext } from '../bundle';
 
-export function astFixes(program: ESTree.Program, currentModule: string, host: IHost): void {
+export function astFixes(program: ESTree.Program, currentModule: string, context: IPaeckchenContext): void {
   visit(program, {
     visitReturnStatement(path: IPath<ESTree.ReturnStatement>): void {
       if (path.node.argument && (path.node.argument as any).leadingComments) {
