@@ -17,11 +17,15 @@ declare module 'ast-types' {
   export interface IPath<T> {
     node: T;
     scope: IScope;
-    get<CT>(...name: (string|number)[]): IPath<CT>;
+    get<CT>(...name: (string|number)[]): INodePath<CT>;
     replace(...newNode: any[]): void;
     insertBefore(newNode: any): void;
     insertAfter(newNode: any): void;
     prune(): void;
+  }
+
+  export interface INodePath<T> extends IPath<T> {
+    value: T;
   }
 
   export function visit(ast: ESTree.Node, visitors: any): void;
@@ -69,7 +73,7 @@ declare module 'ast-types' {
     export function thisExpression(): ESTree.ThisExpression;
     export function functionExpression(id: any, params: any, body: any): ESTree.FunctionExpression;
     export function expressionStatement(expression: any): ESTree.ExpressionStatement;
-    export function blockStatement(body: any[]): ESTree.BlockStatement;
+    export function blockStatement(body: ESTree.Statement[]): ESTree.BlockStatement;
     export function throwStatement(argument: ESTree.Expression): ESTree.ThrowStatement;
     export function variableDeclaration(kind: 'var'|'let'|'const', declarations: any[]): ESTree.VariableDeclaration;
     export function variableDeclarator(id: ESTree.Pattern, init?: ESTree.Expression): ESTree.VariableDeclarator;

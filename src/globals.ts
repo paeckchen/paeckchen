@@ -1,5 +1,7 @@
 import { visit, builders as b, IPath } from 'ast-types';
+import { getModulePath } from './module-path';
 import { getModuleIndex, enqueueModule } from './modules';
+import { IHost } from './host';
 
 export interface IDetectedGlobals {
   global: boolean;
@@ -31,7 +33,8 @@ function injectGlobal(ast: ESTree.Program): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('global') === null) {
-        path.get('body', 0).insertBefore(
+        const body = path.get<ESTree.Statement[]>('body');
+        body.get(body.value.length - 1).insertBefore(
           b.variableDeclaration(
             'var',
             [
@@ -52,7 +55,8 @@ function injectProcess(ast: ESTree.Program): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('process') === null) {
-        path.get('body', 0).insertBefore(
+        const body = path.get<ESTree.Statement[]>('body');
+        body.get(body.value.length - 1).insertBefore(
           b.variableDeclaration(
             'var',
             [
@@ -77,11 +81,15 @@ function injectProcess(ast: ESTree.Program): void {
   });
 }
 
-function injectBuffer(ast: ESTree.Program): void {
+function injectBuffer(ast: ESTree.Program, host: IHost): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('Buffer') === null) {
-        path.get('body', 0).insertBefore(
+        const bufferPath = getModulePath('.', 'buffer', host);
+        const bufferIndex = getModuleIndex(bufferPath);
+
+        const body = path.get<ESTree.Statement[]>('body');
+        body.get(body.value.length - 1).insertBefore(
           b.variableDeclaration(
             'var',
             [
@@ -91,9 +99,7 @@ function injectBuffer(ast: ESTree.Program): void {
                   b.callExpression(
                     b.identifier('__paeckchen_require__'),
                     [
-                      b.literal(
-                        getModuleIndex('buffer')
-                      )
+                      b.literal(bufferIndex)
                     ]
                   ),
                   b.identifier('exports'),
@@ -103,14 +109,14 @@ function injectBuffer(ast: ESTree.Program): void {
             ]
           )
         );
-        enqueueModule('buffer');
+        enqueueModule(bufferPath);
       }
       return false;
     }
   });
 }
 
-export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
+export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program, host: IHost): void {
   if (detectedGlobals.global) {
     injectGlobal(ast);
   }
@@ -118,6 +124,6 @@ export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Pro
     injectProcess(ast);
   }
   if (detectedGlobals.buffer) {
-    injectBuffer(ast);
+    injectBuffer(ast, host);
   }
 }

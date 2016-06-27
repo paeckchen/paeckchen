@@ -21,7 +21,7 @@ export function bundle(entryPoint: string, host: IHost = new DefaultHost()): str
   const paeckchenSource = `
     var __paeckchen_cache__ = [];
     function __paeckchen_require__(index) {
-      if (!__paeckchen_cache__[index]) {
+      if (!(index in __paeckchen_cache__)) {
         __paeckchen_cache__[index] = {
           module: {
             exports: {}
@@ -37,12 +37,18 @@ export function bundle(entryPoint: string, host: IHost = new DefaultHost()): str
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(process.cwd(), entryPoint);
+  // start bundling...
   enqueueModule(getModulePath('.', absoluteEntryPath, host));
   while (bundleNextModule(modules, host, detectedGlobals)) {
     process.stderr.write('.');
   }
+  // ... when ready inject globals...
+  injectGlobals(detectedGlobals, paeckchenAst, host);
+  // ... and bundle global dependencies
+  while (bundleNextModule(modules, host, detectedGlobals)) {
+    process.stderr.write('.');
+  }
   process.stderr.write('\n');
-  injectGlobals(detectedGlobals, paeckchenAst);
 
   return generate(paeckchenAst, {
     comment: true
