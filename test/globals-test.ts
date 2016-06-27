@@ -25,15 +25,26 @@ test('injectGlobals should define global if not already in scope', t => {
   const ast = parse(`
     global.check = true;
     process.env.TEST = true;
+    bufferCheck = Buffer.isBuffer;
   `);
 
   injectGlobals({
     global: true,
-    process: true
+    process: true,
+    buffer: true
   }, ast);
 
-  const sandbox: any = {};
+  const sandbox: any = {
+    __paeckchen_require__: function(idx: number): any {
+      return {
+        exports: {
+          isBuffer: function(): void { /*noop*/ }
+        }
+      };
+    }
+  };
   runInNewContext(generate(ast), sandbox);
   t.true(sandbox.global.check);
   t.true(sandbox.process.env.TEST);
+  t.is(typeof sandbox.bufferCheck, 'function');
 });

@@ -27,7 +27,8 @@ test('bundleNextModule with empty queue return false', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({});
 
@@ -39,7 +40,8 @@ test('bundleNextModule should wrap a module', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
@@ -60,7 +62,8 @@ test('bundleNextModule should call all given plugins', t => {
   };
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     '/some/mod.js': 'console.log("test");'
@@ -77,7 +80,8 @@ test('bundleNextModule should not rebundle modules if already up to date', t => 
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
@@ -98,7 +102,8 @@ test('bundleNextModule should rebundle modules if updated', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
@@ -120,7 +125,8 @@ test('enqueueModule should not accept duplicate entries', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
@@ -137,7 +143,8 @@ test('bundleNextModule should throw if an error occurred', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     '/some/mod.js': '/'
@@ -154,7 +161,8 @@ test('bundleNextModule should bundle an error for unavailable modules', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({});
 

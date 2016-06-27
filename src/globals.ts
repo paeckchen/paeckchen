@@ -1,8 +1,10 @@
 import { visit, builders as b, IPath } from 'ast-types';
+import { getModuleIndex, enqueueModule } from './modules';
 
 export interface IDetectedGlobals {
   global: boolean;
   process: boolean;
+  buffer: boolean;
 };
 
 export function checkGlobalIdentifier(name: string, ast: ESTree.Program): boolean {
@@ -22,6 +24,7 @@ export function checkGlobalIdentifier(name: string, ast: ESTree.Program): boolea
 export function checkGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
   detectedGlobals.global = detectedGlobals.global || checkGlobalIdentifier('global', ast);
   detectedGlobals.process = detectedGlobals.process || checkGlobalIdentifier('process', ast);
+  detectedGlobals.buffer = detectedGlobals.buffer || checkGlobalIdentifier('Buffer', ast);
 }
 
 function injectGlobal(ast: ESTree.Program): void {
@@ -74,11 +77,47 @@ function injectProcess(ast: ESTree.Program): void {
   });
 }
 
+function injectBuffer(ast: ESTree.Program): void {
+  visit(ast, {
+    visitProgram: function(path: IPath<ESTree.Program>): boolean {
+      if (path.scope.lookup('Buffer') === null) {
+        path.get('body', 0).insertBefore(
+          b.variableDeclaration(
+            'var',
+            [
+              b.variableDeclarator(
+                b.identifier('Buffer'),
+                b.memberExpression(
+                  b.callExpression(
+                    b.identifier('__paeckchen_require__'),
+                    [
+                      b.literal(
+                        getModuleIndex('buffer')
+                      )
+                    ]
+                  ),
+                  b.identifier('exports'),
+                  false
+                )
+              )
+            ]
+          )
+        );
+        enqueueModule('buffer');
+      }
+      return false;
+    }
+  });
+}
+
 export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
   if (detectedGlobals.global) {
     injectGlobal(ast);
   }
   if (detectedGlobals.process) {
     injectProcess(ast);
+  }
+  if (detectedGlobals.buffer) {
+    injectBuffer(ast);
   }
 }
