@@ -22,7 +22,7 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
     `
   });
 
-  const bundled = bundle('entry-point.js', host);
+  const bundled = bundle({entryPoint: 'entry-point.js'}, host);
 
   let called = false;
   virtualModule(bundled, {
@@ -47,11 +47,34 @@ test('bundle should bundle global dependencies', t => {
     `
   }, '/');
 
-  const bundled = bundle('/entry-point.js', host);
+  const bundled = bundle({entryPoint: '/entry-point.js'}, host);
 
   let called = false;
   virtualModule(bundled, {
     callme: function(): void {
+      called = true;
+    }
+  });
+  t.true(called);
+});
+
+test('bundle should check for a config-file', t => {
+  const host = new HostMock({
+    '/entry-point.js': `
+      callback();
+    `,
+    '/paeckchen.json': `
+      {
+        "entry": "./entry-point"
+      }
+    `
+  }, '/');
+
+  const bundled = bundle({}, host);
+
+  let called = false;
+  virtualModule(bundled, {
+    callback: function(): void {
       called = true;
     }
   });
