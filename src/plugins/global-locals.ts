@@ -24,21 +24,23 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
 
   if (detectedFilename || detectedDirname) {
     program.body = [
-      b.callExpression(
-        b.functionExpression(
-          null,
+      b.expressionStatement(
+        b.callExpression(
+          b.functionExpression(
+            null,
+            [
+              b.identifier('__filename'),
+              b.identifier('__dirname')
+            ],
+            b.blockStatement(
+              program.body
+            )
+          ),
           [
-            b.identifier('__filename'),
-            b.identifier('__dirname')
-          ],
-          b.blockStatement(
-            program.body
-          )
-        ),
-        [
-          b.literal(currentModule.substring(host.cwd().length)),
-          b.literal(host.dirname(currentModule).substring(host.cwd().length))
-        ]
+            b.literal(currentModule.substring(host.cwd().length)),
+            b.literal(host.dirname(currentModule).substring(host.cwd().length))
+          ]
+        )
       )
     ];
   }
