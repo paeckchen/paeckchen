@@ -103,7 +103,9 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
         onComment: comments,
         onToken: tokens
       });
-      attachComments(moduleAst, comments, tokens);
+      // only attach comments which are not sourceMaps
+      attachComments(moduleAst,
+        comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
 
       // ... check for global features...
       checkGlobals(detectedGlobals, moduleAst);
