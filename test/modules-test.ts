@@ -25,20 +25,28 @@ test.beforeEach(() => {
 test('bundleNextModule with empty queue return false', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({});
 
-  t.false(bundleNextModule(modules, host, {process: false}, plugins));
+  t.false(bundleNextModule(modules, host, globals, plugins));
 });
 
 test('bundleNextModule should wrap a module', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
 });
@@ -50,12 +58,16 @@ test('bundleNextModule should call all given plugins', t => {
     a: function(): void { pluginCalls++; },
     b: function(): void { pluginCalls++; }
   };
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     '/some/mod.js': 'console.log("test");'
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
 
   t.deepEqual(pluginCalls, 2);
 });
@@ -63,16 +75,20 @@ test('bundleNextModule should call all given plugins', t => {
 test('bundleNextModule should not rebundle modules if already up to date', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
   const firstBundled = modules[0];
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
 
   t.is(modules[0], firstBundled);
 });
@@ -80,17 +96,21 @@ test('bundleNextModule should not rebundle modules if already up to date', t => 
 test('bundleNextModule should rebundle modules if updated', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
   const firstBundled = modules[0];
 
   updateModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
 
   t.not(modules[0], firstBundled);
 });
@@ -98,36 +118,48 @@ test('bundleNextModule should rebundle modules if updated', t => {
 test('enqueueModule should not accept duplicate entries', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   }, '/');
 
   enqueueModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, host, {process: false}, plugins);
-  t.false(bundleNextModule(modules, host, {process: false}, plugins));
+  bundleNextModule(modules, host, globals, plugins);
+  t.false(bundleNextModule(modules, host, globals, plugins));
 });
 
 test('bundleNextModule should throw if an error occurred', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({
     '/some/mod.js': '/'
   });
 
   enqueueModule('/some/mod.js');
   t.throws(() => {
-    bundleNextModule(modules, host, {process: false}, plugins);
+    bundleNextModule(modules, host, globals, plugins);
   });
 });
 
 test('bundleNextModule should bundle an error for unavailable modules', t => {
   const modules: any[] = [];
   const plugins = {};
+  const globals = {
+    global: false,
+    process: false
+  };
   const host = new HostMock({});
 
   enqueueModule('fs');
-  bundleNextModule(modules, host, {process: false}, plugins);
+  bundleNextModule(modules, host, globals, plugins);
 
   let throws = false;
   visit(modules[0], {
