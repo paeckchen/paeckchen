@@ -2,7 +2,7 @@ import { parse } from 'acorn';
 import { attachComments } from 'estraverse';
 import { builders as b } from 'ast-types';
 
-import { IHost } from './host';
+import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
 import { checkGlobals, IDetectedGlobals } from './globals';
 
@@ -64,17 +64,17 @@ export function enqueueModule(modulePath: string): void {
 }
 
 export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, detectedGlobals: IDetectedGlobals, plugins: any = defaultPlugins): boolean {
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any = defaultPlugins): boolean {
   if (moduleBundleQueue.length === 0) {
     return false;
   }
   const modulePath = moduleBundleQueue.shift();
-  wrapModule(modulePath, modules, host, detectedGlobals, plugins);
+  wrapModule(modulePath, modules, context, detectedGlobals, plugins);
   return true;
 }
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    host: IHost, detectedGlobals: IDetectedGlobals, plugins: any): void {
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any): void {
   // Prefill module indices
   getModuleIndex(modulePath);
   if (wrappedModules[modulePath].ast !== undefined) {
@@ -84,7 +84,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
 
   try {
     let moduleAst: ESTree.Program;
-    if (!host.fileExists(modulePath)) {
+    if (!context.host.fileExists(modulePath)) {
       moduleAst = b.program([
         b.throwStatement(
           b.literal(`Module ${modulePath} not found`)
@@ -94,7 +94,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
       // parse...
       const comments: any[] = [];
       const tokens: any[] = [];
-      moduleAst = parse(host.readFile(modulePath).toString(), {
+      moduleAst = parse(context.host.readFile(modulePath).toString(), {
         ecmaVersion: 7,
         sourceType: 'module',
         locations: true,
@@ -112,7 +112,7 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
 
       // ... and rewrite ast
       Object.keys(plugins).forEach(plugin => {
-        plugins[plugin](moduleAst, modulePath, host);
+        plugins[plugin](moduleAst, modulePath, context);
       });
     }
 

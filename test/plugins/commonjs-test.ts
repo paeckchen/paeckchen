@@ -22,7 +22,10 @@ test('commonjs should rewrite require statements', t => {
   });
 
   const actual = parseAndProcess(input,
-    ast => rewriteRequireStatements(ast, 'name', host));
+    ast => rewriteRequireStatements(ast, 'name', {
+      config: {} as any,
+      host
+    }));
 
   t.is(actual, expected);
 });
@@ -40,7 +43,10 @@ test('commonjs should rewrite require statements which are nested inside call ch
   });
 
   const actual = parseAndProcess(input,
-    ast => rewriteRequireStatements(ast, 'name', host));
+    ast => rewriteRequireStatements(ast, 'name', {
+      config: {} as any,
+      host
+    }));
 
   t.is(actual, expected);
 });

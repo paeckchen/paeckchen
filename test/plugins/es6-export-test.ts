@@ -9,7 +9,10 @@ function rewriteExports(input: string, files: any = {}): string {
   const host = new HostMock(files);
 
   return parseAndProcess(input, ast => {
-    return rewriteExportNamedDeclaration(ast, 'name', host);
+    return rewriteExportNamedDeclaration(ast, 'name', {
+      config: {} as any,
+      host
+    });
   });
 }
 
