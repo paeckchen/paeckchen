@@ -36,7 +36,7 @@ export function bundle(entryPoint: string, host: IHost = new DefaultHost()): str
   `;
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  const absoluteEntryPath = join(process.cwd(), entryPoint);
+  const absoluteEntryPath = join(host.cwd(), entryPoint);
   // start bundling...
   enqueueModule(getModulePath('.', absoluteEntryPath, host));
   while (bundleNextModule(modules, host, detectedGlobals)) {

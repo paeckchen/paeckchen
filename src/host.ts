@@ -4,6 +4,7 @@ import { join, dirname, sep } from 'path';
 export interface IHost {
   pathSep: string;
 
+  cwd(): string;
   fileExists(path: string): boolean;
   isFile(path: string): boolean;
   readFile(path: string): string;
@@ -12,6 +13,10 @@ export interface IHost {
 }
 
 export class DefaultHost implements IHost {
+  public cwd(): string {
+    return process.cwd();
+  }
+
   public fileExists(path: string): boolean {
     return existsSync(path);
   }
