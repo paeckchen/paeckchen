@@ -85,9 +85,11 @@ const defaultSandbox = {
 export type virtualModuleResult = {[name: string]: any};
 export function virtualModule(code: string, optionsSandbox = {}, requireResults: any[] = []): virtualModuleResult {
   const sandbox: any = merge({}, defaultSandbox, optionsSandbox);
-  sandbox.__paeckchen_require__ = function(idx: number): any {
-    return requireResults[idx];
-  };
+  if (requireResults.length > 0) {
+    sandbox.__paeckchen_require__ = function(idx: number): any {
+      return requireResults[idx];
+    };
+  }
   runInNewContext(code, sandbox);
   return sandbox.module.exports;
 }
