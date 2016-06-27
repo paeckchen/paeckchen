@@ -184,7 +184,8 @@ test('bundleNextModule should remove sourceMapping comments', t => {
   const plugins = {};
   const globals = {
     global: false,
-    process: false
+    process: false,
+    buffer: false
   };
   const host = new HostMock({
     '/some/mod.js': `
