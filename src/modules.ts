@@ -38,40 +38,20 @@ export function updateModule(moduleName: string): void {
 }
 
 function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedModule {
-  function getWrapperBlock(ast: any): ESTree.BlockStatement {
-    return (ast as any).body.body[0].consequent.body[1].expression.callee.body;
-  }
-
   const index = getModuleIndex(name);
-  // TODO: Add relative path as comment
-  const wrapperSource = `
-    // ${name}
-    function _${index}() {
-      if (!_${index}.module) {
-        _${index}.module = {
-          exports: {}
-        };
-        (function(module, exports) {})(_${index}.module, _${index}.module.exports);
-      }
-      return _${index}.module;
-    }
-  `;
-  const comments: any[] = [];
-  const tokens: any[] = [];
-  const wrapperAst = parse(wrapperSource, {
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    onComment: comments,
-    onToken: tokens
-  }).body[0];
-  attachComments(wrapperAst, comments, tokens);
-  getWrapperBlock(wrapperAst).body = moduleAst.body;
-
   return {
     index,
     name,
-    ast: wrapperAst
+    ast: b.functionExpression(
+      null,
+      [
+        b.identifier('module'),
+        b.identifier('exports')
+      ],
+      b.blockStatement(
+        moduleAst.body
+      )
+    )
   };
 }
 

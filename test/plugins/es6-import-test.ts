@@ -13,9 +13,10 @@ function rewriteImports(input: string, files: any = {}): string {
   });
 }
 
-function executeImports(input: string, files: any = {}, settings: any = {}): virtualModuleResult {
+function executeImports(input: string, files: any = {}, settings: any = {},
+    requireResults: any[] = []): virtualModuleResult {
   const processed = rewriteImports(input, files);
-  return virtualModule(processed, settings);
+  return virtualModule(processed, settings, requireResults);
 }
 
 test.beforeEach(reset);
@@ -48,9 +49,7 @@ test('es6-import plugin should rewrite import specifiers correctly', t => {
 
   const actual = executeImports(input, {
     './bar.js': ''
-  }, {
-    modules: [() => exported]
-  });
+  }, {}, [exported]);
 
   t.deepEqual(actual, expected);
 });
@@ -73,9 +72,7 @@ test('es6-import plugin should rewrite default import specifiers correctly', t =
 
   const actual = executeImports(input, {
     './bar.js': ''
-  }, {
-    modules: [() => exported]
-  });
+  }, {}, [exported]);
 
   t.deepEqual(actual, expected);
 });
@@ -97,9 +94,7 @@ test('es6-import plugin should rewrite namespace import specifiers correctly', t
 
   const actual = executeImports(input, {
     './bar.js': ''
-  }, {
-    modules: [() => exported]
-  });
+  }, {}, [exported]);
 
   t.deepEqual(actual, expected);
 });
