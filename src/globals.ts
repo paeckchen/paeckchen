@@ -24,7 +24,7 @@ export function checkGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Prog
   detectedGlobals.process = detectedGlobals.process || checkGlobalIdentifier('process', ast);
 }
 
-export function injectGlobal(ast: ESTree.Program): void {
+function injectGlobal(ast: ESTree.Program): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('global') === null) {
@@ -45,7 +45,7 @@ export function injectGlobal(ast: ESTree.Program): void {
   });
 }
 
-export function injectProcess(ast: ESTree.Program): void {
+function injectProcess(ast: ESTree.Program): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('process') === null) {
