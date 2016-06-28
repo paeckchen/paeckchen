@@ -84,8 +84,8 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
   config.input.source = getSource(options.source || configFile.input && configFile.input.source || 'es2015');
   config.output = undefined;
   config.output = {} as any;
-  config.output.folder = options.outputDirectory || config.output.folder || host.cwd();
-  config.output.file = options.outputFile || config.output.file || 'paeckchen.js';
+  config.output.folder = options.outputDirectory || configFile.output && configFile.output.folder || host.cwd();
+  config.output.file = options.outputFile || configFile.output && configFile.output.file || 'paeckchen.js';
   config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime);
   config.aliases = getAliases(options.alias, configFile.aliases);
   config.watchMode = options.watchMode || configFile.watchMode || false;
