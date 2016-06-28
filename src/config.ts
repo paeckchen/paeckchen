@@ -4,7 +4,12 @@ import { IHost } from './host';
 export enum SourceSpec {
   ES5,
   ES2015
-};
+}
+
+export enum Runtime {
+  browser,
+  node
+}
 
 export interface IConfig {
   entryPoint: string;
@@ -12,6 +17,7 @@ export interface IConfig {
   output: {
     folder: string;
     file: string;
+    runtime: Runtime;
   };
   aliases: {[name: string]: string};
   watchMode: boolean;
@@ -26,6 +32,15 @@ function getSource(input: SourceOptions): SourceSpec {
       return SourceSpec.ES2015;
   }
   throw new Error(`Invalid source option ${input}`);
+}
+
+function getRuntime(input: string): Runtime {
+  switch (input) {
+    case 'node':
+      return Runtime.node;
+    default:
+      return Runtime.browser;
+  }
 }
 
 function getAliases(list: string|string[], config: {[name: string]: string}): {[name: string]: string} {
@@ -65,11 +80,10 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
   config.entryPoint = options.entryPoint || configFile.entry || undefined;
   config.source = getSource(options.source || configFile.source || 'es2015');
   config.output = undefined;
-  if (options.outputDirectory || options.outputFile || configFile.output) {
-    config.output = {} as any;
-    config.output.folder = options.outputDirectory || config.output.folder || __dirname;
-    config.output.file = options.outputFile || config.output.file || 'paeckchen.js';
-  }
+  config.output = {} as any;
+  config.output.folder = options.outputDirectory || config.output.folder || host.cwd();
+  config.output.file = options.outputFile || config.output.file || 'paeckchen.js';
+  config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime);
   config.aliases = getAliases(options.alias, configFile.aliases);
   config.watchMode = options.watchMode || configFile.watchMode || false;
 

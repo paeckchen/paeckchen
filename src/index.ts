@@ -6,7 +6,7 @@ import { bundle } from './bundle';
 // TODO: create config file
 // TODO: add watch mode
 const argv = minimist(process.argv.slice(2), {
-  string: ['config', 'entry', 'source', 'alias'],
+  string: ['config', 'entry', 'source', 'alias', 'runtime'],
   boolean: ['watch'],
   default: {
     source: 'es2015',
