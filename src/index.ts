@@ -16,11 +16,7 @@ const argv = minimist(process.argv.slice(2), {
     'runtime',
     'alias'
   ],
-  boolean: ['watch'],
-  default: {
-    source: 'es2015',
-    watch: false
-  }
+  boolean: ['watch']
 });
 
 const startTime = new Date().getTime();
