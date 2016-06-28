@@ -13,7 +13,8 @@ test('createConfig should return the config defaults', t => {
   t.deepEqual(config, {
     entryPoint: undefined,
     source: SourceSpec.ES2015,
-    watchMode: false
+    watchMode: false,
+    output: undefined
   } as IConfig);
 });
 
@@ -65,4 +66,24 @@ test('createConfig should throw on invalid config file', t => {
   t.throws(() => {
     createConfig({}, host);
   });
+});
+
+test('createConfig should prefer output directory option', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"folder": "foo"}}'
+  }, '/');
+
+  const config = createConfig({outputDirectory: 'bar'}, host);
+
+  t.is(config.output.folder, 'bar');
+});
+
+test('createConfig should prefer output file option', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"file": "foo"}}'
+  }, '/');
+
+  const config = createConfig({outputFile: 'bar'}, host);
+
+  t.is(config.output.file, 'bar');
 });

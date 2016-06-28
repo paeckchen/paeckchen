@@ -17,6 +17,8 @@ export interface IBundleOptions {
   configFile?: string;
   watchMode?: boolean;
   source?: SourceOptions;
+  outputDirectory?: string;
+  outputFile?: string;
 }
 
 export interface IPaeckchenContext {

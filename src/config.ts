@@ -9,6 +9,10 @@ export enum SourceSpec {
 export interface IConfig {
   entryPoint: string;
   source: SourceSpec;
+  output: {
+    folder: string;
+    file: string;
+  };
   watchMode: boolean;
 }
 
@@ -36,9 +40,15 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
     }
   }
 
-  config.entryPoint = options.entryPoint || configFile.entry;
+  config.entryPoint = options.entryPoint || configFile.entry || undefined;
   config.source = getSource(options.source || configFile.source || 'es2015');
   config.watchMode = options.watchMode || configFile.watchMode || false;
+  config.output = undefined;
+  if (options.outputDirectory || options.outputFile || configFile.output) {
+    config.output = {} as any;
+    config.output.folder = options.outputDirectory || config.output.folder || __dirname;
+    config.output.file = options.outputFile || config.output.file || 'paeckchen.js';
+  }
 
   return config;
 }
