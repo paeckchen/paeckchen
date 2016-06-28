@@ -37,6 +37,16 @@ test('createConfig should fallback to entry point of config', t => {
   t.is(config.entryPoint, 'config');
 });
 
+test('createConfig should prefer source level of options', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"source": "es2015"}'
+  }, '/');
+
+  const config = createConfig({source: 'es5'}, host);
+
+  t.is(config.source, SourceSpec.ES5);
+});
+
 test('createConfig should throw on invalid source value', t => {
   const host = new HostMock({
     '/paeckchen.json': '{"source": "abc"}'
