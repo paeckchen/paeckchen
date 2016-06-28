@@ -13,12 +13,13 @@ export type SourceOptions =
   | 'es6' | 'es2015';
 
 export interface IBundleOptions {
-  entryPoint?: string;
   configFile?: string;
-  watchMode?: boolean;
+  entryPoint?: string;
   source?: SourceOptions;
   outputDirectory?: string;
   outputFile?: string;
+  alias?: string|string[];
+  watchMode?: boolean;
 }
 
 export interface IPaeckchenContext {
