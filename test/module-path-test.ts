@@ -29,7 +29,7 @@ test('getModulePath should resolve a relative directory with package.json and ma
     'some/dir/package.json': '{"main": "./main.js"}',
     'some/dir/main.js': ''
   });
-  t.is(getModulePath('some/where', './dir', { config: {} as any, host }), path.resolve(process.cwd(),
+  t.is(getModulePath('some/where', './dir', { config: { input: {} } as any, host }), path.resolve(process.cwd(),
     'some/dir/main.js'));
 });
 
@@ -49,7 +49,7 @@ test('getModulePath should resolve jsnext:main field correctly', t => {
     'some/dir/jsnext.js': '',
     'some/dir/main.js': ''
   });
-  t.is(getModulePath('some/where', './dir', { config: {} as any, host }), path.resolve(process.cwd(),
+  t.is(getModulePath('some/where', './dir', { config: { input: {} } as any, host }), path.resolve(process.cwd(),
     'some/dir/jsnext.js'));
 });
 
@@ -59,7 +59,7 @@ test('getModulePath should not resolve jsnext:main field if source-config is set
     'some/dir/jsnext.js': '',
     'some/dir/main.js': ''
   });
-  t.is(getModulePath('some/where', './dir', { config: { source: SourceSpec.ES5 } as any, host }),
+  t.is(getModulePath('some/where', './dir', { config: { input: { source: SourceSpec.ES5 } } as any, host }),
     path.resolve(process.cwd(), 'some/dir/main.js'));
 });
 

@@ -12,8 +12,10 @@ export enum Runtime {
 }
 
 export interface IConfig {
-  entryPoint: string;
-  source: SourceSpec;
+  input: {
+    entryPoint: string;
+    source: SourceSpec;
+  };
   output: {
     folder: string;
     file: string;
@@ -77,8 +79,9 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
     }
   }
 
-  config.entryPoint = options.entryPoint || configFile.entry || undefined;
-  config.source = getSource(options.source || configFile.source || 'es2015');
+  config.input = {} as any;
+  config.input.entryPoint = options.entryPoint || configFile.input && configFile.input.entry || undefined;
+  config.input.source = getSource(options.source || configFile.input && configFile.input.source || 'es2015');
   config.output = undefined;
   config.output = {} as any;
   config.output.folder = options.outputDirectory || config.output.folder || host.cwd();

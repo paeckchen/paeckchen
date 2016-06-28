@@ -74,7 +74,9 @@ test('bundle should check for a config-file', t => {
     `,
     '/paeckchen.json': `
       {
-        "entry": "./entry-point"
+        "input": {
+          "entry": "./entry-point"
+        }
       }
     `
   }, '/');
@@ -88,4 +90,12 @@ test('bundle should check for a config-file', t => {
     }
   });
   t.true(called);
+});
+
+test('bundle should throw if no entry-point configured', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{}'
+  }, '/');
+
+  t.throws(() => bundle({}, host), 'Missing entry-point');
 });

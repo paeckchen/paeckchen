@@ -54,6 +54,9 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
     config: createConfig(options, host),
     host
   };
+  if (!context.config.input.entryPoint) {
+    throw new Error('Missing entry-point');
+  }
 
   const detectedGlobals: IDetectedGlobals = {
     global: false,
@@ -62,7 +65,7 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   };
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
-  const absoluteEntryPath = join(host.cwd(), context.config.entryPoint);
+  const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
   // start bundling...
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
   while (bundleNextModule(modules, context, detectedGlobals)) {
