@@ -18,6 +18,7 @@ export interface IBundleOptions {
   source?: SourceOptions;
   outputDirectory?: string;
   outputFile?: string;
+  runtime?: string;
   alias?: string|string[];
   watchMode?: boolean;
 }

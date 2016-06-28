@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { createConfig, IConfig, SourceSpec } from '../src/config';
+import { createConfig, IConfig, SourceSpec, Runtime } from '../src/config';
 import { HostMock } from './helper';
 
 test('createConfig should return the config defaults', t => {
@@ -13,7 +13,11 @@ test('createConfig should return the config defaults', t => {
   t.deepEqual(config, {
     entryPoint: undefined,
     source: SourceSpec.ES2015,
-    output: undefined,
+    output: {
+      folder: host.cwd(),
+      file: 'paeckchen.js',
+      runtime: Runtime.browser
+    },
     aliases: undefined,
     watchMode: false
   } as IConfig);
@@ -139,4 +143,24 @@ test('createConfig should create options from aliases', t => {
     name: 'path',
   };
   t.deepEqual(config.aliases, expected);
+});
+
+test('createConfig should read runtime from config file', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"runtime": "node"}}'
+  }, '/');
+
+  const config = createConfig({}, host);
+
+  t.deepEqual(config.output.runtime, Runtime.node);
+});
+
+test('createConfig should prefer runtime from options', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"runtime": "node"}}'
+  }, '/');
+
+  const config = createConfig({runtime: 'browser'}, host);
+
+  t.deepEqual(config.output.runtime, Runtime.browser);
 });
