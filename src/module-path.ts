@@ -17,7 +17,7 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
     }
 
     // no .browser, .jsnext:main, use jsnext:main by aliasing to .main
-    if (context.config.source !== SourceSpec.ES5 && 'jsnext:main' in pkg) {
+    if (context.config.input.source !== SourceSpec.ES5 && 'jsnext:main' in pkg) {
       pkg.main = pkg['jsnext:main'];
       return pkg;
     }

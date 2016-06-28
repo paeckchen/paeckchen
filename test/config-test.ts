@@ -11,8 +11,10 @@ test('createConfig should return the config defaults', t => {
   const config = createConfig({}, host);
 
   t.deepEqual(config, {
-    entryPoint: undefined,
-    source: SourceSpec.ES2015,
+    input: {
+      entryPoint: undefined,
+      source: SourceSpec.ES2015,
+    },
     output: {
       folder: host.cwd(),
       file: 'paeckchen.js',
@@ -25,22 +27,22 @@ test('createConfig should return the config defaults', t => {
 
 test('createConfig should prefer entry point of options', t => {
   const host = new HostMock({
-    '/paeckchen.json': '{"entry": "config"}'
+    '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
   const config = createConfig({entryPoint: 'options'}, host);
 
-  t.is(config.entryPoint, 'options');
+  t.is(config.input.entryPoint, 'options');
 });
 
 test('createConfig should fallback to entry point of config', t => {
   const host = new HostMock({
-    '/paeckchen.json': '{"entry": "config"}'
+    '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
   const config = createConfig({}, host);
 
-  t.is(config.entryPoint, 'config');
+  t.is(config.input.entryPoint, 'config');
 });
 
 test('createConfig should prefer source level of options', t => {
@@ -50,12 +52,12 @@ test('createConfig should prefer source level of options', t => {
 
   const config = createConfig({source: 'es5'}, host);
 
-  t.is(config.source, SourceSpec.ES5);
+  t.is(config.input.source, SourceSpec.ES5);
 });
 
 test('createConfig should throw on invalid source value', t => {
   const host = new HostMock({
-    '/paeckchen.json': '{"source": "abc"}'
+    '/paeckchen.json': '{"input": {"source": "abc"}}'
   }, '/');
 
   t.throws(() => {
