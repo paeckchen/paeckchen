@@ -13,8 +13,9 @@ test('createConfig should return the config defaults', t => {
   t.deepEqual(config, {
     entryPoint: undefined,
     source: SourceSpec.ES2015,
-    watchMode: false,
-    output: undefined
+    output: undefined,
+    aliases: undefined,
+    watchMode: false
   } as IConfig);
 });
 
@@ -86,4 +87,43 @@ test('createConfig should prefer output file option', t => {
   const config = createConfig({outputFile: 'bar'}, host);
 
   t.is(config.output.file, 'bar');
+});
+
+test('createConfig should read alias from config file', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
+  }, '/');
+
+  const config = createConfig({}, host);
+
+  t.deepEqual(config.aliases, {'module': '/some/path'} as {[name: string]: string});
+});
+
+test('createConfig should join single alias into config', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
+  }, '/');
+
+  const config = createConfig({alias: 'name=path'}, host);
+
+  const expected: {[name: string]: string} = {
+    module: '/some/path',
+    name: 'path'
+  };
+  t.deepEqual(config.aliases, expected);
+});
+
+test('createConfig should join multi aliases into config', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
+  }, '/');
+
+  const config = createConfig({alias: ['name=path', 'name2=path2']}, host);
+
+  const expected: {[name: string]: string} = {
+    module: '/some/path',
+    name: 'path',
+    name2: 'path2'
+  };
+  t.deepEqual(config.aliases, expected);
 });
