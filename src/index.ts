@@ -3,8 +3,6 @@ const minimist: typeof minimistNode = minimistNode;
 
 import { bundle } from './bundle';
 
-// TODO: create config file
-// TODO: add watch mode
 const argv = minimist(process.argv.slice(2), {
   string: [
     'config',

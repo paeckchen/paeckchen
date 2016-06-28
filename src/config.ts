@@ -41,13 +41,16 @@ function getSource(input: SourceOptions): SourceSpec {
 
 function getRuntime(input: string): Runtime {
   switch (input) {
+    case 'browser':
+    case 'Browser':
+    case 'BROWSER':
+      return Runtime.browser;
     case 'node':
     case 'Node':
     case 'NODE':
       return Runtime.node;
-    default:
-      return Runtime.browser;
   }
+  throw new Error(`Invalid runtime ${input}`);
 }
 
 function getAliases(list: string|string[], config: {[name: string]: string}): {[name: string]: string} {
@@ -91,7 +94,7 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
   config.output = {} as any;
   config.output.folder = options.outputDirectory || configFile.output && configFile.output.folder || host.cwd();
   config.output.file = options.outputFile || configFile.output && configFile.output.file || 'paeckchen.js';
-  config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime);
+  config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser');
   config.aliases = getAliases(options.alias, configFile.aliases);
   config.watchMode = options.watchMode || configFile.watchMode || false;
 
