@@ -38,7 +38,16 @@ test('bundle should bundle global dependencies', t => {
     '/entry-point.js': `
       Buffer.isBuffer();
     `,
+    // npm2
     [join(process.cwd(), ...'../../node_modules/node-libs-browser/node_modules/buffer/index.js'.split('/'))]: `
+      export const Buffer = {
+        isBuffer() {
+          callme();
+        }
+      };
+    `,
+    // npm3
+    [join(process.cwd(), ...'../../node_modules/buffer/index.js'.split('/'))]: `
       export const Buffer = {
         isBuffer() {
           callme();
