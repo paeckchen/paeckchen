@@ -28,9 +28,12 @@ export interface IConfig {
 function getSource(input: SourceOptions): SourceSpec {
   switch (input) {
     case 'es5':
+    case 'ES5':
       return SourceSpec.ES5;
     case 'es6':
+    case 'ES6':
     case 'es2015':
+    case 'ES2015':
       return SourceSpec.ES2015;
   }
   throw new Error(`Invalid source option ${input}`);
@@ -39,6 +42,8 @@ function getSource(input: SourceOptions): SourceSpec {
 function getRuntime(input: string): Runtime {
   switch (input) {
     case 'node':
+    case 'Node':
+    case 'NODE':
       return Runtime.node;
     default:
       return Runtime.browser;
