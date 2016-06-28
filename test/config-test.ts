@@ -60,9 +60,15 @@ test('createConfig should throw on invalid source value', t => {
     '/paeckchen.json': '{"input": {"source": "abc"}}'
   }, '/');
 
-  t.throws(() => {
-    createConfig({}, host);
-  });
+  t.throws(() => createConfig({}, host), 'Invalid source option abc');
+});
+
+test('createConfig should throw on invalid runtime value', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"runtime": "abc"}}'
+  }, '/');
+
+  t.throws(() => createConfig({}, host), 'Invalid runtime abc');
 });
 
 test('createConfig should throw on invalid config file', t => {
@@ -70,9 +76,7 @@ test('createConfig should throw on invalid config file', t => {
     '/paeckchen.json': "{'test': value}"
   }, '/');
 
-  t.throws(() => {
-    createConfig({}, host);
-  });
+  t.throws(() => createConfig({}, host), /Failed to read config file/);
 });
 
 test('createConfig should prefer output directory option', t => {
