@@ -56,4 +56,3 @@ test('createConfig should throw on invalid config file', t => {
     createConfig({}, host);
   });
 });
-
