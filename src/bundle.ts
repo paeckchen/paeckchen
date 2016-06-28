@@ -6,8 +6,9 @@ import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
 import { IDetectedGlobals, injectGlobals } from './globals';
+import { createConfig, IConfig } from './config';
 
-export type SourceValues =
+export type SourceOptions =
     'es5'
   | 'es6' | 'es2015';
 
@@ -15,34 +16,12 @@ export interface IBundleOptions {
   entryPoint?: string;
   configFile?: string;
   watchMode?: boolean;
-  source?: SourceValues;
-}
-
-export interface IConfig {
-  entryPoint: string;
-  source: SourceValues;
-  watchMode: boolean;
+  source?: SourceOptions;
 }
 
 export interface IPaeckchenContext {
   config: IConfig;
   host: IHost;
-}
-
-function createConfig(options: IBundleOptions, host: IHost): IConfig {
-  const config: IConfig = {} as any;
-
-  const configPath = host.joinPath(host.cwd(), options.configFile || 'paeckchen.json');
-  let configFile: any = {};
-  if (host.fileExists(configPath)) {
-    configFile = JSON.parse(host.readFile(configPath));
-  }
-
-  config.entryPoint = options.entryPoint || configFile.entry;
-  config.source = options.source || configFile.source || 'es2015';
-  config.watchMode = options.watchMode || configFile.watchMode;
-
-  return config;
 }
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {

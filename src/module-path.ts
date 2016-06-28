@@ -1,6 +1,7 @@
 import { sync as browserResolveSync } from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
 import { IPaeckchenContext } from './bundle';
+import { SourceSpec } from './config';
 
 interface IPackage {
   main: string;
@@ -16,7 +17,7 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
     }
 
     // no .browser, .jsnext:main, use jsnext:main by aliasing to .main
-    if (context.config.source !== 'es5' && 'jsnext:main' in pkg) {
+    if (context.config.source !== SourceSpec.ES5 && 'jsnext:main' in pkg) {
       pkg.main = pkg['jsnext:main'];
       return pkg;
     }

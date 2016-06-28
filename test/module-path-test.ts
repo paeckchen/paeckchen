@@ -3,6 +3,7 @@ import test from 'ava';
 
 import { HostMock } from './helper';
 import { getModulePath } from '../src/module-path';
+import { SourceSpec } from '../src/config';
 
 test('getModulePath should throw on non existing module', t => {
   const host = new HostMock({});
@@ -58,8 +59,8 @@ test('getModulePath should not resolve jsnext:main field if source-config is set
     'some/dir/jsnext.js': '',
     'some/dir/main.js': ''
   });
-  t.is(getModulePath('some/where', './dir', { config: { source: 'es5' } as any, host }), path.resolve(process.cwd(),
-    'some/dir/main.js'));
+  t.is(getModulePath('some/where', './dir', { config: { source: SourceSpec.ES5 } as any, host }),
+    path.resolve(process.cwd(), 'some/dir/main.js'));
 });
 
 test('getModulePath should resolve browser, jsnext:main and main in correct precedence', t => {
