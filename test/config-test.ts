@@ -127,3 +127,16 @@ test('createConfig should join multi aliases into config', t => {
   };
   t.deepEqual(config.aliases, expected);
 });
+
+test('createConfig should create options from aliases', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{}'
+  }, '/');
+
+  const config = createConfig({alias: 'name=path'}, host);
+
+  const expected: {[name: string]: string} = {
+    name: 'path',
+  };
+  t.deepEqual(config.aliases, expected);
+});
