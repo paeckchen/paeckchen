@@ -47,6 +47,7 @@ stay tuned
 * [x] Basic support for `jsnext:main` field | [Reference](https://github.com/rollup/rollup/wiki/jsnext:main)
 * [x] Basic support for `browser` field | [Reference](https://github.com/defunctzombie/package-browser-field-spec)
 * [x] Incremental bundling
+* [X] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
 
 ---
 
@@ -58,7 +59,6 @@ paeckchen is under active development, expect the items on this list to move to
 [Features](#features) over time.
 
 * [ ] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
-* [ ] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
 * [ ] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
 
 ---
