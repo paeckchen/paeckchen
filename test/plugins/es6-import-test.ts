@@ -10,7 +10,9 @@ function rewriteImports(input: string, files: any = {}): string {
 
   return parseAndProcess(input, ast => {
     return rewriteImportDeclaration(ast, 'name', {
-      config: {} as any,
+      config: {
+        aliases: {}
+      } as any,
       host
     });
   });

@@ -37,7 +37,11 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
  * @throws when failing to resolve requested module
  */
 export function getModulePath(filename: string, importIdentifier: string, context: IPaeckchenContext): string {
-  return browserResolveSync(importIdentifier, {
+  let importOrAliasIdentifier = importIdentifier;
+  if (importIdentifier in context.config.aliases) {
+    importOrAliasIdentifier = context.config.aliases[importIdentifier];
+  }
+  return browserResolveSync(importOrAliasIdentifier, {
     filename: filename,
     modules: nodeCoreLibs,
     packageFilter: normalizePackageFactory(context),

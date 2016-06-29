@@ -54,12 +54,9 @@ function getRuntime(input: string): Runtime {
 }
 
 function getAliases(list: string|string[], config: {[name: string]: string}): {[name: string]: string} {
-  let aliases = config;
+  let aliases = config || {};
   if (list && list.length > 0) {
     const split = (alias: string) => alias.split('=');
-    if (!aliases) {
-      aliases = {};
-    }
     if (Array.isArray(list)) {
       aliases = list.reduce((all: any, alias: string) => {
         const [key, path] = split(alias as string);
@@ -71,7 +68,7 @@ function getAliases(list: string|string[], config: {[name: string]: string}): {[
       aliases[key] = path;
     }
   }
-  return aliases || undefined;
+  return aliases;
 }
 
 export function createConfig(options: IBundleOptions, host: IHost): IConfig {
