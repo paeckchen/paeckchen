@@ -84,36 +84,16 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
 
   try {
     let moduleAst: ESTree.Program;
-    if (!context.host.fileExists(modulePath)) {
+    if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+      moduleAst = wrapExternalModule(modulePath, context);
+    } else if (!context.host.fileExists(modulePath)) {
       moduleAst = b.program([
         b.throwStatement(
           b.literal(`Module ${modulePath} not found`)
         )
       ]);
     } else {
-      // parse...
-      const comments: any[] = [];
-      const tokens: any[] = [];
-      moduleAst = parse(context.host.readFile(modulePath).toString(), {
-        ecmaVersion: 7,
-        sourceType: 'module',
-        locations: true,
-        ranges: true,
-        allowHashBang: true,
-        onComment: comments,
-        onToken: tokens
-      });
-      // only attach comments which are not sourceMaps
-      attachComments(moduleAst,
-        comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
-
-      // ... check for global features...
-      checkGlobals(detectedGlobals, moduleAst);
-
-      // ... and rewrite ast
-      Object.keys(plugins).forEach(plugin => {
-        plugins[plugin](moduleAst, modulePath, context);
-      });
+      moduleAst = processModule(modulePath, context, detectedGlobals, plugins);
     }
 
     const wrappedModule = createModuleWrapper(modulePath, moduleAst);
@@ -123,4 +103,52 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
     console.error(`Failed to process module '${modulePath}'`);
     throw e;
   }
+}
+
+function wrapExternalModule(modulePath: string, context: IPaeckchenContext): ESTree.Program {
+  const external = context.config.externals[modulePath] === false
+    ? b.objectExpression([])
+    : b.identifier(context.config.externals[modulePath] as string);
+  return b.program([
+    b.expressionStatement(
+      b.assignmentExpression(
+        '=',
+        b.memberExpression(
+          b.identifier('module'),
+          b.identifier('exports'),
+          false
+        ),
+        external
+      )
+    )
+  ]);
+}
+
+function processModule(modulePath: string, context: IPaeckchenContext, detectedGlobals: IDetectedGlobals,
+    plugins: any): ESTree.Program {
+  // parse...
+  const comments: any[] = [];
+  const tokens: any[] = [];
+  const moduleAst = parse(context.host.readFile(modulePath).toString(), {
+    ecmaVersion: 7,
+    sourceType: 'module',
+    locations: true,
+    ranges: true,
+    allowHashBang: true,
+    onComment: comments,
+    onToken: tokens
+  });
+  // only attach comments which are not sourceMaps
+  attachComments(moduleAst,
+    comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
+
+  // ... check for global features...
+  checkGlobals(detectedGlobals, moduleAst);
+
+  // ... and rewrite ast
+  Object.keys(plugins).forEach(plugin => {
+    plugins[plugin](moduleAst, modulePath, context);
+  });
+
+  return moduleAst;
 }
