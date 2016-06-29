@@ -12,7 +12,8 @@ const argv = minimist(process.argv.slice(2), {
     'out-dir',
     'out-file',
     'runtime',
-    'alias'
+    'alias',
+    'external'
   ],
   boolean: ['watch']
 });
@@ -26,6 +27,7 @@ process.stdout.write(bundle({
   outputFile: argv['out-file'],
   runtime: argv['runtime'],
   alias: argv['alias'],
+  external: argv['external'],
   watchMode: argv['watch']
 }));
 const endTime = new Date().getTime();
