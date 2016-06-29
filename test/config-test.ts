@@ -20,7 +20,7 @@ test('createConfig should return the config defaults', t => {
       file: 'paeckchen.js',
       runtime: Runtime.browser
     },
-    aliases: undefined,
+    aliases: {},
     watchMode: false
   } as IConfig);
 });
