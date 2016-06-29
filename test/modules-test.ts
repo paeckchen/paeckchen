@@ -1,5 +1,6 @@
 import test from 'ava';
 import { visit } from 'ast-types';
+import { runInNewContext } from 'vm';
 
 import { HostMock, generate } from './helper';
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
@@ -32,7 +33,7 @@ test('bundleNextModule with empty queue return false', t => {
   };
   const host = new HostMock({});
 
-  t.false(bundleNextModule(modules, { config: {} as any, host }, globals, plugins));
+  t.false(bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins));
 });
 
 test('bundleNextModule should wrap a module', t => {
@@ -48,7 +49,7 @@ test('bundleNextModule should wrap a module', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.deepEqual(Object.keys(modules).length, 1);
 });
@@ -70,7 +71,7 @@ test('bundleNextModule should call all given plugins', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.deepEqual(pluginCalls, 2);
 });
@@ -88,11 +89,11 @@ test('bundleNextModule should not rebundle modules if already up to date', t => 
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
   const firstBundled = modules[0];
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.is(modules[0], firstBundled);
 });
@@ -110,12 +111,12 @@ test('bundleNextModule should rebundle modules if updated', t => {
   }, '/');
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
   const firstBundled = modules[0];
 
   updateModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.not(modules[0], firstBundled);
 });
@@ -134,8 +135,8 @@ test('enqueueModule should not accept duplicate entries', t => {
 
   enqueueModule('/some/mod.js');
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
-  t.false(bundleNextModule(modules, { config: {} as any, host }, globals, plugins));
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
+  t.false(bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins));
 });
 
 test('bundleNextModule should throw if an error occurred', t => {
@@ -152,8 +153,55 @@ test('bundleNextModule should throw if an error occurred', t => {
 
   enqueueModule('/some/mod.js');
   t.throws(() => {
-    bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+    bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
   });
+});
+
+test('bundleNextModule should bundle a virtual module per external configuration', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const globals = {
+    global: false,
+    process: false,
+    buffer: false
+  };
+  const host = new HostMock({});
+
+  enqueueModule('fs');
+  bundleNextModule(modules, { config: { externals: { fs: 'fsShim' } } as any, host }, globals, plugins);
+
+  const sandbox = {
+    fsShim: {},
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(generate(modules[0]) + '_0(module, module.exports);', sandbox);
+  t.is(sandbox.module.exports, sandbox.fsShim);
+});
+
+test('bundleNextModule should bundle a virtual empty module per external falsy configuration', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const globals = {
+    global: false,
+    process: false,
+    buffer: false
+  };
+  const host = new HostMock({});
+
+  enqueueModule('fs');
+  bundleNextModule(modules, { config: { externals: { fs: false } } as any, host }, globals, plugins);
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(generate(modules[0]) + '_0(module, module.exports);', sandbox);
+  t.deepEqual(sandbox.module.exports, {});
 });
 
 test('bundleNextModule should bundle an error for unavailable modules', t => {
@@ -167,7 +215,7 @@ test('bundleNextModule should bundle an error for unavailable modules', t => {
   const host = new HostMock({});
 
   enqueueModule('fs');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   let throws = false;
   visit(modules[0], {
@@ -195,7 +243,7 @@ test('bundleNextModule should remove sourceMapping comments', t => {
   });
 
   enqueueModule('/some/mod.js');
-  bundleNextModule(modules, { config: {} as any, host }, globals, plugins);
+  bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.is(generate(modules[0]).indexOf('# sourceMappingURL='), -1);
 });
