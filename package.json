@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "acorn": "3.2.0",
-    "ast-types": "0.8.17",
+    "ast-types": "0.8.18",
     "browser-resolve": "1.11.2",
     "escodegen": "1.8.0",
     "estraverse": "4.2.0",
