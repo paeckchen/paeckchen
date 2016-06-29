@@ -22,6 +22,7 @@ export interface IConfig {
     runtime: Runtime;
   };
   aliases: {[name: string]: string};
+  externals: {[name: string]: string};
   watchMode: boolean;
 }
 
@@ -53,22 +54,22 @@ function getRuntime(input: string): Runtime {
   throw new Error(`Invalid runtime ${input}`);
 }
 
-function getAliases(list: string|string[], config: {[name: string]: string}): {[name: string]: string} {
-  let aliases = config || {};
+function processKeyValueOption(list: string|string[], config: {[name: string]: string}): {[name: string]: string} {
+  let map = config || {};
   if (list && list.length > 0) {
     const split = (alias: string) => alias.split('=');
     if (Array.isArray(list)) {
-      aliases = list.reduce((all: any, alias: string) => {
+      map = list.reduce((all: any, alias: string) => {
         const [key, path] = split(alias as string);
         all[key] = path;
         return all;
-      }, aliases);
+      }, map);
     } else {
       const [key, path] = split(list as string);
-      aliases[key] = path;
+      map[key] = path;
     }
   }
-  return aliases;
+  return map;
 }
 
 export function createConfig(options: IBundleOptions, host: IHost): IConfig {
@@ -92,7 +93,8 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
   config.output.folder = options.outputDirectory || configFile.output && configFile.output.folder || host.cwd();
   config.output.file = options.outputFile || configFile.output && configFile.output.file || 'paeckchen.js';
   config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser');
-  config.aliases = getAliases(options.alias, configFile.aliases);
+  config.aliases = processKeyValueOption(options.alias, configFile.aliases);
+  config.externals = processKeyValueOption(options.external, configFile.externals);
   config.watchMode = options.watchMode || configFile.watchMode || false;
 
   return config;

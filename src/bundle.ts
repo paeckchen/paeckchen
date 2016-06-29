@@ -20,6 +20,7 @@ export interface IBundleOptions {
   outputFile?: string;
   runtime?: string;
   alias?: string|string[];
+  external?: string|string[];
   watchMode?: boolean;
 }
 

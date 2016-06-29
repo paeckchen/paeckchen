@@ -21,6 +21,7 @@ test('createConfig should return the config defaults', t => {
       runtime: Runtime.browser
     },
     aliases: {},
+    externals: {},
     watchMode: false
   } as IConfig);
 });
@@ -169,4 +170,56 @@ test('createConfig should prefer runtime from options', t => {
   const config = createConfig({runtime: 'browser'}, host);
 
   t.deepEqual(config.output.runtime, Runtime.browser);
+});
+
+test('createConfig should read externals from config file', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"externals": {"module": "Global"}}'
+  }, '/');
+
+  const config = createConfig({}, host);
+
+  t.deepEqual(config.externals, {'module': 'Global'} as {[name: string]: string});
+});
+
+test('createConfig should join single external into config', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"externals": {"module": "Global"}}'
+  }, '/');
+
+  const config = createConfig({external: 'name=var'}, host);
+
+  const expected: {[name: string]: string} = {
+    module: 'Global',
+    name: 'var'
+  };
+  t.deepEqual(config.externals, expected);
+});
+
+test('createConfig should join multi externals into config', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"externals": {"module": "Global"}}'
+  }, '/');
+
+  const config = createConfig({external: ['name=var', 'name2=var2']}, host);
+
+  const expected: {[name: string]: string} = {
+    module: 'Global',
+    name: 'var',
+    name2: 'var2'
+  };
+  t.deepEqual(config.externals, expected);
+});
+
+test('createConfig should create options from externals', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{}'
+  }, '/');
+
+  const config = createConfig({external: 'name=var'}, host);
+
+  const expected: {[name: string]: string} = {
+    name: 'var',
+  };
+  t.deepEqual(config.externals, expected);
 });
