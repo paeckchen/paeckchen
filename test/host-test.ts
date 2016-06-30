@@ -1,5 +1,6 @@
 import test from 'ava';
-import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import { readFileSync, existsSync, unlinkSync } from 'fs';
 
 import { DefaultHost } from '../src/host';
 
@@ -42,4 +43,16 @@ test('DefaultHost#joinPath should return joined paths', t => {
 
 test('DefaultHost#dirname should return the directory part of the given path', t => {
   t.deepEqual(t.context.host.dirname('a/b/c'), 'a/b');
+});
+
+test('DefaultHost#writeFile should dump the content to disk', t => {
+  const file = resolve(process.cwd(), 'dump.txt');
+  try {
+    t.context.host.writeFile(file, 'test-data');
+    t.is(readFileSync(file).toString(), 'test-data');
+  } finally {
+    if (existsSync(file)) {
+      unlinkSync(file);
+    }
+  }
 });

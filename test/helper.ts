@@ -10,8 +10,8 @@ import { IHost } from '../src/host';
 export class HostMock implements IHost {
   public pathSep: string = '/';
 
-  private basePath: string = process.cwd();
-  private files: any = {};
+  public basePath: string = process.cwd();
+  public files: any = {};
 
   constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
     this.fileExists = this.fileExists.bind(this);
@@ -49,6 +49,10 @@ export class HostMock implements IHost {
     }
     throw new Error(oneLine`ENOENT: Could not read file ${filePath} from HostMock fs.
       Available files: ${Object.keys(this.files)}`);
+  }
+
+  public writeFile(filePath: string, content: string): void {
+    this.files[filePath] = content;
   }
 
   public joinPath(...paths: string[]): string {
