@@ -27,6 +27,7 @@ export interface IBundleOptions {
 export interface IPaeckchenContext {
   config: IConfig;
   host: IHost;
+  rebundle?: () => void;
 }
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
@@ -50,6 +51,42 @@ const paeckchenSource = `
   __paeckchen_require__(0);
 `;
 
+function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost): string {
+  while (bundleNextModule(modules, context, detectedGlobals)) {
+    process.stderr.write('.');
+  }
+  injectGlobals(detectedGlobals, paeckchenAst, context);
+  while (bundleNextModule(modules, context, detectedGlobals)) {
+    process.stderr.write('.');
+  }
+  process.stderr.write('\n');
+
+  const bundleResult = generate(paeckchenAst, {
+    comment: true
+  });
+  if (context.config.output.file) {
+    host.writeFile(
+      host.joinPath(context.config.output.folder, context.config.output.file),
+        bundleResult);
+    return undefined;
+  }
+  return bundleResult;
+}
+
+function rebundleFactory(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost): () => void {
+  let timer: NodeJS.Timer;
+  return () => {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      executeBundling(paeckchenAst, modules, context, detectedGlobals, host);
+    }, 0);
+  };
+}
+
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost()): string {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
@@ -67,27 +104,11 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
-  // start bundling...
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
-  while (bundleNextModule(modules, context, detectedGlobals)) {
-    process.stderr.write('.');
-  }
-  // ... when ready inject globals...
-  injectGlobals(detectedGlobals, paeckchenAst, context);
-  // ... and bundle global dependencies
-  while (bundleNextModule(modules, context, detectedGlobals)) {
-    process.stderr.write('.');
-  }
-  process.stderr.write('\n');
 
-  const bundleResult = generate(paeckchenAst, {
-    comment: true
-  });
-  if (context.config.output.file) {
-    host.writeFile(
-      host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
-    return undefined;
+  if (context.config.watchMode) {
+    context.rebundle = rebundleFactory(paeckchenAst, modules, context, detectedGlobals, host);
   }
-  return bundleResult;
+
+  return executeBundling(paeckchenAst, modules, context, detectedGlobals, host);
 }

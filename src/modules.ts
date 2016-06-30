@@ -5,6 +5,7 @@ import { builders as b } from 'ast-types';
 import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
 import { checkGlobals, IDetectedGlobals } from './globals';
+import { Watcher } from './watcher';
 
 interface IWrappedModule {
   index: number;
@@ -57,6 +58,7 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 }
 
 const moduleBundleQueue: string[] = [];
+
 export function enqueueModule(modulePath: string): void {
   if (moduleBundleQueue.indexOf(modulePath) === -1) {
     moduleBundleQueue.push(modulePath);
@@ -69,8 +71,29 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
     return false;
   }
   const modulePath = moduleBundleQueue.shift();
+  watchModule(modulePath, context);
   wrapModule(modulePath, modules, context, detectedGlobals, plugins);
   return true;
+}
+
+let watcher: Watcher;
+
+function watchModule(modulePath: string, context: IPaeckchenContext): void {
+  if (context.config.watchMode) {
+    if (!watcher) {
+      watcher = new Watcher(context.host);
+      watcher.start((event, fileName) => {
+        if (event === 'update') {
+          updateModule(modulePath);
+          enqueueModule(modulePath);
+          context.rebundle();
+        } else if (event === 'remove') {
+          // TODO: Bundle need to be updated
+        }
+      });
+    }
+    watcher.watchFile(modulePath);
+  }
 }
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],

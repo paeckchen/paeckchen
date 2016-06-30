@@ -57,6 +57,7 @@
     "acorn": "3.2.0",
     "ast-types": "0.8.18",
     "browser-resolve": "1.11.2",
+    "chokidar": "1.6.0",
     "escodegen": "1.8.0",
     "estraverse": "4.2.0",
     "minimist": "1.2.0",
