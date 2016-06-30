@@ -1,6 +1,6 @@
 import test from 'ava';
-import { join, resolve } from 'path';
-import { readFileSync, unlinkSync } from 'fs';
+import { resolve } from 'path';
+import { readFileSync, existsSync, unlinkSync } from 'fs';
 
 import { DefaultHost } from '../src/host';
 
@@ -51,6 +51,8 @@ test('DefaultHost#writeFile should dump the content to disk', t => {
     t.context.host.writeFile(file, 'test-data');
     t.is(readFileSync(file).toString(), 'test-data');
   } finally {
-    unlinkSync(file);
+    if (existsSync(file)) {
+      unlinkSync(file);
+    }
   }
 });
