@@ -80,7 +80,14 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   }
   process.stderr.write('\n');
 
-  return generate(paeckchenAst, {
+  const bundleResult = generate(paeckchenAst, {
     comment: true
   });
+  if (context.config.output.file) {
+    host.writeFile(
+      host.joinPath(context.config.output.folder, context.config.output.file),
+        bundleResult);
+    return undefined;
+  }
+  return bundleResult;
 }

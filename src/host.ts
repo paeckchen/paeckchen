@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { join, dirname, sep } from 'path';
 
 export interface IHost {
@@ -8,6 +8,7 @@ export interface IHost {
   fileExists(path: string): boolean;
   isFile(path: string): boolean;
   readFile(path: string): string;
+  writeFile(path: string, content: string): void;
   joinPath(...paths: string[]): string;
   dirname(path: string): string;
 }
@@ -27,6 +28,10 @@ export class DefaultHost implements IHost {
 
   public readFile(path: string): string {
     return readFileSync(path).toString();
+  }
+
+  public writeFile(path: string, content: string): void {
+    writeFileSync(path, content);
   }
 
   public get pathSep(): string {

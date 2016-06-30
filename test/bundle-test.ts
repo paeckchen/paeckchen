@@ -72,13 +72,11 @@ test('bundle should check for a config-file', t => {
     '/entry-point.js': `
       callback();
     `,
-    '/paeckchen.json': `
-      {
-        "input": {
-          "entry": "./entry-point"
+    '/paeckchen.json': JSON.stringify({
+        input: {
+          entry: './entry-point'
         }
-      }
-    `
+      })
   }, '/');
 
   const bundled = bundle({}, host);
@@ -98,4 +96,22 @@ test('bundle should throw if no entry-point configured', t => {
   }, '/');
 
   t.throws(() => bundle({}, host), 'Missing entry-point');
+});
+
+test('bundle should write result to disk if output file given', t => {
+  const host = new HostMock({
+    '/paeckchen.json': JSON.stringify({
+      input: {
+        entry: './entry-point'
+      },
+      output: {
+        file: 'result.js'
+      }
+    }),
+    '/entry-point': `console.log("foo");`
+  }, '/');
+
+  bundle({}, host);
+
+  t.true('/result.js' in host.files);
 });
