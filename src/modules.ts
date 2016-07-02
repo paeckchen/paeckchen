@@ -59,8 +59,8 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 const moduleBundleQueue: string[] = [];
 export function enqueueModule(modulePath: string): string[] {
   // Signal main thread if in worker thread
-  if (global.thread) {
-    thread.emit('enqueueModule', modulePath);
+  if (typeof process.send === 'function') {
+    process.send({ type: 'enqueueModule', data: modulePath });
     return moduleBundleQueue;
   }
 
@@ -80,6 +80,37 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
   const modulePath = moduleBundleQueue.shift();
   wrapModule(modulePath, modules, context, detectedGlobals, plugins);
   return true;
+}
+
+export function wrapModuleAst(
+  modulePath: string,
+  moduleAst: ESTree.Program,
+  modules: (ESTree.Expression | ESTree.SpreadElement)[],
+  context: IPaeckchenContext) {
+  // Prefill module indices
+  getModuleIndex(modulePath);
+  if (wrappedModules[modulePath].ast !== undefined) {
+    // Module is already up to date
+    return;
+  }
+
+  let moduleAstToWrap: ESTree.Program;
+
+  if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+    moduleAstToWrap = wrapExternalModule(modulePath, context);
+  } else if (!context.host.fileExists(modulePath)) {
+    moduleAstToWrap = b.program([
+      b.throwStatement(
+        b.literal(`Module ${modulePath} not found`)
+      )
+    ]);
+  } else {
+    moduleAstToWrap = moduleAst;
+  }
+
+  const wrappedModule = createModuleWrapper(modulePath, moduleAstToWrap);
+  wrappedModules[wrappedModule.name] = wrappedModule;
+  modules[wrappedModule.index] = wrappedModule.ast;
 }
 
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
@@ -138,18 +169,31 @@ export function processModule(modulePath: string, context: IPaeckchenContext, de
   // parse...
   const comments: any[] = [];
   const tokens: any[] = [];
-  const moduleAst = parse(context.host.readFile(modulePath).toString(), {
-    ecmaVersion: 7,
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    allowHashBang: true,
-    onComment: comments,
-    onToken: tokens
-  });
-  // only attach comments which are not sourceMaps
-  attachComments(moduleAst,
-    comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
+
+  let moduleAst: ESTree.Program;
+
+  if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+      moduleAst = wrapExternalModule(modulePath, context);
+    } else if (!context.host.fileExists(modulePath)) {
+    moduleAst = b.program([
+      b.throwStatement(
+        b.literal(`Module ${modulePath} not found`)
+      )
+    ]);
+  } else {
+    moduleAst = parse(context.host.readFile(modulePath).toString(), {
+      ecmaVersion: 7,
+      sourceType: 'module',
+      locations: true,
+      ranges: true,
+      allowHashBang: true,
+      onComment: comments,
+      onToken: tokens
+    });
+    // only attach comments which are not sourceMaps
+    attachComments(moduleAst,
+      comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
+  }
 
   // ... check for global features...
   checkGlobals(detectedGlobals, moduleAst);

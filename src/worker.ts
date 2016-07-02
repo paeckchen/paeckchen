@@ -1,63 +1,52 @@
-function fibonacci(n) {
-   return n < 1 ? 0
-        : n <= 2 ? 1
-        : fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-process.on('message', payload => {
-  console.log(process.pid);
-  console.log('worker received payload for', payload.type, 'bouncing back');
-  
-  fibonacci(43);
-  process.send(payload);
-});
-
-/* import * as Promise from 'bluebird';
-import { bundleNextModule } from './modules';
 import { DefaultHost } from './host';
 import { createConfig } from './config';
+import { processModule } from './modules';
+import * as plugins from './plugins';
+import { IPaeckchenContext } from './bundle';
+import { IDetectedGlobals } from './globals';
 
-const notConfiguredError = 'context needs to be configured before sending processing requests';
+interface IWorkerPaeckchenContext extends IPaeckchenContext {
+  configured: boolean;
+}
 
-function main() {
-  // Wrap procedure into promise to get basic error handling back.
-  return new Promise((_, reject) => {
-    const context = {
-      configured: false
-    };
+const context = <IWorkerPaeckchenContext> {
+  configured: false
+};
 
-    // Configure paeckchen context
-    thread.on('configure', (optionsJson) => {
+const log = (...args: any[]) => {
+  console.log(process.pid, ...args);
+};
+
+process.on('message', ({ type, data, id}) => {
+  log(type, data, id);
+
+  const respond = (type?: string, data?: any) => {
+    process.send({ id, type, data });
+  };
+
+  switch (type) {
+    case 'configure':
       const host = new DefaultHost();
-      const options = JSON.parse(optionsJson);
 
-      context.config = createConfig(options, host);
+      context.config = createConfig(data, host);
       context.host = host;
       context.configured = true;
-    });
 
-    // Handle incoming processing requests
-    thread.on('processFile', (modulePath) => {
+      respond();
+      break;
+
+    case 'processFile':
       if (context.configured === false) {
-        reject(new Error(notConfiguredError));
+        log('not yet configured!');
       }
-      console.log(modulePath);
-    });
+      const globals = <IDetectedGlobals> {};
+      const ast = processModule(data, context, globals, plugins);
 
-  });
-}
+      respond('processedFile', { globals, ast, path: data });
+      break;
 
-function barf(errorData) {
-  thread.emit('error', JSON.stringify({
-    message: error.message,
-    stack: error.stack,
-    id: thread.id
-  }));
-}
+    default:
+      log('what?', { type, data, id });
+  }
 
-try {
-  main()
-    .catch(barf);
-} catch (error) {
-  barf(error);
-} */
+});

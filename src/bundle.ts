@@ -5,7 +5,7 @@ import { generate } from 'escodegen';
 
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
-import { enqueueModule } from './modules';
+import { enqueueModule, wrapModuleAst, bundleNextModule } from './modules';
 import createPool from './pool';
 import { IDetectedGlobals, injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
@@ -54,7 +54,7 @@ const paeckchenSource = `
 
 const pool = createPool(cpus().length, require.resolve('./worker'));
 
-export function bundle(options: IBundleOptions, host: IHost = new DefaultHost()): string {
+export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(), callback: Function): void {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
     host
@@ -63,7 +63,7 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
     throw new Error('Missing entry-point');
   }
 
-  const detectedGlobals: IDetectedGlobals = {
+  let detectedGlobals: IDetectedGlobals = {
     global: false,
     process: false,
     buffer: false
@@ -72,69 +72,46 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-  pool.all('foo', {foo: 'bar'});
-  pool.any('foo-any', 'moep1');
-  pool.any('foo-any', 'moep2');
-  pool.any('foo-any', 'moep3');
-  pool.any('foo-any', 'moep4');
-  pool.all('foo', {foo: 'bar2'});
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
-  pool.any('foo-any', 'moep5');
+  const processed = [];
 
-  pool.on('foo', (payload) => {
-    console.log('main thread received payload foo', payload);
-  });
-
-  pool.on('foo-any', (payload) => {
-    console.log('main thread received payload foo-any', payload);
-  });
-
-  /* pool.all.emit('configure', JSON.stringify(options));
-  pool.on('enqueueModule', enqueueModule);
-  
-  pool.on('processedFile', (...args: any[]) => {
-    console.log('processedFile', ...args);
+  pool.all('configure', options);
+  pool.on('enqueueModule', (path) => {
+    enqueueModule(getModulePath(absoluteEntryPath, path, context));
+    const toProcess = queue.shift();
+    if (processed.indexOf(toProcess) === -1 && toProcess != null) {
+      processed.push(toProcess);
+      pool.any('processFile', toProcess);
+    }
   });
   
-  pool.on('error', (errorJson) => {
-    const errorData = JSON.parse(errorJson);
-    const error = new Error(errorData.message);
-    error.stack = errorData.stack;
-    console.error(error);
-    process.exit(1);
-  }); */
+  pool.on('processedFile', ({ ast, globals, path }) => {
+    process.stderr.write('.');
 
+    detectedGlobals = Object.assign({}, detectedGlobals, globals);
+    wrapModuleAst(path, ast, modules, context);
+
+    if (pool.isIdle() && queue.length === 0) {
+      pool.destroy();
+
+      injectGlobals(detectedGlobals, paeckchenAst, context);
+
+      while (bundleNextModule(modules, context, detectedGlobals)) {
+        process.stderr.write('.');
+      }
+      process.stderr.write('\n');
+
+      const bundleResult = generate(paeckchenAst, { comment: true });
+      if (context.config.output.file) {
+        host.writeFile(
+          host.joinPath(context.config.output.folder, context.config.output.file),
+          bundleResult
+        );
+      }
+      callback(null, bundleResult);
+    }
+  });
+  
   const queue = enqueueModule(getModulePath('.', absoluteEntryPath, context));
-
   // Start processing in the worker pool
-  // pool.any.emit('processFile', queue.shift());
-
-  // start bundling...
-  // enqueueModule(getModulePath('.', absoluteEntryPath, context));
-  // while (bundleNextModule(modules, context, detectedGlobals)) {
-  //   process.stderr.write('.');
-  // }
-  // // ... when ready inject globals...
-  // injectGlobals(detectedGlobals, paeckchenAst, context);
-  // // ... and bundle global dependencies
-  // while (bundleNextModule(modules, context, detectedGlobals)) {
-  //   process.stderr.write('.');
-  // }
-  // process.stderr.write('\n');
-
-  const bundleResult = generate(paeckchenAst, {
-    comment: true
-  });
-  if (context.config.output.file) {
-    host.writeFile(
-      host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
-    return undefined;
-  }
-  return bundleResult;
+  pool.any('processFile', queue.shift());
 }

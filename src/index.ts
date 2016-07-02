@@ -19,7 +19,7 @@ const argv = minimist(process.argv.slice(2), {
 });
 
 const startTime = new Date().getTime();
-const result = bundle({
+bundle({
   configFile: argv['config'],
   entryPoint: argv['entry'],
   source: argv['source'],
@@ -29,9 +29,10 @@ const result = bundle({
   alias: argv['alias'],
   external: argv['external'],
   watchMode: argv['watch']
+}, undefined, (error, result) => {
+  if (result) {
+    process.stdout.write(result);
+  }
+  const endTime = new Date().getTime();
+  process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s\n`);
 });
-if (result) {
-  // process.stdout.write(result);
-}
-const endTime = new Date().getTime();
-// process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s\n`);

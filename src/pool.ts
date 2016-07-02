@@ -20,6 +20,8 @@ export interface IPool {
   /* Kill all workers */
   destroy(): IPool;
 
+  isIdle(): boolean;
+
   /* Listen on emitted events from all workers in pool */
   on(type: string, listener: (data?: any) => void): IPool;
 }
@@ -78,6 +80,9 @@ export default function createPool(headCount: number, modulePath: string, forkOp
 
       queue.push({type, data});
       return this;
+    },
+    isIdle() {
+      return workers.every(worker => worker.tasks.length === 0);
     },
     destroy() {
       workers.forEach(worker => worker.child.kill('SIGKILL'));
