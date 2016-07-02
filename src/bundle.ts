@@ -2,11 +2,11 @@ import { cpus } from 'os';
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
-import * as Threads from 'webworker-threads';
 
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
-import { enqueueModule, bundleNextModule } from './modules';
+import { enqueueModule } from './modules';
+import createPool from './pool';
 import { IDetectedGlobals, injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
 
@@ -31,12 +31,6 @@ export interface IPaeckchenContext {
   host: IHost;
 }
 
-const pool = Threads.createPool(cpus().length);
-pool.load(require.resolve('./worker'), (...args: any[]) => {
-  // console.log('pool loaded', ...args);
-});
-
-
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
   return (ast as any).body[2].declarations[0].init;
 }
@@ -58,6 +52,8 @@ const paeckchenSource = `
   __paeckchen_require__(0);
 `;
 
+const pool = createPool(cpus().length, require.resolve('./worker'));
+
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost()): string {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
@@ -76,19 +72,47 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-  pool.any.emit('processFile', absoluteEntryPath);
+  pool.all('foo', {foo: 'bar'});
+  pool.any('foo-any', 'moep1');
+  pool.any('foo-any', 'moep2');
+  pool.any('foo-any', 'moep3');
+  pool.any('foo-any', 'moep4');
+  pool.all('foo', {foo: 'bar2'});
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+  pool.any('foo-any', 'moep5');
+
+  pool.on('foo', (payload) => {
+    console.log('main thread received payload foo', payload);
+  });
+
+  pool.on('foo-any', (payload) => {
+    console.log('main thread received payload foo-any', payload);
+  });
+
+  /* pool.all.emit('configure', JSON.stringify(options));
   pool.on('enqueueModule', enqueueModule);
+  
   pool.on('processedFile', (...args: any[]) => {
     console.log('processedFile', ...args);
   });
+  
   pool.on('error', (errorJson) => {
     const errorData = JSON.parse(errorJson);
     const error = new Error(errorData.message);
     error.stack = errorData.stack;
     console.error(error);
     process.exit(1);
-  });
+  }); */
 
+  const queue = enqueueModule(getModulePath('.', absoluteEntryPath, context));
+
+  // Start processing in the worker pool
+  // pool.any.emit('processFile', queue.shift());
 
   // start bundling...
   // enqueueModule(getModulePath('.', absoluteEntryPath, context));

@@ -57,10 +57,19 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
 }
 
 const moduleBundleQueue: string[] = [];
-export function enqueueModule(modulePath: string): void {
+export function enqueueModule(modulePath: string): string[] {
+  // Signal main thread if in worker thread
+  if (global.thread) {
+    thread.emit('enqueueModule', modulePath);
+    return moduleBundleQueue;
+  }
+
+  // Add module path to processing queue if in main thread
   if (moduleBundleQueue.indexOf(modulePath) === -1) {
     moduleBundleQueue.push(modulePath);
   }
+
+  return moduleBundleQueue;
 }
 
 export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
@@ -124,7 +133,7 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): EST
   ]);
 }
 
-function processModule(modulePath: string, context: IPaeckchenContext, detectedGlobals: IDetectedGlobals,
+export function processModule(modulePath: string, context: IPaeckchenContext, detectedGlobals: IDetectedGlobals,
     plugins: any): ESTree.Program {
   // parse...
   const comments: any[] = [];
