@@ -60,7 +60,8 @@
     "escodegen": "1.8.0",
     "estraverse": "4.2.0",
     "minimist": "1.2.0",
-    "node-libs-browser": "1.0.0"
+    "node-libs-browser": "1.0.0",
+    "webworker-threads": "0.7.5"
   },
   "publishConfig": {
     "tag": "next"

@@ -1,6 +1,8 @@
+import { cpus } from 'os';
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
+import * as Threads from 'webworker-threads';
 
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -28,6 +30,12 @@ export interface IPaeckchenContext {
   config: IConfig;
   host: IHost;
 }
+
+const pool = Threads.createPool(cpus().length);
+pool.load(require.resolve('./worker'), (...args: any[]) => {
+  // console.log('pool loaded', ...args);
+});
+
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
   return (ast as any).body[2].declarations[0].init;
@@ -67,18 +75,33 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   const paeckchenAst = parse(paeckchenSource);
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
+
+  pool.any.emit('processFile', absoluteEntryPath);
+  pool.on('enqueueModule', enqueueModule);
+  pool.on('processedFile', (...args: any[]) => {
+    console.log('processedFile', ...args);
+  });
+  pool.on('error', (errorJson) => {
+    const errorData = JSON.parse(errorJson);
+    const error = new Error(errorData.message);
+    error.stack = errorData.stack;
+    console.error(error);
+    process.exit(1);
+  });
+
+
   // start bundling...
-  enqueueModule(getModulePath('.', absoluteEntryPath, context));
-  while (bundleNextModule(modules, context, detectedGlobals)) {
-    process.stderr.write('.');
-  }
-  // ... when ready inject globals...
-  injectGlobals(detectedGlobals, paeckchenAst, context);
-  // ... and bundle global dependencies
-  while (bundleNextModule(modules, context, detectedGlobals)) {
-    process.stderr.write('.');
-  }
-  process.stderr.write('\n');
+  // enqueueModule(getModulePath('.', absoluteEntryPath, context));
+  // while (bundleNextModule(modules, context, detectedGlobals)) {
+  //   process.stderr.write('.');
+  // }
+  // // ... when ready inject globals...
+  // injectGlobals(detectedGlobals, paeckchenAst, context);
+  // // ... and bundle global dependencies
+  // while (bundleNextModule(modules, context, detectedGlobals)) {
+  //   process.stderr.write('.');
+  // }
+  // process.stderr.write('\n');
 
   const bundleResult = generate(paeckchenAst, {
     comment: true

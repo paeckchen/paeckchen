@@ -31,7 +31,7 @@ const result = bundle({
   watchMode: argv['watch']
 });
 if (result) {
-  process.stdout.write(result);
+  // process.stdout.write(result);
 }
 const endTime = new Date().getTime();
-process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s\n`);
+// process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s\n`);
