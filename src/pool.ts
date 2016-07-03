@@ -56,21 +56,21 @@ export default function createPool(headCount: number, modulePath: string, forkOp
       worker.tasks.splice(index, 1);
     }
     if (worker.tasks.length === 0 && queue.length > 0) {
-      const {type, data} = queue.shift();
-      send(worker, type, data);
+      const {_type, _data} = queue.shift();
+      send(worker, _type, _data);
     }
     const typeReceivers = receivers[type] || [];
     typeReceivers.forEach(receiver => receiver(data));
   }));
 
   return {
-    all(type, data) {
+    all(type, data): IPool {
       workers.forEach(worker => {
         send(worker, type, data);
-      })
+      });
       return this;
     },
-    any(type, data) {
+    any(type, data): IPool {
       const candidate = workers.filter(worker => worker.tasks.length === 0)[0];
 
       if (candidate) {
@@ -81,14 +81,14 @@ export default function createPool(headCount: number, modulePath: string, forkOp
       queue.push({type, data});
       return this;
     },
-    isIdle() {
+    isIdle(): boolean {
       return workers.every(worker => worker.tasks.length === 0);
     },
-    destroy() {
+    destroy(): IPool {
       workers.forEach(worker => worker.child.kill('SIGKILL'));
       return this;
     },
-    on(messageType, listener) {
+    on(messageType, listener): IPool {
       const typeReceivers = receivers[messageType] || [];
       if (typeReceivers.indexOf(listener) === -1) {
         receivers[messageType] = typeReceivers.concat(listener);

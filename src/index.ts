@@ -29,7 +29,7 @@ bundle({
   alias: argv['alias'],
   external: argv['external'],
   watchMode: argv['watch']
-}, undefined, (error, result) => {
+}, undefined, (error: Error, result: string) => {
   if (result) {
     process.stdout.write(result);
   }

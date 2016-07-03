@@ -22,15 +22,15 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
     `
   });
 
-  const bundled = bundle({entryPoint: 'entry-point.js'}, host);
-
-  let called = false;
-  virtualModule(bundled, {
-    callme: function(): void {
-      called = true;
-    }
+  bundle({entryPoint: 'entry-point.js'}, host, (error: Error, bundled: string) => {
+    let called = false;
+    virtualModule(bundled, {
+      callme: function(): void {
+        called = true;
+      }
+    });
+    t.true(called);
   });
-  t.true(called);
 });
 
 test('bundle should bundle global dependencies', t => {
@@ -56,15 +56,15 @@ test('bundle should bundle global dependencies', t => {
     `
   }, '/');
 
-  const bundled = bundle({entryPoint: '/entry-point.js'}, host);
-
-  let called = false;
-  virtualModule(bundled, {
-    callme: function(): void {
-      called = true;
-    }
+  bundle({entryPoint: '/entry-point.js'}, host, (error: Error, bundled: string) => {
+    let called = false;
+    virtualModule(bundled, {
+      callme: function(): void {
+        called = true;
+      }
+    });
+    t.true(called);
   });
-  t.true(called);
 });
 
 test('bundle should check for a config-file', t => {
@@ -79,15 +79,15 @@ test('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  const bundled = bundle({}, host);
-
-  let called = false;
-  virtualModule(bundled, {
-    callback: function(): void {
-      called = true;
-    }
+  bundle({}, host, (error: Error, bundled: string) => {
+    let called = false;
+    virtualModule(bundled, {
+      callback: function(): void {
+        called = true;
+      }
+    });
+    t.true(called);
   });
-  t.true(called);
 });
 
 test('bundle should throw if no entry-point configured', t => {
@@ -95,7 +95,7 @@ test('bundle should throw if no entry-point configured', t => {
     '/paeckchen.json': '{}'
   }, '/');
 
-  t.throws(() => bundle({}, host), 'Missing entry-point');
+  t.throws(() => bundle({}, host, () => {}), 'Missing entry-point');
 });
 
 test('bundle should write result to disk if output file given', t => {
@@ -111,7 +111,7 @@ test('bundle should write result to disk if output file given', t => {
     '/entry-point': `console.log("foo");`
   }, '/');
 
-  bundle({}, host);
+  bundle({}, host, () => {});
 
   t.true('/result.js' in host.files);
 });

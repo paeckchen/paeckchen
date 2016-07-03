@@ -86,7 +86,7 @@ export function wrapModuleAst(
   modulePath: string,
   moduleAst: ESTree.Program,
   modules: (ESTree.Expression | ESTree.SpreadElement)[],
-  context: IPaeckchenContext) {
+  context: IPaeckchenContext): void {
   // Prefill module indices
   getModuleIndex(modulePath);
   if (wrappedModules[modulePath].ast !== undefined) {

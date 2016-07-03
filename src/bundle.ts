@@ -72,7 +72,11 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
   const modules = getModules(paeckchenAst).elements;
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-  const processed = [];
+  const processed: string[] = [];
+
+  const queue = enqueueModule(getModulePath('.', absoluteEntryPath, context));
+  // Start processing in the worker pool
+  pool.any('processFile', queue.shift());
 
   pool.all('configure', options);
   pool.on('enqueueModule', (path) => {
@@ -83,7 +87,7 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
       pool.any('processFile', toProcess);
     }
   });
-  
+
   pool.on('processedFile', ({ ast, globals, path }) => {
     process.stderr.write('.');
 
@@ -110,8 +114,4 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
       callback(null, bundleResult);
     }
   });
-  
-  const queue = enqueueModule(getModulePath('.', absoluteEntryPath, context));
-  // Start processing in the worker pool
-  pool.any('processFile', queue.shift());
 }

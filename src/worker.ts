@@ -20,8 +20,8 @@ const log = (...args: any[]) => {
 process.on('message', ({ type, data, id}) => {
   log(type, data, id);
 
-  const respond = (type?: string, data?: any) => {
-    process.send({ id, type, data });
+  const respond = (_type?: string, _data?: any) => {
+    process.send({ id, type: _type, data: _data });
   };
 
   switch (type) {
