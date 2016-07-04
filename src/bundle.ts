@@ -7,6 +7,7 @@ import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
 import { IDetectedGlobals, injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
+import { Watcher } from './watcher';
 
 export type SourceOptions =
     'es5'
@@ -27,6 +28,7 @@ export interface IBundleOptions {
 export interface IPaeckchenContext {
   config: IConfig;
   host: IHost;
+  watcher?: Watcher;
   rebundle?: () => void;
 }
 
@@ -94,6 +96,9 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   };
   if (!context.config.input.entryPoint) {
     throw new Error('Missing entry-point');
+  }
+  if (context.config.watchMode) {
+    context.watcher = new Watcher(host);
   }
 
   const detectedGlobals: IDetectedGlobals = {

@@ -1,8 +1,9 @@
 import test from 'ava';
 import { visit } from 'ast-types';
 import { runInNewContext } from 'vm';
-
 import { HostMock, generate } from './helper';
+import { IPaeckchenContext } from '../src/bundle';
+
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
 
 test.beforeEach(() => {
@@ -246,4 +247,57 @@ test('bundleNextModule should remove sourceMapping comments', t => {
   bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.is(generate(modules[0]).indexOf('# sourceMappingURL='), -1);
+});
+
+test('bundleNextModule should add modules to the watch list if enabled', t => {
+  let watchedFile: string;
+  const host = new HostMock({
+    '/some/mod.js': ''
+  });
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start(): void { /* */ },
+      watchFile(fileName: string): void {
+        watchedFile = fileName;
+      }
+    } as any
+  };
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule([], context, {} as any, {});
+
+  t.is(watchedFile, '/some/mod.js');
+});
+
+test('bundleNextModule should trigger rebundle on watched file update', t => {
+  let callMeOnChangesFunction: Function;
+  const host = new HostMock({
+    '/some/mod.js': ''
+  });
+  let calledRebundle = false;
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start(callMeOnChanges: Function): void {
+        callMeOnChangesFunction = callMeOnChanges;
+      },
+      watchFile(fileName: string): void { /* */ }
+    } as any,
+    rebundle: () => calledRebundle = true
+  };
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule([], context, {} as any, {});
+  callMeOnChangesFunction('update', '/some/mod.js');
+
+  t.true(calledRebundle);
 });

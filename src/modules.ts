@@ -5,7 +5,6 @@ import { builders as b } from 'ast-types';
 import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
 import { checkGlobals, IDetectedGlobals } from './globals';
-import { Watcher } from './watcher';
 
 interface IWrappedModule {
   index: number;
@@ -15,10 +14,15 @@ interface IWrappedModule {
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
 let nextModuleIndex = 0;
+let watchCallbackAdded = false;
 
+/*
+ * This function is for testing purpose and a big code smell.
+ */
 export function reset(): void {
   Object.keys(wrappedModules).forEach(key => delete wrappedModules[key]);
   nextModuleIndex = 0;
+  watchCallbackAdded = false;
 }
 
 export function getModuleIndex(moduleName: string): number {
@@ -76,13 +80,11 @@ export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElem
   return true;
 }
 
-let watcher: Watcher;
-
 function watchModule(modulePath: string, context: IPaeckchenContext): void {
   if (context.config.watchMode) {
-    if (!watcher) {
-      watcher = new Watcher(context.host);
-      watcher.start((event, fileName) => {
+    if (!watchCallbackAdded) {
+      watchCallbackAdded = true;
+      context.watcher.start((event, fileName) => {
         if (event === 'update') {
           updateModule(modulePath);
           enqueueModule(modulePath);
@@ -92,7 +94,7 @@ function watchModule(modulePath: string, context: IPaeckchenContext): void {
         }
       });
     }
-    watcher.watchFile(modulePath);
+    context.watcher.watchFile(modulePath);
   }
 }
 

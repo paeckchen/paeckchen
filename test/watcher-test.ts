@@ -4,7 +4,7 @@ import { HostMock } from './helper';
 
 import { Watcher } from '../src/watcher';
 
-class ChokidarMock extends FSWatcher {
+export class ChokidarMock extends FSWatcher {
   public onCalls: string[] = [];
   private onAdd: Function;
   private onChange: Function;
