@@ -188,7 +188,6 @@ declare module 'ava' {
      * The test will fail if the actual assertion count doesn't match planned assertions.
      */
     plan(count: number): void;
-    end(): void;
 
     skip: AssertContext;
   }
