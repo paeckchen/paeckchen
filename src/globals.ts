@@ -2,6 +2,7 @@ import { visit, builders as b, IPath } from 'ast-types';
 import { getModulePath } from './module-path';
 import { getModuleIndex, enqueueModule } from './modules';
 import { IPaeckchenContext } from './bundle';
+import { State } from './state';
 
 export interface IDetectedGlobals {
   global: boolean;
@@ -23,10 +24,10 @@ export function checkGlobalIdentifier(name: string, ast: ESTree.Program): boolea
   return detectedGlobalIdentifier;
 }
 
-export function checkGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program): void {
-  detectedGlobals.global = detectedGlobals.global || checkGlobalIdentifier('global', ast);
-  detectedGlobals.process = detectedGlobals.process || checkGlobalIdentifier('process', ast);
-  detectedGlobals.buffer = detectedGlobals.buffer || checkGlobalIdentifier('Buffer', ast);
+export function checkGlobals(state: State, ast: ESTree.Program): void {
+  state.detectedGlobals.global = state.detectedGlobals.global || checkGlobalIdentifier('global', ast);
+  state.detectedGlobals.process = state.detectedGlobals.process || checkGlobalIdentifier('process', ast);
+  state.detectedGlobals.buffer = state.detectedGlobals.buffer || checkGlobalIdentifier('Buffer', ast);
 }
 
 function injectGlobal(ast: ESTree.Program): void {
@@ -51,12 +52,12 @@ function injectGlobal(ast: ESTree.Program): void {
   });
 }
 
-function injectProcess(ast: ESTree.Program, context: IPaeckchenContext): void {
+function injectProcess(ast: ESTree.Program, context: IPaeckchenContext, state: State): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('process') === null) {
         const processPath = getModulePath('.', 'process', context);
-        const processIndex = getModuleIndex(processPath);
+        const processIndex = getModuleIndex(processPath, state);
 
         const body = path.get<ESTree.Statement[]>('body');
         body.get(body.value.length - 1).insertBefore(
@@ -86,12 +87,12 @@ function injectProcess(ast: ESTree.Program, context: IPaeckchenContext): void {
   });
 }
 
-function injectBuffer(ast: ESTree.Program, context: IPaeckchenContext): void {
+function injectBuffer(ast: ESTree.Program, context: IPaeckchenContext, state: State): void {
   visit(ast, {
     visitProgram: function(path: IPath<ESTree.Program>): boolean {
       if (path.scope.lookup('Buffer') === null) {
         const bufferPath = getModulePath('.', 'buffer', context);
-        const bufferIndex = getModuleIndex(bufferPath);
+        const bufferIndex = getModuleIndex(bufferPath, state);
 
         const body = path.get<ESTree.Statement[]>('body');
         body.get(body.value.length - 1).insertBefore(
@@ -125,15 +126,15 @@ function injectBuffer(ast: ESTree.Program, context: IPaeckchenContext): void {
   });
 }
 
-export function injectGlobals(detectedGlobals: IDetectedGlobals, ast: ESTree.Program,
+export function injectGlobals(state: State, ast: ESTree.Program,
     context: IPaeckchenContext): void {
-  if (detectedGlobals.global) {
+  if (state.detectedGlobals.global) {
     injectGlobal(ast);
   }
-  if (detectedGlobals.process) {
-    injectProcess(ast, context);
+  if (state.detectedGlobals.process) {
+    injectProcess(ast, context, state);
   }
-  if (detectedGlobals.buffer) {
-    injectBuffer(ast, context);
+  if (state.detectedGlobals.buffer) {
+    injectBuffer(ast, context, state);
   }
 }

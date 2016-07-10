@@ -1,11 +1,12 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
 import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
+import { State } from '../../src/state';
 
-import { reset } from '../../src/modules';
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
 function rewriteExports(input: string, files: any = {}): string {
+  const state = new State([]);
   const host = new HostMock(files);
 
   return parseAndProcess(input, ast => {
@@ -14,7 +15,7 @@ function rewriteExports(input: string, files: any = {}): string {
         aliases: {}
       } as any,
       host
-    });
+    }, state);
   });
 }
 
@@ -23,8 +24,6 @@ function executeExports(input: string, files: any = {}, settings: any = {},
   const processed = rewriteExports(input, files);
   return virtualModule(processed, settings, requireResults);
 }
-
-test.beforeEach(reset);
 
 test('es6-export plugin should rewrite variable assignment exports correctly', t => {
   const input = stripIndent`

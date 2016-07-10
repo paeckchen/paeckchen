@@ -1,6 +1,7 @@
 import test from 'ava';
 import { runInNewContext } from 'vm';
 import { parse, generate, HostMock } from './helper';
+import { State } from '../src/state';
 
 import { checkGlobalIdentifier, injectGlobals } from '../src/globals';
 
@@ -22,6 +23,10 @@ test('checkGlobalIdentifier should return false if the process is declared in sc
 });
 
 test('injectGlobals should define global if not already in scope', t => {
+  const state = new State([]);
+  state.detectedGlobals.buffer = true;
+  state.detectedGlobals.global = true;
+  state.detectedGlobals.process = true;
   const host = new HostMock({});
   const ast = parse(`
     var cache = [];
@@ -36,11 +41,7 @@ test('injectGlobals should define global if not already in scope', t => {
     modules[0]();
   `);
 
-  injectGlobals({
-    global: true,
-    process: true,
-    buffer: true
-  }, ast, { config: { aliases: {} } as any, host });
+  injectGlobals(state, ast, { config: { aliases: {} } as any, host });
 
   const sandbox: any = {
     console,

@@ -1,7 +1,6 @@
 import test from 'ava';
 import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 
-import { reset } from '../../src/modules';
 import { rewriteGlobalLocals } from '../../src/plugins/global-locals';
 
 function rewriteExports(input: string, files: any = {}): string {
@@ -17,8 +16,6 @@ function executeExports(input: string, files: any = {}, settings: any = {},
   const processed = rewriteExports(input, files);
   return virtualModule(processed, settings, requireResults);
 }
-
-test.beforeEach(reset);
 
 test('rewriteGlobalLocals plugin should wrap module in closure with __filename and __dirname', t => {
   const input = `

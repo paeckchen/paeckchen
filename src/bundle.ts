@@ -5,8 +5,9 @@ import { generate } from 'escodegen';
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
-import { IDetectedGlobals, injectGlobals } from './globals';
+import { injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
+import { State } from './state';
 
 export type SourceOptions =
     'es5'
@@ -59,23 +60,19 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
     throw new Error('Missing entry-point');
   }
 
-  const detectedGlobals: IDetectedGlobals = {
-    global: false,
-    process: false,
-    buffer: false
-  };
   const paeckchenAst = parse(paeckchenSource);
-  const modules = getModules(paeckchenAst).elements;
+  const state = new State(getModules(paeckchenAst).elements);
+
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
   // start bundling...
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
-  while (bundleNextModule(modules, context, detectedGlobals)) {
+  while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
   // ... when ready inject globals...
-  injectGlobals(detectedGlobals, paeckchenAst, context);
+  injectGlobals(state, paeckchenAst, context);
   // ... and bundle global dependencies
-  while (bundleNextModule(modules, context, detectedGlobals)) {
+  while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
   process.stderr.write('\n');

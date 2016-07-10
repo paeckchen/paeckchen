@@ -3,16 +3,17 @@ import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
 import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
 import { IPaeckchenContext } from '../bundle';
+import { State } from '../state';
 
 export function rewriteImportDeclaration(program: ESTree.Program, currentModule: string,
-    context: IPaeckchenContext): void {
+    context: IPaeckchenContext, state: State): void {
   visit(program, {
     visitImportDeclaration: function(path: IPath<ESTree.ImportDeclaration>): boolean {
       const source = path.node.source;
 
       if (n.Literal.check(source)) {
         const importModule = getModulePath(currentModule, source.value as string, context);
-        const importModuleIndex = getModuleIndex(importModule);
+        const importModuleIndex = getModuleIndex(importModule, state);
 
         const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
         const tempIdentifier = b.identifier(`__import${importModuleIndex}_${loc(path.node.loc.start)}`);

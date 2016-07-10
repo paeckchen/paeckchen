@@ -1,15 +1,13 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
 import { HostMock, parseAndProcess } from '../helper';
+import { State } from '../../src/state';
 
-import { reset } from '../../src/modules';
 import { rewriteRequireStatements } from '../../src/plugins/commonjs';
 
-test.beforeEach(() => {
-  reset();
-});
-
 test('commonjs should rewrite require statements', t => {
+  const state = new State([]);
+
   const input = stripIndent`
     var a = require('./dependency');
   `;
@@ -27,12 +25,13 @@ test('commonjs should rewrite require statements', t => {
         aliases: {}
       } as any,
       host
-    }));
+    }, state));
 
   t.is(actual, expected);
 });
 
 test('commonjs should rewrite require statements which are nested inside call chains', t => {
+  const state = new State([]);
   const input = stripIndent`
     require('./dependency')();
   `;
@@ -50,7 +49,7 @@ test('commonjs should rewrite require statements which are nested inside call ch
         aliases: {}
       } as any,
       host
-    }));
+    }, state));
 
   t.is(actual, expected);
 });

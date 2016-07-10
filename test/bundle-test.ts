@@ -1,13 +1,8 @@
 import test from 'ava';
 import { join } from 'path';
 import { HostMock, virtualModule } from './helper';
-import { reset } from '../src/modules';
 
 import { bundle } from '../src/bundle';
-
-test.beforeEach(() => {
-  reset();
-});
 
 test('bundle should bundle the given entry-point and its dependencies', t => {
   const host = new HostMock({

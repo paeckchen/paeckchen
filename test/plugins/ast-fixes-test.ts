@@ -3,7 +3,6 @@ import { runInNewContext } from 'vm';
 import { stripIndent } from 'common-tags';
 import { HostMock, parseAndProcess } from '../helper';
 
-import { reset } from '../../src/modules';
 import { astFixes } from '../../src/plugins/ast-fixes';
 
 function fixComments(input: string, files: any = {}): string {
@@ -20,8 +19,6 @@ function executeFixComments(input: string, files: any = {}, settings: any = {}):
   runInNewContext(processed, result);
   return result;
 }
-
-test.beforeEach(reset);
 
 test('test', t => {
   const input = stripIndent`

@@ -4,42 +4,29 @@ import { builders as b } from 'ast-types';
 
 import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
-import { checkGlobals, IDetectedGlobals } from './globals';
+import { checkGlobals } from './globals';
+import { IWrappedModule, State } from './state';
 
-interface IWrappedModule {
-  index: number;
-  name: string;
-  ast?: ESTree.Statement;
-}
-
-const wrappedModules: {[name: string]: IWrappedModule} = {};
-let nextModuleIndex = 0;
-
-export function reset(): void {
-  Object.keys(wrappedModules).forEach(key => delete wrappedModules[key]);
-  nextModuleIndex = 0;
-}
-
-export function getModuleIndex(moduleName: string): number {
-  if (wrappedModules[moduleName]) {
-    return wrappedModules[moduleName].index;
+export function getModuleIndex(moduleName: string, state: State): number {
+  if (state.wrappedModules[moduleName]) {
+    return state.wrappedModules[moduleName].index;
   }
-  const index = nextModuleIndex++;
-  wrappedModules[moduleName] = {
+  const index = state.getAndIncrementModuleIndex();
+  state.wrappedModules[moduleName] = {
     index,
     name: moduleName
   };
   return index;
 }
 
-export function updateModule(moduleName: string): void {
-  if (wrappedModules[moduleName]) {
-    wrappedModules[moduleName].ast = undefined;
+export function updateModule(moduleName: string, state: State): void {
+  if (state.wrappedModules[moduleName]) {
+    state.wrappedModules[moduleName].ast = undefined;
   }
 }
 
-function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedModule {
-  const index = getModuleIndex(name);
+function createModuleWrapper(name: string, moduleAst: ESTree.Program, state: State): IWrappedModule {
+  const index = getModuleIndex(name, state);
   return {
     index,
     name,
@@ -63,21 +50,19 @@ export function enqueueModule(modulePath: string): void {
   }
 }
 
-export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any = defaultPlugins): boolean {
+export function bundleNextModule(state: State, context: IPaeckchenContext, plugins: any = defaultPlugins): boolean {
   if (moduleBundleQueue.length === 0) {
     return false;
   }
   const modulePath = moduleBundleQueue.shift();
-  wrapModule(modulePath, modules, context, detectedGlobals, plugins);
+  wrapModule(modulePath, state, context, plugins);
   return true;
 }
 
-function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any): void {
+function wrapModule(modulePath: string, state: State, context: IPaeckchenContext, plugins: any): void {
   // Prefill module indices
-  getModuleIndex(modulePath);
-  if (wrappedModules[modulePath].ast !== undefined) {
+  getModuleIndex(modulePath, state);
+  if (state.wrappedModules[modulePath].ast !== undefined) {
     // Module is already up to date
     return;
   }
@@ -93,12 +78,12 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
         )
       ]);
     } else {
-      moduleAst = processModule(modulePath, context, detectedGlobals, plugins);
+      moduleAst = processModule(modulePath, context, state, plugins);
     }
 
-    const wrappedModule = createModuleWrapper(modulePath, moduleAst);
-    wrappedModules[wrappedModule.name] = wrappedModule;
-    modules[wrappedModule.index] = wrappedModule.ast;
+    const wrappedModule = createModuleWrapper(modulePath, moduleAst, state);
+    state.wrappedModules[wrappedModule.name] = wrappedModule;
+    state.modules[wrappedModule.index] = wrappedModule.ast;
   } catch (e) {
     console.error(`Failed to process module '${modulePath}'`);
     throw e;
@@ -124,7 +109,7 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): EST
   ]);
 }
 
-function processModule(modulePath: string, context: IPaeckchenContext, detectedGlobals: IDetectedGlobals,
+function processModule(modulePath: string, context: IPaeckchenContext, state: State,
     plugins: any): ESTree.Program {
   // parse...
   const comments: any[] = [];
@@ -143,11 +128,11 @@ function processModule(modulePath: string, context: IPaeckchenContext, detectedG
     comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
 
   // ... check for global features...
-  checkGlobals(detectedGlobals, moduleAst);
+  checkGlobals(state, moduleAst);
 
   // ... and rewrite ast
   Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, modulePath, context);
+    plugins[plugin](moduleAst, modulePath, context, state);
   });
 
   return moduleAst;
