@@ -1,8 +1,9 @@
 import test from 'ava';
 import { visit } from 'ast-types';
 import { runInNewContext } from 'vm';
-
 import { HostMock, generate } from './helper';
+import { IPaeckchenContext } from '../src/bundle';
+
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule, reset } from '../src/modules';
 
 test.beforeEach(() => {
@@ -20,7 +21,7 @@ test('getModuleIndex should return the same index if duplicate request', t => {
 });
 
 test.beforeEach(() => {
-  updateModule('/some/mod.js');
+  updateModule('/some/mod.js', false);
 });
 
 test('bundleNextModule with empty queue return false', t => {
@@ -114,7 +115,7 @@ test('bundleNextModule should rebundle modules if updated', t => {
   bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
   const firstBundled = modules[0];
 
-  updateModule('/some/mod.js');
+  updateModule('/some/mod.js', false);
   enqueueModule('/some/mod.js');
   bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
@@ -204,6 +205,48 @@ test('bundleNextModule should bundle a virtual empty module per external falsy c
   t.deepEqual(sandbox.module.exports, {});
 });
 
+test('bundleNextModule should bundle an error for removed modules', t => {
+  const modules: any[] = [];
+  const plugins = {};
+  const globals = {
+    global: false,
+    process: false,
+    buffer: false
+  };
+  let callMeOnChangesFunction: Function;
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host: new HostMock({
+      '/test': ''
+    }, '/'),
+    watcher: {
+      start(callMeOnChanges: Function): void {
+        callMeOnChangesFunction = callMeOnChanges;
+      },
+      watchFile(fileName: string): void { /* */ }
+    } as any,
+    rebundle: () => { /* */ }
+  };
+
+  enqueueModule('/test');
+  bundleNextModule(modules, context, globals, plugins);
+  callMeOnChangesFunction('remove', '/test');
+  bundleNextModule(modules, context, globals, plugins);
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  t.throws(() => {
+    runInNewContext(generate(modules[0]) + '_0(module, module.exports);', sandbox);
+  }, "Module '/test' was removed");
+});
+
 test('bundleNextModule should bundle an error for unavailable modules', t => {
   const modules: any[] = [];
   const plugins = {};
@@ -246,4 +289,85 @@ test('bundleNextModule should remove sourceMapping comments', t => {
   bundleNextModule(modules, { config: { externals: {} } as any, host }, globals, plugins);
 
   t.is(generate(modules[0]).indexOf('# sourceMappingURL='), -1);
+});
+
+test('bundleNextModule should add modules to the watch list if enabled', t => {
+  let watchedFile: string;
+  const host = new HostMock({
+    '/some/mod.js': ''
+  });
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start(): void { /* */ },
+      watchFile(fileName: string): void {
+        watchedFile = fileName;
+      }
+    } as any
+  };
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule([], context, {} as any, {});
+
+  t.is(watchedFile, '/some/mod.js');
+});
+
+test('bundleNextModule should trigger rebundle on watched file update', t => {
+  let callMeOnChangesFunction: Function;
+  const host = new HostMock({
+    '/some/mod.js': ''
+  });
+  let calledRebundle = false;
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start(callMeOnChanges: Function): void {
+        callMeOnChangesFunction = callMeOnChanges;
+      },
+      watchFile(fileName: string): void { /* */ }
+    } as any,
+    rebundle: () => calledRebundle = true
+  };
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule([], context, {} as any, {});
+  callMeOnChangesFunction('update', '/some/mod.js');
+
+  t.true(calledRebundle);
+});
+
+test('bundleNextModule should trigger rebundle on watched file removal', t => {
+  let callMeOnChangesFunction: Function;
+  const host = new HostMock({
+    '/some/mod.js': ''
+  });
+  let calledRebundle = false;
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start(callMeOnChanges: Function): void {
+        callMeOnChangesFunction = callMeOnChanges;
+      },
+      watchFile(fileName: string): void { /* */ }
+    } as any,
+    rebundle: () => calledRebundle = true
+  };
+
+  enqueueModule('/some/mod.js');
+  bundleNextModule([], context, {} as any, {});
+  callMeOnChangesFunction('remove', '/some/mod.js');
+
+  t.true(calledRebundle);
 });
