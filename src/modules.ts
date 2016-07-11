@@ -10,6 +10,7 @@ interface IWrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
+  remove: boolean;
 }
 
 const wrappedModules: {[name: string]: IWrappedModule} = {};
@@ -32,14 +33,16 @@ export function getModuleIndex(moduleName: string): number {
   const index = nextModuleIndex++;
   wrappedModules[moduleName] = {
     index,
-    name: moduleName
+    name: moduleName,
+    remove: false
   };
   return index;
 }
 
-export function updateModule(moduleName: string): void {
+export function updateModule(moduleName: string, remove: boolean): void {
   if (wrappedModules[moduleName]) {
     wrappedModules[moduleName].ast = undefined;
+    wrappedModules[moduleName].remove = remove;
   }
 }
 
@@ -57,7 +60,8 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedM
       b.blockStatement(
         moduleAst.body
       )
-    )
+    ),
+    remove: false
   };
 }
 
@@ -86,11 +90,13 @@ function watchModule(modulePath: string, context: IPaeckchenContext): void {
       watchCallbackAdded = true;
       context.watcher.start((event, fileName) => {
         if (event === 'update') {
-          updateModule(modulePath);
+          updateModule(modulePath, false);
           enqueueModule(modulePath);
           context.rebundle();
         } else if (event === 'remove') {
-          // TODO: Bundle need to be updated
+          updateModule(modulePath, true);
+          enqueueModule(modulePath);
+          context.rebundle();
         }
       });
     }
@@ -101,29 +107,43 @@ function watchModule(modulePath: string, context: IPaeckchenContext): void {
 function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any): void {
   // Prefill module indices
-  getModuleIndex(modulePath);
+  const moduleIndex = getModuleIndex(modulePath);
   if (wrappedModules[modulePath].ast !== undefined) {
     // Module is already up to date
     return;
   }
 
   try {
-    let moduleAst: ESTree.Program;
-    if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
-      moduleAst = wrapExternalModule(modulePath, context);
-    } else if (!context.host.fileExists(modulePath)) {
-      moduleAst = b.program([
-        b.throwStatement(
-          b.literal(`Module ${modulePath} not found`)
-        )
-      ]);
+    let moduleAst: ESTree.Program = undefined;
+    if (!wrappedModules[modulePath].remove) {
+      if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+        moduleAst = wrapExternalModule(modulePath, context);
+      } else if (!context.host.fileExists(modulePath)) {
+        moduleAst = b.program([
+          b.throwStatement(
+            b.newExpression(
+              b.identifier('Error'),
+              [
+                b.literal(`Module '${modulePath}' not found`)
+              ]
+            )
+          )
+        ]);
+      } else {
+        moduleAst = processModule(modulePath, context, detectedGlobals, plugins);
+      }
+      wrappedModules[modulePath] = createModuleWrapper(modulePath, moduleAst);
+      modules[moduleIndex] = wrappedModules[modulePath].ast;
     } else {
-      moduleAst = processModule(modulePath, context, detectedGlobals, plugins);
+      modules[moduleIndex] = b.throwStatement(
+        b.newExpression(
+          b.identifier('Error'),
+          [
+            b.literal(`Module '${modulePath}' was removed`)
+          ]
+        )
+      );
     }
-
-    const wrappedModule = createModuleWrapper(modulePath, moduleAst);
-    wrappedModules[wrappedModule.name] = wrappedModule;
-    modules[wrappedModule.index] = wrappedModule.ast;
   } catch (e) {
     console.error(`Failed to process module '${modulePath}'`);
     throw e;
