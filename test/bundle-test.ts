@@ -3,7 +3,7 @@ import { join } from 'path';
 import { HostMock, virtualModule } from './helper';
 import { reset } from '../src/modules';
 
-import { bundle } from '../src/bundle';
+import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
 
 test.beforeEach(() => {
   reset();
@@ -114,4 +114,55 @@ test('bundle should write result to disk if output file given', t => {
   bundle({}, host);
 
   t.true('/result.js' in host.files);
+});
+
+test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
+  const ast: any = {};
+  const modules: any = {};
+  const context: any = {};
+  const globals: any = {};
+  const host: any = {};
+  let bundleFunctionCalled = 0;
+  const bundleFunction: any = (_ast: any, _modules: any, _context: any, _globals: any, _host: any) => {
+    t.is(_ast, ast);
+    t.is(_modules, modules);
+    t.is(_context, context);
+    t.is(_globals, globals);
+    t.is(_host, host);
+    bundleFunctionCalled++;
+  };
+  const rebundle = rebundleFactory(ast, modules, context, globals, host, bundleFunction);
+  rebundle();
+  rebundle();
+
+  setTimeout(() => {
+    t.is(bundleFunctionCalled, 1);
+    t.end();
+  }, 25);
+});
+
+test('bundle should create a watch and a rebundle function when in watch mode', t => {
+  const host = new HostMock({
+    '/entry': ''
+  }, '/');
+  let bundleFunctionCalled = 0;
+  const rebundle = () => {
+    //
+  };
+  const bundleFunction: any = (ast: any, modules: any, context: IPaeckchenContext) => {
+    t.truthy(context.watcher);
+    t.is(context.rebundle, rebundle);
+    bundleFunctionCalled++;
+  };
+  const rebundleFactoryFunction: any = () => {
+    return rebundle;
+  };
+  const config: IBundleOptions = {
+    entryPoint: '/entry',
+    watchMode: true
+  };
+
+  bundle(config, host, bundleFunction, rebundleFactoryFunction);
+
+  t.is(bundleFunctionCalled, 1);
 });

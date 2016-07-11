@@ -53,7 +53,7 @@ const paeckchenSource = `
   __paeckchen_require__(0);
 `;
 
-function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+export function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
     context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost): string {
   while (bundleNextModule(modules, context, detectedGlobals)) {
     process.stderr.write('.');
@@ -76,20 +76,23 @@ function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expressi
   return bundleResult;
 }
 
-function rebundleFactory(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost): () => void {
+export function rebundleFactory(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost,
+      bundleFunction: typeof executeBundling): () => void {
   let timer: NodeJS.Timer;
   return () => {
     if (timer) {
       clearTimeout(timer);
     }
     timer = setTimeout(() => {
-      executeBundling(paeckchenAst, modules, context, detectedGlobals, host);
+      bundleFunction(paeckchenAst, modules, context, detectedGlobals, host);
     }, 0);
   };
 }
 
-export function bundle(options: IBundleOptions, host: IHost = new DefaultHost()): string {
+export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
+    bundleFunction: typeof executeBundling = executeBundling,
+      rebundleFactoryFunction: typeof rebundleFactory = rebundleFactory): string {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
     host
@@ -112,8 +115,8 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost())
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
 
   if (context.config.watchMode) {
-    context.rebundle = rebundleFactory(paeckchenAst, modules, context, detectedGlobals, host);
+    context.rebundle = rebundleFactoryFunction(paeckchenAst, modules, context, detectedGlobals, host, bundleFunction);
   }
 
-  return executeBundling(paeckchenAst, modules, context, detectedGlobals, host);
+  return bundleFunction(paeckchenAst, modules, context, detectedGlobals, host);
 }
