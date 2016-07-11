@@ -82,5 +82,6 @@ declare module 'ast-types' {
     export function objectExpression(properties: ESTree.Property[]): ESTree.ObjectExpression;
     export function property(kind: 'init'|'get'|'set', key: ESTree.Literal|ESTree.Identifier, value: ESTree.Expression): ESTree.Property;
     export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
+    export function newExpression(callee: ESTree.Expression, arguments: ESTree.Expression[]): ESTree.NewExpression;
   }
 }

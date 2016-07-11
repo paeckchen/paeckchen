@@ -4,6 +4,7 @@ export interface IWrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
+  remove: boolean;
 }
 
 export class State {
@@ -19,6 +20,8 @@ export class State {
   private _wrappedModules: { [name: string]: IWrappedModule } = {};
 
   private _nextModuleIndex: number = 0;
+
+  private _moduleWatchCallbackAdded: boolean = false;
 
   constructor(modules: (ESTree.Expression | ESTree.SpreadElement)[]) {
     this._modules = modules;
@@ -38,6 +41,14 @@ export class State {
 
   public getAndIncrementModuleIndex(): number {
     return this._nextModuleIndex++;
+  }
+
+  public get moduleWatchCallbackAdded(): boolean {
+    return this._moduleWatchCallbackAdded;
+  }
+
+  public set moduleWatchCallbackAdded(watchCallbackAdded: boolean) {
+    this._moduleWatchCallbackAdded = watchCallbackAdded;
   }
 
 }
