@@ -53,8 +53,9 @@ const paeckchenSource = `
   __paeckchen_require__(0);
 `;
 
+export type BundlingFunction = typeof executeBundling;
 export function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost): string {
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, outputFunction: OutputFunction): string {
   while (bundleNextModule(modules, context, detectedGlobals)) {
     process.stderr.write('.');
   }
@@ -67,32 +68,38 @@ export function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.E
   const bundleResult = generate(paeckchenAst, {
     comment: true
   });
-  if (context.config.output.file) {
-    host.writeFile(
-      host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
-    return undefined;
-  }
+  outputFunction(bundleResult, context);
   return bundleResult;
 }
 
+export type RebundleFactory = typeof rebundleFactory;
 export function rebundleFactory(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, host: IHost,
-      bundleFunction: typeof executeBundling): () => void {
+    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, bundleFunction: BundlingFunction,
+      outputFunction: OutputFunction): () => void {
   let timer: NodeJS.Timer;
   return () => {
     if (timer) {
       clearTimeout(timer);
     }
     timer = setTimeout(() => {
-      bundleFunction(paeckchenAst, modules, context, detectedGlobals, host);
+      bundleFunction(paeckchenAst, modules, context, detectedGlobals, outputFunction);
     }, 0);
   };
 }
 
+export type OutputFunction = typeof writeOutput;
+export function writeOutput(bundleResult: string, context: IPaeckchenContext): void {
+  if (context.config.output.file) {
+    context.host.writeFile(
+      context.host.joinPath(context.config.output.folder, context.config.output.file),
+        bundleResult);
+  }
+}
+
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
-    bundleFunction: typeof executeBundling = executeBundling,
-      rebundleFactoryFunction: typeof rebundleFactory = rebundleFactory): string {
+    outputFunction: OutputFunction = writeOutput,
+      bundleFunction: BundlingFunction = executeBundling,
+        rebundleFactoryFunction: RebundleFactory = rebundleFactory): string {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
     host
@@ -115,8 +122,9 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
 
   if (context.config.watchMode) {
-    context.rebundle = rebundleFactoryFunction(paeckchenAst, modules, context, detectedGlobals, host, bundleFunction);
+    context.rebundle = rebundleFactoryFunction(paeckchenAst, modules, context, detectedGlobals, bundleFunction,
+      outputFunction);
   }
 
-  return bundleFunction(paeckchenAst, modules, context, detectedGlobals, host);
+  return bundleFunction(paeckchenAst, modules, context, detectedGlobals, outputFunction);
 }
