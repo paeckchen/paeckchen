@@ -1,1 +1,13 @@
-export { bundle, IBundleOptions, SourceOptions } from './bundle';
+export {
+  bundle,
+  IBundleOptions,
+  SourceOptions,
+  OutputFunction,
+  BundlingFunction,
+  RebundleFactory,
+  IPaeckchenContext
+} from './bundle';
+export {
+  IHost,
+  DefaultHost
+} from './host';

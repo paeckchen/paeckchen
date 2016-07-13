@@ -54,8 +54,9 @@ const paeckchenSource = `
   __paeckchen_require__(0);
 `;
 
+export type BundlingFunction = typeof executeBundling;
 export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
-    host: IHost): string {
+    outputFunction: OutputFunction): string {
   while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
@@ -68,31 +69,37 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
   const bundleResult = generate(paeckchenAst, {
     comment: true
   });
-  if (context.config.output.file) {
-    host.writeFile(
-      host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
-    return undefined;
-  }
+  outputFunction(bundleResult, context);
   return bundleResult;
 }
 
-export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext, host: IHost,
-    bundleFunction: typeof executeBundling): () => void {
+export type RebundleFactory = typeof rebundleFactory;
+export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
+    bundleFunction: BundlingFunction, outputFunction: OutputFunction): () => void {
   let timer: NodeJS.Timer;
   return () => {
     if (timer) {
       clearTimeout(timer);
     }
     timer = setTimeout(() => {
-      bundleFunction(state, paeckchenAst, context, host);
+      bundleFunction(state, paeckchenAst, context, outputFunction);
     }, 0);
   };
 }
 
+export type OutputFunction = typeof writeOutput;
+export function writeOutput(bundleResult: string, context: IPaeckchenContext): void {
+  if (context.config.output.file) {
+    context.host.writeFile(
+      context.host.joinPath(context.config.output.folder, context.config.output.file),
+        bundleResult);
+  }
+}
+
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
-    bundleFunction: typeof executeBundling = executeBundling,
-      rebundleFactoryFunction: typeof rebundleFactory = rebundleFactory): string {
+    outputFunction: OutputFunction = writeOutput,
+      bundleFunction: BundlingFunction = executeBundling,
+        rebundleFactoryFunction: RebundleFactory = rebundleFactory): string {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
     host
@@ -111,8 +118,8 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
 
   if (context.config.watchMode) {
-    context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, host, bundleFunction);
+    context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction, outputFunction);
   }
 
-  return bundleFunction(state, paeckchenAst, context, host);
+  return bundleFunction(state, paeckchenAst, context, outputFunction);
 }

@@ -116,16 +116,14 @@ test.cb('rebundleFactory should return a function which calls a bundle function 
   const state = new State([]);
   const ast: any = {};
   const context: any = {};
-  const host: any = {};
   let bundleFunctionCalled = 0;
-  const bundleFunction: any = (_state: any, _ast: any, _context: any, _host: any) => {
+  const bundleFunction: any = (_state: any, _ast: any, _context: any) => {
     t.is(_state, state);
     t.is(_ast, ast);
     t.is(_context, context);
-    t.is(_host, host);
     bundleFunctionCalled++;
   };
-  const rebundle = rebundleFactory(state, ast, context, host, bundleFunction);
+  const rebundle = rebundleFactory(state, ast, context, bundleFunction, () => undefined);
   rebundle();
   rebundle();
 
@@ -156,7 +154,7 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
     watchMode: true
   };
 
-  bundle(config, host, bundleFunction, rebundleFactoryFunction);
+  bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction);
 
   t.is(bundleFunctionCalled, 1);
 });
