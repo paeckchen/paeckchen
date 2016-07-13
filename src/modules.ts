@@ -4,34 +4,15 @@ import { builders as b } from 'ast-types';
 
 import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
-import { checkGlobals, IDetectedGlobals } from './globals';
+import { checkGlobals } from './globals';
+import { IWrappedModule, State } from './state';
 
-interface IWrappedModule {
-  index: number;
-  name: string;
-  ast?: ESTree.Statement;
-  remove: boolean;
-}
-
-const wrappedModules: {[name: string]: IWrappedModule} = {};
-let nextModuleIndex = 0;
-let watchCallbackAdded = false;
-
-/*
- * This function is for testing purpose and a big code smell.
- */
-export function reset(): void {
-  Object.keys(wrappedModules).forEach(key => delete wrappedModules[key]);
-  nextModuleIndex = 0;
-  watchCallbackAdded = false;
-}
-
-export function getModuleIndex(moduleName: string): number {
-  if (wrappedModules[moduleName]) {
-    return wrappedModules[moduleName].index;
+export function getModuleIndex(moduleName: string, state: State): number {
+  if (state.wrappedModules[moduleName]) {
+    return state.wrappedModules[moduleName].index;
   }
-  const index = nextModuleIndex++;
-  wrappedModules[moduleName] = {
+  const index = state.getAndIncrementModuleIndex();
+  state.wrappedModules[moduleName] = {
     index,
     name: moduleName,
     remove: false
@@ -39,15 +20,15 @@ export function getModuleIndex(moduleName: string): number {
   return index;
 }
 
-export function updateModule(moduleName: string, remove: boolean): void {
-  if (wrappedModules[moduleName]) {
-    wrappedModules[moduleName].ast = undefined;
-    wrappedModules[moduleName].remove = remove;
+export function updateModule(moduleName: string, remove: boolean, state: State): void {
+  if (state.wrappedModules[moduleName]) {
+    state.wrappedModules[moduleName].ast = undefined;
+    state.wrappedModules[moduleName].remove = remove;
   }
 }
 
-function createModuleWrapper(name: string, moduleAst: ESTree.Program): IWrappedModule {
-  const index = getModuleIndex(name);
+function createModuleWrapper(name: string, moduleAst: ESTree.Program, state: State): IWrappedModule {
+  const index = getModuleIndex(name, state);
   return {
     index,
     name,
@@ -73,28 +54,27 @@ export function enqueueModule(modulePath: string): void {
   }
 }
 
-export function bundleNextModule(modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any = defaultPlugins): boolean {
+export function bundleNextModule(state: State, context: IPaeckchenContext, plugins: any = defaultPlugins): boolean {
   if (moduleBundleQueue.length === 0) {
     return false;
   }
   const modulePath = moduleBundleQueue.shift();
-  watchModule(modulePath, context);
-  wrapModule(modulePath, modules, context, detectedGlobals, plugins);
+  watchModule(state, modulePath, context);
+  wrapModule(modulePath, state, context, plugins);
   return true;
 }
 
-function watchModule(modulePath: string, context: IPaeckchenContext): void {
+function watchModule(state: State, modulePath: string, context: IPaeckchenContext): void {
   if (context.config.watchMode) {
-    if (!watchCallbackAdded) {
-      watchCallbackAdded = true;
+    if (!state.moduleWatchCallbackAdded) {
+      state.moduleWatchCallbackAdded = true;
       context.watcher.start((event, fileName) => {
         if (event === 'update') {
-          updateModule(modulePath, false);
+          updateModule(modulePath, false, state);
           enqueueModule(modulePath);
           context.rebundle();
         } else if (event === 'remove') {
-          updateModule(modulePath, true);
+          updateModule(modulePath, true, state);
           enqueueModule(modulePath);
           context.rebundle();
         }
@@ -104,18 +84,17 @@ function watchModule(modulePath: string, context: IPaeckchenContext): void {
   }
 }
 
-function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, plugins: any): void {
+function wrapModule(modulePath: string, state: State, context: IPaeckchenContext, plugins: any): void {
   // Prefill module indices
-  const moduleIndex = getModuleIndex(modulePath);
-  if (wrappedModules[modulePath].ast !== undefined) {
+  const moduleIndex = getModuleIndex(modulePath, state);
+  if (state.wrappedModules[modulePath].ast !== undefined) {
     // Module is already up to date
     return;
   }
 
   try {
     let moduleAst: ESTree.Program = undefined;
-    if (!wrappedModules[modulePath].remove) {
+    if (!state.wrappedModules[modulePath].remove) {
       if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
         moduleAst = wrapExternalModule(modulePath, context);
       } else if (!context.host.fileExists(modulePath)) {
@@ -130,12 +109,12 @@ function wrapModule(modulePath: string, modules: (ESTree.Expression | ESTree.Spr
           )
         ]);
       } else {
-        moduleAst = processModule(modulePath, context, detectedGlobals, plugins);
+        moduleAst = processModule(modulePath, context, state, plugins);
       }
-      wrappedModules[modulePath] = createModuleWrapper(modulePath, moduleAst);
-      modules[moduleIndex] = wrappedModules[modulePath].ast;
+      state.wrappedModules[modulePath] = createModuleWrapper(modulePath, moduleAst, state);
+      state.modules[moduleIndex] = state.wrappedModules[modulePath].ast;
     } else {
-      modules[moduleIndex] = b.throwStatement(
+      state.modules[moduleIndex] = b.throwStatement(
         b.newExpression(
           b.identifier('Error'),
           [
@@ -169,7 +148,7 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): EST
   ]);
 }
 
-function processModule(modulePath: string, context: IPaeckchenContext, detectedGlobals: IDetectedGlobals,
+function processModule(modulePath: string, context: IPaeckchenContext, state: State,
     plugins: any): ESTree.Program {
   // parse...
   const comments: any[] = [];
@@ -188,11 +167,11 @@ function processModule(modulePath: string, context: IPaeckchenContext, detectedG
     comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
 
   // ... check for global features...
-  checkGlobals(detectedGlobals, moduleAst);
+  checkGlobals(state, moduleAst);
 
   // ... and rewrite ast
   Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, modulePath, context);
+    plugins[plugin](moduleAst, modulePath, context, state);
   });
 
   return moduleAst;

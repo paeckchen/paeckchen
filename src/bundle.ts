@@ -5,8 +5,9 @@ import { generate } from 'escodegen';
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModule } from './modules';
-import { IDetectedGlobals, injectGlobals } from './globals';
+import { injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
+import { State } from './state';
 import { Watcher } from './watcher';
 
 export type SourceOptions =
@@ -54,13 +55,13 @@ const paeckchenSource = `
 `;
 
 export type BundlingFunction = typeof executeBundling;
-export function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, outputFunction: OutputFunction): string {
-  while (bundleNextModule(modules, context, detectedGlobals)) {
+export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
+    outputFunction: OutputFunction): string {
+  while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
-  injectGlobals(detectedGlobals, paeckchenAst, context);
-  while (bundleNextModule(modules, context, detectedGlobals)) {
+  injectGlobals(state, paeckchenAst, context);
+  while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
   process.stderr.write('\n');
@@ -73,16 +74,15 @@ export function executeBundling(paeckchenAst: ESTree.Program, modules: (ESTree.E
 }
 
 export type RebundleFactory = typeof rebundleFactory;
-export function rebundleFactory(paeckchenAst: ESTree.Program, modules: (ESTree.Expression | ESTree.SpreadElement)[],
-    context: IPaeckchenContext, detectedGlobals: IDetectedGlobals, bundleFunction: BundlingFunction,
-      outputFunction: OutputFunction): () => void {
+export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
+    bundleFunction: BundlingFunction, outputFunction: OutputFunction): () => void {
   let timer: NodeJS.Timer;
   return () => {
     if (timer) {
       clearTimeout(timer);
     }
     timer = setTimeout(() => {
-      bundleFunction(paeckchenAst, modules, context, detectedGlobals, outputFunction);
+      bundleFunction(state, paeckchenAst, context, outputFunction);
     }, 0);
   };
 }
@@ -111,20 +111,15 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
     context.watcher = new Watcher(host);
   }
 
-  const detectedGlobals: IDetectedGlobals = {
-    global: false,
-    process: false,
-    buffer: false
-  };
   const paeckchenAst = parse(paeckchenSource);
-  const modules = getModules(paeckchenAst).elements;
+  const state = new State(getModules(paeckchenAst).elements);
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
+
   enqueueModule(getModulePath('.', absoluteEntryPath, context));
 
   if (context.config.watchMode) {
-    context.rebundle = rebundleFactoryFunction(paeckchenAst, modules, context, detectedGlobals, bundleFunction,
-      outputFunction);
+    context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction, outputFunction);
   }
 
-  return bundleFunction(paeckchenAst, modules, context, detectedGlobals, outputFunction);
+  return bundleFunction(state, paeckchenAst, context, outputFunction);
 }

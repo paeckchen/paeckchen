@@ -1,13 +1,9 @@
 import test from 'ava';
 import { join } from 'path';
 import { HostMock, virtualModule } from './helper';
-import { reset } from '../src/modules';
+import { State } from '../src/state';
 
 import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
-
-test.beforeEach(() => {
-  reset();
-});
 
 test('bundle should bundle the given entry-point and its dependencies', t => {
   const host = new HostMock({
@@ -117,19 +113,17 @@ test('bundle should write result to disk if output file given', t => {
 });
 
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
+  const state = new State([]);
   const ast: any = {};
-  const modules: any = {};
   const context: any = {};
-  const globals: any = {};
   let bundleFunctionCalled = 0;
-  const bundleFunction: any = (_ast: any, _modules: any, _context: any, _globals: any) => {
+  const bundleFunction: any = (_state: any, _ast: any, _context: any) => {
+    t.is(_state, state);
     t.is(_ast, ast);
-    t.is(_modules, modules);
     t.is(_context, context);
-    t.is(_globals, globals);
     bundleFunctionCalled++;
   };
-  const rebundle = rebundleFactory(ast, modules, context, globals, bundleFunction, () => undefined);
+  const rebundle = rebundleFactory(state, ast, context, bundleFunction, () => undefined);
   rebundle();
   rebundle();
 
