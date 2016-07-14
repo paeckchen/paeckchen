@@ -1,8 +1,11 @@
 {
   "private": true,
   "scripts": {
-    "linter": "tslint './packages/**/{src,test}/**/*.ts'",
-    "coverage": "echo 'run coverage on every package'"
+    "bootstrap": "node task bootstrap",
+    "linter": "node task run linter",
+    "build": "node task run build",
+    "test": "node task run test",
+    "coverage": "node task run coverage"
   },
   "repository": {
     "type": "git",
@@ -24,6 +27,7 @@
     "eslint-config-standard": "6.0.0-beta.0",
     "eslint-plugin-promise": "2.0.0",
     "eslint-plugin-standard": "2.0.0",
+    "lcov-result-merger": "1.2.0",
     "tslint": "3.13.0",
     "typescript": "1.8.10"
   },

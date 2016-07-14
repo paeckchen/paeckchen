@@ -16,7 +16,7 @@ function getPackages () {
 }
 
 const commands = {
-  install (packageDir) {
+  bootstrap (packageDir) {
     const opts = {
       cwd: path.join(process.cwd(), 'packages', packageDir),
       env: process.env,
