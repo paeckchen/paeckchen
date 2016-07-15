@@ -37,6 +37,28 @@ function getPackages () {
   return fsReaddir(path.join(process.cwd(), 'packages'))
 }
 
+function getOrderedPackages () {
+  return getPackages()
+    .then(packages => {
+      return Promise.all(packages.map(file => getPackageJson(file)))
+        .then(pkgs => ({packages, pkgs}))
+    })
+    .then(context => {
+      context.packages.sort((left, right) => {
+        let pkg = context.pkgs.find(pkg => right === pkg['name'])
+        if (left in pkg['devDependencies'] || left in pkg['dependencies']) {
+          return -1
+        }
+        pkg = context.pkgs.find(pkg => left === pkg['name'])
+        if (right in pkg['devDependencies'] || right in pkg['dependencies']) {
+          return 1
+        }
+        return 0
+      })
+      return context.packages
+    })
+}
+
 function getPackageJson (packageDir) {
   return fsReadJson(path.join(process.cwd(), 'packages', packageDir, 'package.json'))
 }
@@ -161,7 +183,7 @@ const command = process.argv[2]
 const commandArguments = process.argv.slice(3)
 
 const start = new Date().getTime()
-getPackages()
+getOrderedPackages()
   .then(packages => {
     return forEach(packages, file => commands[command].apply(null, [].concat([file], commandArguments)))
   })
