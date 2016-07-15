@@ -51,6 +51,7 @@
     "ava": "0.15.2",
     "coveralls": "2.11.11",
     "cz-conventional-changelog": "1.1.6",
+    "execa": "0.4.0",
     "in-publish": "2.0.0",
     "nyc": "7.0.0",
     "rimraf": "2.5.3",
