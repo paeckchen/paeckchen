@@ -7,6 +7,8 @@ node_js:
 cache:
   directories:
   - node_modules
+  - packages/paeckchen-core/node_modules
+  - packages/paeckchen-cli/node_modules
 
 before_script: 'npm run bootstrap; npm run linter'
 script: 'npm run coverage'
