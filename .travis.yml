@@ -10,4 +10,4 @@ cache:
 
 before_script: 'npm run linter'
 script: 'npm run coverage'
-after_script: 'cat ./coverage/lcov.info | ./node_modules/.bin/coveralls'
+after_script: "./node_modules/.bin/lcov-result-merger 'packages/*/coverage/lcov.info' | ./node_modules/.bin/coveralls"

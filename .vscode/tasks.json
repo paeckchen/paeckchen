@@ -13,9 +13,8 @@
     },
     {
       "taskName": "build",
-      "args": ["run", "build:watch"],
-      "isBuildCommand": true,
-      "isWatching": true
+      "args": ["run", "build"],
+      "isBuildCommand": true
     },
     {
       "taskName": "test",
