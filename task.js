@@ -5,6 +5,7 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const commonTags = require('common-tags')
 const fsExtra = require('fs-extra')
+const globby = require('globby')
 
 function promisify (fn) {
   return function () {
@@ -29,12 +30,14 @@ const fsRemove = promisify(fsExtra.remove)
 const fsReadJson = promisify(fsExtra.readJson)
 const fsWriteJson = promisify(fsExtra.writeJson)
 
+const packagesDirectory = path.join(process.cwd(), 'packages')
+
 function forEach (list, task) {
   return list.reduce((promise, entry) => promise.then(() => task(entry)), Promise.resolve())
 }
 
 function getPackages () {
-  return fsReaddir(path.join(process.cwd(), 'packages'))
+  return fsReaddir(packagesDirectory)
 }
 
 function getOrderedPackages () {
@@ -60,7 +63,7 @@ function getOrderedPackages () {
 }
 
 function getPackageJson (packageDir) {
-  return fsReadJson(path.join(process.cwd(), 'packages', packageDir, 'package.json'))
+  return fsReadJson(path.join(packagesDirectory, packageDir, 'package.json'))
 }
 
 function patchPackageJson (pkg) {
@@ -76,7 +79,7 @@ function npmInstall (packageDir) {
   return Promise.resolve()
     .then(() => {
       const opts = {
-        cwd: path.join(process.cwd(), 'packages', packageDir),
+        cwd: path.join(packagesDirectory, packageDir),
         env: process.env,
         stdio: 'inherit'
       }
@@ -88,7 +91,7 @@ function npmRun (packageDir, task) {
   return Promise.resolve()
     .then(() => {
       const opts = {
-        cwd: path.join(process.cwd(), 'packages', packageDir),
+        cwd: path.join(packagesDirectory, packageDir),
         env: process.env,
         stdio: 'inherit'
       }
@@ -113,9 +116,13 @@ function linkDependencies (packageDir) {
         .then(pkg => getPackageDependencies(pkg))
         .then(dependencies => {
           return forEach(dependencies,
-              dependency =>
-                fsOutputFile(path.join(process.cwd(), 'packages', packageDir, 'node_modules', dependency, 'index.js'),
-                  `module.exports = require('../../../${dependency}/')`))
+              dependency => {
+                const dependecyModulPath = path.join(packagesDirectory, packageDir, 'node_modules', dependency)
+                return fsOutputFile(path.join(dependecyModulPath, 'index.js'),
+                    `module.exports = require('../../../${dependency}/')`)
+                  .then(() => fsOutputFile(path.join(dependecyModulPath, 'index.d.ts'),
+                    `export * from '../../../${dependency}/index.d.ts';`))
+              })
         })
     })
 }
@@ -131,8 +138,8 @@ const commands = {
     `}\n`)
     return Promise.resolve()
       .then(() => {
-        const packageJsonPath = path.join(process.cwd(), 'packages', packageDir, 'package.json')
-        const packageJsonBackupPath = path.join(process.cwd(), 'packages', packageDir, 'package.json.orig')
+        const packageJsonPath = path.join(packagesDirectory, packageDir, 'package.json')
+        const packageJsonBackupPath = path.join(packagesDirectory, packageDir, 'package.json.orig')
         return fsCopy(packageJsonPath, packageJsonBackupPath)
           .then(() => {
             return fsReadJson(packageJsonPath)
@@ -158,7 +165,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`)
-    return fsRemove(path.join(process.cwd(), 'packages', packageDir, 'node_modules'))
+    return fsRemove(path.join(packagesDirectory, packageDir, 'node_modules'))
   },
   run (packageDir, task) {
     console.log(`\n${commonTags.stripIndent`
