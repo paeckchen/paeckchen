@@ -5,5 +5,6 @@
     "**/node_modules": true,
     "**/dist": true,
     "**/coverage": true
-  }
+  },
+  "xo.enable": true
 }
