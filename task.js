@@ -5,7 +5,6 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const commonTags = require('common-tags')
 const fsExtra = require('fs-extra')
-const globby = require('globby')
 
 function promisify (fn) {
   return function () {
@@ -40,26 +39,31 @@ function getPackages () {
   return fsReaddir(packagesDirectory)
 }
 
+function readAllPackageJsonFiles (list) {
+  return Promise.all(list.map(file => getPackageJson(file)))
+}
+
+function sortDependencys (list, pkgs) {
+  list.sort((left, right) => {
+    let pkg = pkgs.find(pkg => right === pkg['name'])
+    if (left in pkg['devDependencies'] || left in pkg['dependencies']) {
+      return -1
+    }
+    pkg = pkgs.find(pkg => left === pkg['name'])
+    if (right in pkg['devDependencies'] || right in pkg['dependencies']) {
+      return 1
+    }
+    return 0
+  })
+  return list
+}
+
 function getOrderedPackages () {
   return getPackages()
-    .then(packages => {
-      return Promise.all(packages.map(file => getPackageJson(file)))
-        .then(pkgs => ({packages, pkgs}))
-    })
-    .then(context => {
-      context.packages.sort((left, right) => {
-        let pkg = context.pkgs.find(pkg => right === pkg['name'])
-        if (left in pkg['devDependencies'] || left in pkg['dependencies']) {
-          return -1
-        }
-        pkg = context.pkgs.find(pkg => left === pkg['name'])
-        if (right in pkg['devDependencies'] || right in pkg['dependencies']) {
-          return 1
-        }
-        return 0
-      })
-      return context.packages
-    })
+    .then(packages =>
+      readAllPackageJsonFiles(packages)
+        .then(pkgs => ({packages, pkgs})))
+    .then(context => sortDependencys(context.packages, context.pkgs))
 }
 
 function getPackageJson (packageDir) {
@@ -75,7 +79,7 @@ function patchPackageJson (pkg) {
     .then(() => pkg)
 }
 
-function npmInstall (packageDir) {
+function npm (packageDir, command) {
   return Promise.resolve()
     .then(() => {
       const opts = {
@@ -83,19 +87,7 @@ function npmInstall (packageDir) {
         env: process.env,
         stdio: 'inherit'
       }
-      childProcess.execSync('npm install', opts)
-    })
-}
-
-function npmRun (packageDir, task) {
-  return Promise.resolve()
-    .then(() => {
-      const opts = {
-        cwd: path.join(packagesDirectory, packageDir),
-        env: process.env,
-        stdio: 'inherit'
-      }
-      childProcess.execSync(`npm run ${task}`, opts)
+      childProcess.execSync(command, opts)
     })
 }
 
@@ -127,6 +119,25 @@ function linkDependencies (packageDir) {
     })
 }
 
+function withPatchedPackageJson (packageDir, fn) {
+  const packageJsonPath = path.join(packagesDirectory, packageDir, 'package.json')
+  const packageJsonBackupPath = path.join(packagesDirectory, packageDir, 'package.json.orig')
+  return fsCopy(packageJsonPath, packageJsonBackupPath)
+    .then(() => {
+      return fsReadJson(packageJsonPath)
+        .then(pkg => patchPackageJson(pkg))
+        .then(pkg => fsWriteJson(packageJsonPath, pkg))
+        .then(() => fn())
+        .catch(err => {
+          return fsMove(packageJsonBackupPath, packageJsonPath, {clobber: true})
+            .then(() => {
+              throw err
+            })
+        })
+    })
+    .then(() => fsMove(packageJsonBackupPath, packageJsonPath, {clobber: true}))
+}
+
 const commands = {
   bootstrap (packageDir) {
     console.log(`\n${commonTags.stripIndent`
@@ -138,23 +149,11 @@ const commands = {
     `}\n`)
     return Promise.resolve()
       .then(() => {
-        const packageJsonPath = path.join(packagesDirectory, packageDir, 'package.json')
-        const packageJsonBackupPath = path.join(packagesDirectory, packageDir, 'package.json.orig')
-        return fsCopy(packageJsonPath, packageJsonBackupPath)
-          .then(() => {
-            return fsReadJson(packageJsonPath)
-              .then(pkg => patchPackageJson(pkg))
-              .then(pkg => fsWriteJson(packageJsonPath, pkg))
-              .then(() => npmInstall(packageDir))
-              .catch(err => {
-                return fsMove(packageJsonBackupPath, packageJsonPath, {clobber: true})
-                  .then(() => {
-                    throw err
-                  })
-              })
-          })
-          .then(() => fsMove(packageJsonBackupPath, packageJsonPath, {clobber: true}))
-          .then(() => linkDependencies(packageDir))
+        return withPatchedPackageJson(packageDir, () => {
+          return npm(packageDir, 'npm install')
+            .then(() => npm(packageDir, 'npm prune'))
+        })
+        .then(() => linkDependencies(packageDir))
       })
   },
   reset (packageDir) {
@@ -171,14 +170,31 @@ const commands = {
     console.log(`\n${commonTags.stripIndent`
       -------------------------------------------------------------------------------
 
-        Running ${task} in ${packageDir}
+        Running npm script '${task}' in ${packageDir}
 
       -------------------------------------------------------------------------------
     `}\n`)
     return Promise.resolve()
       .then(() => getPackageJson(packageDir))
       .then(pkg => task in pkg['scripts'])
-      .then(hasTask => hasTask && npmRun(packageDir, task))
+      .then(hasTask => hasTask
+        ? npm(packageDir, `npm run ${task}`)
+        : console.log(`Skip ${task} for ${packageDir}`))
+  },
+  npm (packageDir) {
+    const args = Array.prototype.slice.call(arguments).slice(1)
+
+    console.log(`\n${commonTags.stripIndent`
+      -------------------------------------------------------------------------------
+
+        Running 'npm ${args.join(' ')}' in ${packageDir}
+
+      -------------------------------------------------------------------------------
+    `}\n`)
+    return Promise.resolve()
+      .then(() => withPatchedPackageJson(packageDir, () => {
+        return npm(packageDir, `npm ${args.join(' ')}`)
+      }))
   }
 }
 

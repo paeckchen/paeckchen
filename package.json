@@ -3,6 +3,8 @@
   "scripts": {
     "bootstrap": "node task bootstrap",
     "reset": "node task reset",
+    "#packages": "Script to run generic commands per package (e.g. npm run packages -- outdated)",
+    "packages": "node task npm",
     "linter": "node task run linter",
     "clean": "node task run clean",
     "build": "node task run build",
@@ -31,7 +33,6 @@
     "eslint-plugin-promise": "2.0.0",
     "eslint-plugin-standard": "2.0.0",
     "fs-extra": "0.30.0",
-    "globby": "5.0.0",
     "lcov-result-merger": "1.2.0",
     "tslint": "3.13.0",
     "typescript": "2.0.0"
