@@ -299,20 +299,22 @@ function runCommandReset(packageDir) {
 function updatePackageJson(packageDir, fn) {
   const packageJson = path.join(packagesDirectory, packageDir, 'package.json');
   return fsReadfile(packageJson)
-    .then(buffer => buffer.toString().split('\n'))
-    .then(lines => fn(lines))
-    .then(lines => fsOutputFile(packageJson, lines.join('\n')));
+    .then(buffer => buffer.toString())
+    .then(data => fn(data))
+    .then(data => fsOutputFile(packageJson, data));
 }
 
 function incrementPackageVersion(packageDir, data) {
-  return updatePackageJson(packageDir, lines => lines.map(line =>
-    line.replace(/^(\s*"version"\s*:\s*")(\d+(?:\.\d+(?:\.\d+)?)?)("\s*(?:,\s*)?)$/, `$1${data.nextVersion}$3`)));
+  return updatePackageJson(packageDir, content =>
+    content.replace(/^(\s*"version"\s*:\s*")\d+(?:\.\d+(?:\.\d+)?)?("\s*(?:,\s*)?)$/gm, `$1${data.nextVersion}$2`));
 }
 
 function updateDependents(packageDir, data) {
   return getDependents(packageDir)
-    .then(dependents => forEach(dependents, dependent => updatePackageJson(dependent, lines => lines.map(line =>
-      line.replace(new RegExp(`^(\s*"${packageDir}"\s*:\s*")(\d+(?:\.\d+(?:\.\d+)?)?)("\s*(?:,\s*)?)$`), `$1${data.nextVersion}$3`)))));
+    .then(dependents => forEach(dependents, dependent =>
+      updatePackageJson(dependent, content =>
+        content.replace(new RegExp(`^(\\s*"${packageDir}"\\s*:\\s*")\\d+(?:\\.\\d+(?:\\.\\d+)?)?("\\s*(?:,\\s*)?)$`, 'gm'),
+          `$1${data.nextVersion}$2`))));
 }
 
 function runCommandRelease(packageDir) {
@@ -335,7 +337,7 @@ function runCommandRelease(packageDir) {
           .then(stdout => {
             if (stdout !== '') {
               return git('..', `add .`)
-                .then(() => git('..', `commit -m "Release ${packageDir} - ${data.nextVersion}"`));
+                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`));
             }
           })
           .then(() => git('..', `tag ${packageDir}-${data.nextVersion}`));
