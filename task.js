@@ -235,19 +235,24 @@ function getReleaseCommits(packageDir, data) {
 }
 
 function getNextVersion(packageDir, data) {
-  const bumps = ['patch', 'minor', 'major'];
-  const typeToBumpIndex = {
+  const releases = ['patch', 'minor', 'major'];
+  const typeToReleaseIndex = {
     fix: 0,
     feat: 1
   };
 
   return Promise.resolve()
     .then(() => {
-      const bumpIndex = data.commits.reduce((bump, commit) => {
-        return bump > (typeToBumpIndex[commit.type] || -1) ? bump : typeToBumpIndex[commit.type];
+      const relaseIndex = data.commits.reduce((relase, commit) => {
+        let result = relase > (typeToReleaseIndex[commit.type] || 0) ? relase : typeToReleaseIndex[commit.type];
+        if (commit.footer.indexOf('BREAKING CHANGE:\n') > -1) {
+          result = 2;
+        }
+        return result;
       }, 0);
+      data.release = releases[relaseIndex];
       if (data.lastVersion) {
-        data.nextVersion = semver.inc(data.lastVersion, bumps[bumpIndex]);
+        data.nextVersion = semver.inc(data.lastVersion, data.release);
       } else {
         data.nextVersion = data.pkg.version;
       }
@@ -321,7 +326,7 @@ function runCommandRelease(packageDir) {
           .then(() => runCommandNpmRun(packageDir, 'release'))
           .then(() => updateDependents(packageDir, data))
           // TODO add all changed files create commit & tag
-          .then(data => console.log(data));
+          .then(() => console.log(data));
       }
       console.log(`No release for ${packageDir} required`);
       return data;
