@@ -316,7 +316,13 @@ function updateDependents(packageDir, data) {
 }
 
 function runCommandRelease(packageDir) {
-  return remoteNpmGet(packageDir)
+  return git('..', `status --porcelain`)
+    .then(stdout => {
+      if (stdout !== '') {
+        throw new Error('Git workspace not clean!');
+      }
+    })
+    .then(() => remoteNpmGet(packageDir))
     .then(npm => getReleaseData(packageDir, npm))
     .then(data => getReleaseCommits(packageDir, data))
     .then(data => getNextVersion(packageDir, data))
@@ -325,8 +331,9 @@ function runCommandRelease(packageDir) {
         return incrementPackageVersion(packageDir, data)
           .then(() => runCommandNpmRun(packageDir, 'release'))
           .then(() => updateDependents(packageDir, data))
-          // TODO add all changed files create commit & tag
-          .then(() => console.log(data));
+          .then(() => git('..', `add .`))
+          .then(() => git('..', `commit -m "Release ${packageDir} - ${data.nextVersion}"`))
+          .then(() => git('..', `tag ${packageDir}-${data.nextVersion}`));
       }
       console.log(`No release for ${packageDir} required`);
       return data;
