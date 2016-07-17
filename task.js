@@ -245,7 +245,6 @@ function getNextVersion(packageDir, data) {
     .then(() => {
       const relaseIndex = data.commits.reduce((relase, commit) => {
         let result = relase > (typeToReleaseIndex[commit.type] || 0) ? relase : typeToReleaseIndex[commit.type];
-        console.log(commit);
         if (commit.footer && commit.footer.indexOf('BREAKING CHANGE:\n') > -1) {
           result = 2;
         }
