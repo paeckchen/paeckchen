@@ -56,7 +56,7 @@ const paeckchenSource = `
 
 export type BundlingFunction = typeof executeBundling;
 export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
-    outputFunction: OutputFunction): string {
+    outputFunction: OutputFunction): void {
   while (bundleNextModule(state, context)) {
     process.stderr.write('.');
   }
@@ -70,7 +70,6 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
     comment: true
   });
   outputFunction(bundleResult, context);
-  return bundleResult;
 }
 
 export type RebundleFactory = typeof rebundleFactory;
@@ -99,7 +98,7 @@ export function writeOutput(bundleResult: string, context: IPaeckchenContext): v
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
     outputFunction: OutputFunction = writeOutput,
       bundleFunction: BundlingFunction = executeBundling,
-        rebundleFactoryFunction: RebundleFactory = rebundleFactory): string {
+        rebundleFactoryFunction: RebundleFactory = rebundleFactory): void {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
     host
@@ -121,5 +120,5 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
     context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction, outputFunction);
   }
 
-  return bundleFunction(state, paeckchenAst, context, outputFunction);
+  bundleFunction(state, paeckchenAst, context, outputFunction);
 }

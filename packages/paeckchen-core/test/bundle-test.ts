@@ -17,7 +17,8 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
     `
   });
 
-  const bundled = bundle({entryPoint: 'entry-point.js'}, host);
+  let bundled: string;
+  bundle({entryPoint: 'entry-point.js'}, host, result => bundled = result);
 
   let called = false;
   virtualModule(bundled, {
@@ -46,7 +47,8 @@ test('bundle should bundle global dependencies', t => {
     alias: 'buffer=/BUFFER'
   };
 
-  const bundled = bundle(config, host);
+  let bundled: string;
+  bundle(config, host, result => bundled = result);
 
   let called = false;
   virtualModule(bundled, {
@@ -69,7 +71,8 @@ test('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  const bundled = bundle({}, host);
+  let bundled: string;
+  bundle({}, host, result => bundled = result);
 
   let called = false;
   virtualModule(bundled, {
