@@ -194,7 +194,8 @@ function getReleaseData(packageDir, npm) {
       if (data.npm) {
         data.lastVersion = data.npm['dist-tags'][data.tag];
         if (data.lastVersion) {
-          data.lastGitHash = data.npm.versions[data.lastVersion].gitHead;
+          const npmVersionData = data.npm.versions[data.lastVersion];
+          data.lastGitHash = npmVersionData.gitHead || `${npmVersionData.name}-${npmVersionData.version}`;
         }
       }
       return data;
