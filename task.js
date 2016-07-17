@@ -5,6 +5,9 @@ const fs = require('fs');
 const childProcess = require('child_process');
 const commonTags = require('common-tags');
 const fsExtra = require('fs-extra');
+const NpmRegistryClient = require('npm-registry-client');
+const conventionalCommitsParser = require('conventional-commits-parser');
+const semver = require('semver');
 
 function promisify(fn) {
   return function () {
@@ -22,6 +25,7 @@ function promisify(fn) {
 }
 
 const fsReaddir = promisify(fs.readdir);
+const fsReadfile = promisify(fs.readFile);
 const fsOutputFile = promisify(fsExtra.outputFile);
 const fsCopy = promisify(fsExtra.copy);
 const fsMove = promisify(fsExtra.move);
@@ -64,6 +68,15 @@ function getOrderedPackages() {
       readAllPackageJsonFiles(packages)
         .then(pkgs => ({packages, pkgs})))
     .then(context => sortDependencys(context.packages, context.pkgs));
+}
+
+function getDependents(packageDir) {
+  return getPackages()
+    .then(packages => readAllPackageJsonFiles(packages).then(pkgs => ({packages, pkgs})))
+    .then(context => context.packages.filter(name => {
+      const pkg = context.pkgs.find(pkg => name === pkg.name);
+      return packageDir in pkg.devDependencies || packageDir in pkg.dependencies;
+    }));
 }
 
 function getPackageJson(packageDir) {
@@ -138,6 +151,110 @@ function withPatchedPackageJson(packageDir, fn) {
     .then(() => fsMove(packageJsonBackupPath, packageJsonPath, {clobber: true}));
 }
 
+function remoteNpmGet(packageDir) {
+  return new Promise((resolve, reject) => {
+    const noop = () => undefined;
+    const client = new NpmRegistryClient({
+      log: {
+        error: noop,
+        warn: noop,
+        info: noop,
+        verbose: noop,
+        silly: noop,
+        http: noop,
+        pause: noop,
+        resume: noop
+      }
+    });
+    const params = {
+      timeout: 1000
+    };
+    return client
+      .get(`https://registry.npmjs.org/${packageDir}`, params, (err, data) => {
+        if (err) {
+          if (err.statusCode === 404) {
+            return resolve(undefined);
+          }
+          return reject(err);
+        }
+        resolve(data);
+      });
+  });
+}
+
+function getReleaseData(packageDir, npm) {
+  return Promise.resolve()
+    .then(() => getPackageJson(packageDir)
+        .then(pkg => ({
+          npm,
+          pkg
+        })))
+    .then(data => {
+      data.tag = (data.pkg.publishConfig || {}).tag || 'latest';
+      if (data.npm) {
+        data.lastVersion = data.npm['dist-tags'][data.tag];
+        if (data.lastVersion) {
+          data.lastGitHash = data.npm.versions[data.lastVersion].gitHead;
+        }
+      }
+      return data;
+    })
+    .then(data => {
+      if (!data.lastGitHash) {
+        return git(packageDir, 'rev-list --abbrev-commit --max-parents=0 HEAD')
+          .then(firstGitHash => {
+            data.lastGitHash = firstGitHash;
+            return data;
+          });
+      }
+      return data;
+    });
+}
+
+function getReleaseCommits(packageDir, data) {
+  return Promise.resolve()
+    .then(() => {
+      return git(packageDir, `log -E --format=%B==END== ${data.lastGitHash}..HEAD`)
+        .then(stdout => stdout.split('==END==\n'))
+        .then(commits => commits.filter(commit => Boolean(commit.trim())))
+        .then(commits => {
+          const parsedCommits = [];
+          const parser = conventionalCommitsParser();
+          parser.on('data', parsed => parsedCommits.push(parsed));
+          commits.forEach(commit => parser.write(commit));
+          parser.end();
+          return parsedCommits;
+        })
+        .then(commits => commits.filter(commit => commit.scope === packageDir))
+        .then(commits => {
+          data.commits = commits;
+          data.requireRelease = data.commits.length > 0;
+          return data;
+        });
+    });
+}
+
+function getNextVersion(packageDir, data) {
+  const bumps = ['patch', 'minor', 'major'];
+  const typeToBumpIndex = {
+    fix: 0,
+    feat: 1
+  };
+
+  return Promise.resolve()
+    .then(() => {
+      const bumpIndex = data.commits.reduce((bump, commit) => {
+        return bump > (typeToBumpIndex[commit.type] || -1) ? bump : typeToBumpIndex[commit.type];
+      }, 0);
+      if (data.lastVersion) {
+        data.nextVersion = semver.inc(data.lastVersion, bumps[bumpIndex]);
+      } else {
+        data.nextVersion = data.pkg.version;
+      }
+      return data;
+    });
+}
+
 function git(packageDir, command) {
   return Promise.resolve()
     .then(() => {
@@ -150,16 +267,79 @@ function git(packageDir, command) {
     .then(buffer => buffer.toString().trim());
 }
 
-function requiresRelease(packageDir) {
-  return git(packageDir, 'tag --sort="-version:refname"')
-    .then(tags => tags ? tags : git(packageDir, 'rev-list --abbrev-commit --max-parents=0 HEAD'))
-    .then(tag => {
-      console.log('last tag', tag);
-      return git(packageDir, `show --name-only --pretty='format:' ${tag}..HEAD`);
-    })
-    .then(stdout => stdout.split('\n'))
-    .then(lines => lines.filter(line => line.match(new RegExp(`^packages/${packageDir}/`))))
-    .then(files => files.length > 0);
+function runOnPackages(commands, command, args) {
+  return getOrderedPackages()
+    .then(packages => {
+      return forEach(packages, file => {
+        return commands[command].apply(null, [].concat([file], args));
+      });
+    });
+}
+
+function runCommandBootstrap(packageDir) {
+  return Promise.resolve()
+    .then(() => {
+      return withPatchedPackageJson(packageDir, () => {
+        return npm(packageDir, 'install')
+          .then(() => npm(packageDir, 'prune'));
+      })
+      .then(() => linkDependencies(packageDir));
+    });
+}
+
+function runCommandReset(packageDir) {
+  return fsRemove(path.join(packagesDirectory, packageDir, 'node_modules'));
+}
+
+function updatePackageJson(packageDir, fn) {
+  const packageJson = path.join(packagesDirectory, packageDir, 'package.json');
+  return fsReadfile(packageJson)
+    .then(buffer => buffer.toString().split('\n'))
+    .then(lines => fn(lines))
+    .then(lines => fsOutputFile(packageJson, lines.join('\n')));
+}
+
+function incrementPackageVersion(packageDir, data) {
+  return updatePackageJson(packageDir, lines => lines.map(line =>
+    line.replace(/^(\s*"version"\s*:\s*")(\d+(?:\.\d+(?:\.\d+)?)?)("\s*(?:,\s*)?)$/, `$1${data.nextVersion}$3`)));
+}
+
+function updateDependents(packageDir, data) {
+  return getDependents(packageDir)
+    .then(dependents => forEach(dependents, dependent => updatePackageJson(dependent, lines => lines.map(line =>
+      line.replace(new RegExp(`^(\s*"${packageDir}"\s*:\s*")(\d+(?:\.\d+(?:\.\d+)?)?)("\s*(?:,\s*)?)$`), `$1${data.nextVersion}$3`)))));
+}
+
+function runCommandRelease(packageDir) {
+  return remoteNpmGet(packageDir)
+    .then(npm => getReleaseData(packageDir, npm))
+    .then(data => getReleaseCommits(packageDir, data))
+    .then(data => getNextVersion(packageDir, data))
+    .then(data => {
+      if (data.requireRelease) {
+        return incrementPackageVersion(packageDir, data)
+          .then(() => runCommandNpmRun(packageDir, 'release'))
+          .then(() => updateDependents(packageDir, data))
+          // TODO add all changed files create commit & tag
+          .then(data => console.log(data));
+      }
+      console.log(`No release for ${packageDir} required`);
+      return data;
+    });
+}
+
+function runCommandNpmRun(packageDir, task) {
+  return Promise.resolve()
+    .then(() => getPackageJson(packageDir))
+    .then(pkg => task in pkg.scripts)
+    .then(hasTask => hasTask ? npm(packageDir, `run ${task}`) : console.log(`No ${task} script for ${packageDir}`));
+}
+
+function runCommandNpm(packageDir, args) {
+  return Promise.resolve()
+    .then(() => withPatchedPackageJson(packageDir, () => {
+      return npm(packageDir, args.join(' '));
+    }));
 }
 
 const commands = {
@@ -171,14 +351,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`);
-    return Promise.resolve()
-      .then(() => {
-        return withPatchedPackageJson(packageDir, () => {
-          return npm(packageDir, 'install')
-            .then(() => npm(packageDir, 'prune'));
-        })
-        .then(() => linkDependencies(packageDir));
-      });
+    return runCommandBootstrap(packageDir);
   },
   reset(packageDir) {
     console.log(`\n${commonTags.stripIndent`
@@ -188,7 +361,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`);
-    return fsRemove(path.join(packagesDirectory, packageDir, 'node_modules'));
+    return runCommandReset(packageDir);
   },
   release(packageDir) {
     console.log(`\n${commonTags.stripIndent`
@@ -198,8 +371,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`);
-    return requiresRelease(packageDir)
-      .then(requireRelease => console.log(requireRelease));
+    return runCommandRelease(packageDir);
   },
   run(packageDir, task) {
     console.log(`\n${commonTags.stripIndent`
@@ -209,10 +381,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`);
-    return Promise.resolve()
-      .then(() => getPackageJson(packageDir))
-      .then(pkg => task in pkg.scripts)
-      .then(hasTask => hasTask ? npm(packageDir, `run ${task}`) : console.log(`Skip ${task} for ${packageDir}`));
+    return runCommandNpmRun(packageDir, task);
   },
   npm(packageDir) {
     const args = Array.prototype.slice.call(arguments).slice(1);
@@ -224,10 +393,7 @@ const commands = {
 
       -------------------------------------------------------------------------------
     `}\n`);
-    return Promise.resolve()
-      .then(() => withPatchedPackageJson(packageDir, () => {
-        return npm(packageDir, args.join(' '));
-      }));
+    return runCommandNpm(packageDir, args);
   }
 };
 
@@ -235,16 +401,11 @@ if (process.argv.length < 3) {
   console.error('Missing task');
   process.exit(1); // eslint-disable-line xo/no-process-exit
 }
+
 const command = process.argv[2];
 const commandArguments = process.argv.slice(3);
-
 const start = new Date().getTime();
-getOrderedPackages()
-  .then(packages => {
-    return forEach(packages, file => {
-      return commands[command].apply(null, [].concat([file], commandArguments));
-    });
-  })
+runOnPackages(commands, command, commandArguments)
   .then(() => {
     const end = new Date().getTime();
     console.log(`\n${commonTags.stripIndent`
