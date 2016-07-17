@@ -331,8 +331,13 @@ function runCommandRelease(packageDir) {
         return incrementPackageVersion(packageDir, data)
           .then(() => runCommandNpmRun(packageDir, 'release'))
           .then(() => updateDependents(packageDir, data))
-          .then(() => git('..', `add .`))
-          .then(() => git('..', `commit -m "Release ${packageDir} - ${data.nextVersion}"`))
+          .then(() => git('..', `status --porcelain`))
+          .then(stdout => {
+            if (stdout !== '') {
+              return git('..', `add .`)
+                .then(() => git('..', `commit -m "Release ${packageDir} - ${data.nextVersion}"`));
+            }
+          })
           .then(() => git('..', `tag ${packageDir}-${data.nextVersion}`));
       }
       console.log(`No release for ${packageDir} required`);
