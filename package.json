@@ -10,7 +10,8 @@
     "build": "node task run build",
     "test": "node task run test",
     "coverage": "node task run coverage",
-    "commitmsg": "conventional-changelog-lint -e"
+    "commitmsg": "conventional-changelog-lint -e",
+    "release": "node task release"
   },
   "repository": {
     "type": "git",
