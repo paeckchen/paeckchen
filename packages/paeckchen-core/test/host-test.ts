@@ -1,5 +1,5 @@
 import test from 'ava';
-import { resolve } from 'path';
+import { resolve, sep, join } from 'path';
 import { readFileSync, existsSync, unlinkSync } from 'fs';
 
 import { DefaultHost } from '../src/host';
@@ -34,11 +34,11 @@ test('DefaultHost#readFile should return the file content', t => {
 });
 
 test('DefaultHost#pathSep should return the path separator', t => {
-  t.deepEqual(t.context.host.pathSep, '/');
+  t.deepEqual(t.context.host.pathSep, sep);
 });
 
 test('DefaultHost#joinPath should return joined paths', t => {
-  t.deepEqual(t.context.host.joinPath('a', 'b', 'c'), 'a/b/c');
+  t.deepEqual(t.context.host.joinPath('a', 'b', 'c'), join('a', 'b', 'c'));
 });
 
 test('DefaultHost#dirname should return the directory part of the given path', t => {

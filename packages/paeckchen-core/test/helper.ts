@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from 'path';
+import { dirname, join, resolve, sep } from 'path';
 import { runInNewContext } from 'vm';
 import { parse as acornParse, IParseOptions } from 'acorn';
 import { attachComments } from 'estraverse';
@@ -8,9 +8,9 @@ import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
-  public pathSep: string = '/';
+  public pathSep: string = sep;
 
-  public basePath: string = process.cwd();
+  public basePath: string;
   public files: any = {};
 
   constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
@@ -20,7 +20,7 @@ export class HostMock implements IHost {
     this.joinPath = this.joinPath.bind(this);
     this.dirname = this.dirname.bind(this);
 
-    this.basePath = basePath;
+    this.basePath = resolve(basePath);
 
     this.files = Object
       .keys(files)
