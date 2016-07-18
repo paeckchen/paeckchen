@@ -1,4 +1,4 @@
-import { dirname, join, resolve, sep } from 'path';
+import { dirname, join, resolve } from 'path';
 import { runInNewContext } from 'vm';
 import { parse as acornParse, IParseOptions } from 'acorn';
 import { attachComments } from 'estraverse';
@@ -8,7 +8,7 @@ import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
-  public pathSep: string = sep;
+  public pathSep: string = '/';
 
   public basePath: string;
   public files: any = {};
