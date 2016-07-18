@@ -34,7 +34,7 @@ test('DefaultHost#readFile should return the file content', t => {
 });
 
 test('DefaultHost#pathSep should return the path separator', t => {
-  t.deepEqual(t.context.host.pathSep, '/);
+  t.deepEqual(t.context.host.pathSep, '/');
 });
 
 test('DefaultHost#joinPath should return joined paths', t => {
