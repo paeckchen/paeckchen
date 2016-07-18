@@ -70,15 +70,6 @@ function getOrderedPackages() {
     .then(context => sortDependencys(context.packages, context.pkgs));
 }
 
-function getDependents(packageDir) {
-  return getPackages()
-    .then(packages => readAllPackageJsonFiles(packages).then(pkgs => ({packages, pkgs})))
-    .then(context => context.packages.filter(name => {
-      const pkg = context.pkgs.find(pkg => name === pkg.name);
-      return packageDir in pkg.devDependencies || packageDir in pkg.dependencies;
-    }));
-}
-
 function getPackageJson(packageDir) {
   return fsReadJson(path.join(packagesDirectory, packageDir, 'package.json'));
 }
@@ -235,6 +226,10 @@ function getReleaseCommits(packageDir, data) {
     });
 }
 
+function isBreakingChange(commit) {
+  return commit.footer && commit.footer.indexOf('BREAKING CHANGE:\n') > -1;
+}
+
 function getNextVersion(packageDir, data) {
   const releases = ['patch', 'minor', 'major'];
   const typeToReleaseIndex = {
@@ -246,7 +241,7 @@ function getNextVersion(packageDir, data) {
     .then(() => {
       const relaseIndex = data.commits.reduce((relase, commit) => {
         let result = relase > (typeToReleaseIndex[commit.type] || 0) ? relase : typeToReleaseIndex[commit.type];
-        if (commit.footer && commit.footer.indexOf('BREAKING CHANGE:\n') > -1) {
+        if (isBreakingChange(commit)) {
           result = 2;
         }
         return result;
@@ -310,12 +305,16 @@ function incrementPackageVersion(packageDir, data) {
     content.replace(/^(\s*"version"\s*:\s*")\d+(?:\.\d+(?:\.\d+)?)?("\s*(?:,\s*)?)$/gm, `$1${data.nextVersion}$2`));
 }
 
-function updateDependents(packageDir, data) {
-  return getDependents(packageDir)
-    .then(dependents => forEach(dependents, dependent =>
-      updatePackageJson(dependent, content =>
-        content.replace(new RegExp(`^(\\s*"${packageDir}"\\s*:\\s*")\\d+(?:\\.\\d+(?:\\.\\d+)?)?("\\s*(?:,\\s*)?)$`, 'gm'),
-          `$1${data.nextVersion}$2`))));
+function updateDependencies(packageDir, data) {
+  return getPackages()
+    .then(packages => forEach(packages, dependency => {
+      if (dependency in data.pkg.devDependencies || dependency in data.pkg.dependencies) {
+        return getPackageJson(dependency)
+          .then(pkg => updatePackageJson(packageDir, content =>
+            content.replace(new RegExp(`^(\\s*"${dependency}"\\s*:\\s*")\\d+(?:\\.\\d+(?:\\.\\d+)?)?("\\s*(?:,\\s*)?)$`, 'gm'),
+              `$1${pkg.version}$2`)));
+      }
+    }));
 }
 
 function runCommandRelease(packageDir) {
@@ -331,9 +330,10 @@ function runCommandRelease(packageDir) {
     .then(data => getNextVersion(packageDir, data))
     .then(data => {
       if (data.requireRelease) {
+        outputReleaseSummary(packageDir, data);
         return incrementPackageVersion(packageDir, data)
+          .then(() => updateDependencies(packageDir, data))
           .then(() => runCommandNpmRun(packageDir, 'release'))
-          .then(() => updateDependents(packageDir, data))
           .then(() => git('..', `status --porcelain`))
           .then(stdout => {
             if (stdout !== '') {
@@ -346,6 +346,28 @@ function runCommandRelease(packageDir) {
       console.log(`No release for ${packageDir} required`);
       return data;
     });
+}
+
+function outputReleaseSummary(packageDir, data) {
+  console.log(commonTags.stripIndent`
+    Release test for ${packageDir} results:
+      * Required: ${data.requireRelease}
+      * Version increment: ${data.release}
+      * Next Version: ${data.nextVersion}
+
+      Commits:
+  `);
+  console.log('    ' + data.commits
+    .map(commit => `${commit.header}${isBreakingChange(commit) ? ' (BREAKING)' : ''}`)
+    .join('\n    '));
+}
+
+function runCommandTestRelease(packageDir) {
+  return remoteNpmGet(packageDir)
+    .then(npm => getReleaseData(packageDir, npm))
+    .then(data => getReleaseCommits(packageDir, data))
+    .then(data => getNextVersion(packageDir, data))
+    .then(data => outputReleaseSummary(packageDir, data));
 }
 
 function runCommandNpmRun(packageDir, task) {
@@ -382,6 +404,16 @@ const commands = {
       -------------------------------------------------------------------------------
     `}\n`);
     return runCommandReset(packageDir);
+  },
+  testRelease(packageDir) {
+    console.log(`\n${commonTags.stripIndent`
+      -------------------------------------------------------------------------------
+
+        Test ${packageDir} for release
+
+      -------------------------------------------------------------------------------
+    `}\n`);
+    return runCommandTestRelease(packageDir);
   },
   release(packageDir) {
     console.log(`\n${commonTags.stripIndent`
