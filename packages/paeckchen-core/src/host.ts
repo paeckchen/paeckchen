@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, statSync } from 'fs';
-import { join, dirname, sep } from 'path';
+import { join, dirname } from 'path';
 
 export interface IHost {
   pathSep: string;
@@ -15,7 +15,9 @@ export interface IHost {
 
 export class DefaultHost implements IHost {
   public cwd(): string {
-    return process.cwd();
+    // Note: Normalize result path.
+    // This path is used internally and we only use unix-like paths inside paeckchen.
+    return process.cwd().replace(/^[a-z]:\\/i, '').replace(/\\/g, '/');
   }
 
   public fileExists(path: string): boolean {
@@ -35,7 +37,7 @@ export class DefaultHost implements IHost {
   }
 
   public get pathSep(): string {
-    return sep;
+    return '/';
   }
 
   public joinPath(...paths: string[]): string {
