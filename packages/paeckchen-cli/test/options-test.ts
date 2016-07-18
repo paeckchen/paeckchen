@@ -111,3 +111,15 @@ test('createOptions --external', t => {
   const options = createOptions(['--external', 'external=global']);
   t.deepEqual(options, t.context.opts);
 });
+
+test('createOptions --watch', t => {
+  t.context.opts.watchMode = true;
+  const options = createOptions(['--watch']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions -w', t => {
+  t.context.opts.watchMode = true;
+  const options = createOptions(['-w']);
+  t.deepEqual(options, t.context.opts);
+});
