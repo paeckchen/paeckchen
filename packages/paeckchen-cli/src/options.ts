@@ -50,6 +50,9 @@ export function createOptions(argv: string[]): IBundleOptions {
                 --external 'jQuery=$'
                 --external 'fs=false'
 
+        --watch, -w
+              enables watch mode
+
     `
   }, {
       string: [
@@ -71,7 +74,8 @@ export function createOptions(argv: string[]): IBundleOptions {
         r: 'runtime',
         o: 'out-dir',
         f: 'out-file',
-        a: 'alias'
+        a: 'alias',
+        w: 'watch'
       }
     });
 
