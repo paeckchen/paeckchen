@@ -11,6 +11,7 @@
     "test": "node task run test",
     "coverage": "node task run coverage",
     "commitmsg": "conventional-changelog-lint -e",
+    "check-for-release": "node task testRelease",
     "release": "node task release"
   },
   "repository": {
