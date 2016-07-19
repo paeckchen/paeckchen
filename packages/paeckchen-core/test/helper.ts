@@ -36,23 +36,23 @@ export class HostMock implements IHost {
   }
 
   public fileExists(filePath: string): boolean {
-    return resolve(filePath) in this.files;
+    return filePath in this.files;
   }
 
   public isFile(filePath: string): boolean {
-    return resolve(filePath) in this.files;
+    return filePath in this.files;
   }
 
   public readFile(filePath: string): string {
     if (this.fileExists(filePath)) {
-      return this.files[resolve(filePath)];
+      return this.files[filePath];
     }
     throw new Error(oneLine`ENOENT: Could not read file ${filePath} from HostMock fs.
       Available files: ${Object.keys(this.files)}`);
   }
 
   public writeFile(filePath: string, content: string): void {
-    this.files[resolve(filePath)] = content;
+    this.files[filePath] = content;
   }
 
   public joinPath(...paths: string[]): string {

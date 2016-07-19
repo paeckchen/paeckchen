@@ -1,5 +1,4 @@
 import test from 'ava';
-import { resolve } from 'path';
 import { HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
 
@@ -107,7 +106,7 @@ test('bundle should write result to disk if output file given', t => {
 
   bundle({}, host);
 
-  t.true(resolve('/result.js') in host.files);
+  t.true('/result.js' in host.files);
 });
 
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
