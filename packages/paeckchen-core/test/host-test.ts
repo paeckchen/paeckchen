@@ -1,5 +1,5 @@
 import test from 'ava';
-import { resolve, join } from 'path';
+import { resolve, sep, join } from 'path';
 import { readFileSync, existsSync, unlinkSync } from 'fs';
 
 import { DefaultHost } from '../src/host';
@@ -9,7 +9,7 @@ test.beforeEach(t => {
 });
 
 test('DefaultHost#cwd should return the current directory', t => {
-  t.is(t.context.host.cwd(), process.cwd().replace(/^[a-z]:\\/i, '').replace(/\\/g, '/'));
+  t.is(t.context.host.cwd(), process.cwd());
 });
 
 test('DefaultHost#fileExists should return true for existing file', t => {
@@ -34,7 +34,7 @@ test('DefaultHost#readFile should return the file content', t => {
 });
 
 test('DefaultHost#pathSep should return the path separator', t => {
-  t.deepEqual(t.context.host.pathSep, '/);
+  t.deepEqual(t.context.host.pathSep, sep);
 });
 
 test('DefaultHost#joinPath should return joined paths', t => {
