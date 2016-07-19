@@ -17,7 +17,7 @@ test('createConfig should return the config defaults', t => {
     },
     output: {
       folder: host.cwd(),
-      file: 'paeckchen.js',
+      file: undefined,
       runtime: Runtime.browser
     },
     aliases: {},
