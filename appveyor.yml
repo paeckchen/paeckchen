@@ -10,19 +10,19 @@ cache:
 install:
   - ps: Install-Product node $env:nodejs_version
   - set CI=true
-  - npm -g install npm@latest
   - set PATH=%APPDATA%\npm;%PATH%
   - node --version
   - npm --version
 matrix:
   fast_finish: true
+max_jobs: 6
 version: '{build}'
 shallow_clone: true
 clone_depth: 1
 build: off
-deploy: off
 before_test:
   - npm install
   - npm run bootstrap
 test_script:
   - npm run test
+deploy: off
