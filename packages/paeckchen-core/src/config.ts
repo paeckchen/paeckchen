@@ -93,7 +93,7 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
   config.output = undefined;
   config.output = {} as any;
   config.output.folder = options.outputDirectory || configFile.output && configFile.output.folder || host.cwd();
-  config.output.file = options.outputFile || configFile.output && configFile.output.file || 'paeckchen.js';
+  config.output.file = options.outputFile || configFile.output && configFile.output.file || undefined;
   config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser');
   config.aliases = processKeyValueOption<string>(options.alias, configFile.aliases);
   config.externals = processKeyValueOption<string|boolean>(options.external, configFile.externals);
