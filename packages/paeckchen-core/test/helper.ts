@@ -13,15 +13,14 @@ export class HostMock implements IHost {
   public basePath: string;
   public files: any = {};
 
-  constructor(files: {[path: string]: string},
-      basePath: string = process.cwd().replace(/^[a-z]:\\/i, '').replace(/\\/g, '/')) {
+  constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
     this.fileExists = this.fileExists.bind(this);
     this.isFile = this.isFile.bind(this);
     this.readFile = this.readFile.bind(this);
     this.joinPath = this.joinPath.bind(this);
     this.dirname = this.dirname.bind(this);
 
-    this.basePath = basePath;
+    this.basePath = resolve(basePath);
 
     this.files = Object
       .keys(files)
