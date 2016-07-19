@@ -34,8 +34,8 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
             )
           ),
           [
-            b.literal(currentModule.substring(context.host.cwd().length)),
-            b.literal(context.host.dirname(currentModule).substring(context.host.cwd().length))
+            b.literal(currentModule),
+            b.literal(context.host.dirname(currentModule))
           ]
         )
       )

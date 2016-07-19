@@ -102,5 +102,5 @@ test('getModulePath should use the alias name if possible', t => {
     '/alias.js': ''
   });
   t.is(getModulePath('/some/module.js', 'alias-module',
-    { config: { aliases: { 'alias-module': '/alias.js' } } as any, host }), '/alias.js');
+    { config: { aliases: { 'alias-module': '/alias.js' } } as any, host }), path.resolve('/alias.js'));
 });

@@ -34,6 +34,6 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     }
   });
 
-  t.is(calledFilename, '/path/to/name');
-  t.is(calledDirname, '/path/to');
+  t.is(calledFilename, '/cwd/path/to/name');
+  t.is(calledDirname, '/cwd/path/to');
 });
