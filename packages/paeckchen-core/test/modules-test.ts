@@ -7,6 +7,17 @@ import { IPaeckchenContext } from '../src/bundle';
 
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModule } from '../src/modules';
 
+test.beforeEach(t => {
+  let hasNext = true;
+  while (hasNext) {
+    try {
+      hasNext = bundleNextModule.call(undefined);
+    } catch (e) {
+      // ignore
+    }
+  }
+});
+
 test('getModuleIndex should return a new index per requested file', t => {
   const state = new State([]);
 
@@ -310,4 +321,35 @@ test('bundleNextModule should trigger rebundle on watched file removal', t => {
   callMeOnChangesFunction('remove', '/some/mod.js');
 
   t.true(calledRebundle);
+});
+
+
+test('bundleNextModule should bundle json file', t => {
+  const state = new State([]);
+  const host = new HostMock({
+    '/some.json': '{"a": true}'
+  });
+  const context: IPaeckchenContext = {
+    config: {
+      externals: {},
+      watchMode: true
+    } as any,
+    host,
+    watcher: {
+      start: (): void => undefined,
+      watchFile: (): void => undefined
+    } as any
+  };
+
+  enqueueModule('/some.json');
+  bundleNextModule(state, context, {});
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(generate(state.modules[0] as any) + '_0(module, module.exports);', sandbox);
+  t.deepEqual(sandbox.module.exports, {a: true} as any);
 });
