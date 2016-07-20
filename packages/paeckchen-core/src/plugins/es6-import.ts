@@ -79,6 +79,11 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
         enqueueModule(importModule);
       }
       return false;
+    },
+    visitStatement: function(path: IPath<ESTree.Statement>): boolean {
+      // es2015 imports are only allowed at the top level of a module
+      // => we could stop here
+      return false;
     }
   });
 }

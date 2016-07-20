@@ -250,6 +250,11 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
         );
       }
       return false;
+    },
+    visitStatement: function(path: IPath<ESTree.Statement>): boolean {
+      // es2015 exports are only allowed at the top level of a module
+      // => we could stop here
+      return false;
     }
   });
 }
