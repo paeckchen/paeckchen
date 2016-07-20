@@ -81,6 +81,7 @@ declare module 'ast-types' {
     export function unaryExpression(operator: ESTree.UnaryOperator, argument: ESTree.Expression): ESTree.UnaryExpression;
     export function objectExpression(properties: ESTree.Property[]): ESTree.ObjectExpression;
     export function property(kind: 'init'|'get'|'set', key: ESTree.Literal|ESTree.Identifier, value: ESTree.Expression): ESTree.Property;
+    export function arrayExpression(elements?: ESTree.Expression[]): ESTree.ArrayExpression;
     export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
     export function newExpression(callee: ESTree.Expression, arguments: ESTree.Expression[]): ESTree.NewExpression;
   }

@@ -6,6 +6,7 @@ import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
 import { checkGlobals } from './globals';
 import { IWrappedModule, State } from './state';
+import { wrapJsonFile } from './bundle-json';
 
 export function getModuleIndex(moduleName: string, state: State): number {
   if (state.wrappedModules[moduleName]) {
@@ -108,6 +109,8 @@ function wrapModule(modulePath: string, state: State, context: IPaeckchenContext
             )
           )
         ]);
+      } else if (modulePath.match(/\.json$/)) {
+        moduleAst = wrapJsonFile(modulePath, context);
       } else {
         moduleAst = processModule(modulePath, context, state, plugins);
       }

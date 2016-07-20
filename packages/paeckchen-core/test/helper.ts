@@ -82,7 +82,7 @@ export function parse(input: string): ESTree.Program {
 }
 
 export function generate(ast: ESTree.Program): string {
-  return escodegenGenerate(ast, {comment: true}).trim();
+  return escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}).trim();
 }
 
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {
