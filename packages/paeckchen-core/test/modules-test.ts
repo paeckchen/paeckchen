@@ -323,7 +323,6 @@ test('bundleNextModule should trigger rebundle on watched file removal', t => {
   t.true(calledRebundle);
 });
 
-
 test('bundleNextModule should bundle json file', t => {
   const state = new State([]);
   const host = new HostMock({
