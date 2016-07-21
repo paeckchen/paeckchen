@@ -30,6 +30,11 @@ declare module 'ast-types' {
 
   export function visit(ast: ESTree.Node, visitors: any): void;
 
+  export interface IVisitor {
+    abort(): void;
+    traverse<T>(path: IPath<T>): void;
+  }
+
   export namespace namedTypes {
     export namespace VariableDeclaration {
       export function check(object: any): object is ESTree.VariableDeclaration;
@@ -71,7 +76,7 @@ declare module 'ast-types' {
     export function memberExpression(object: ESTree.Expression, property: ESTree.Identifier|ESTree.Expression, computed: boolean): ESTree.MemberExpression;
     export function callExpression(callee: any, arguments: any[]): ESTree.CallExpression;
     export function thisExpression(): ESTree.ThisExpression;
-    export function functionExpression(id: ESTree.Identifier, params: ESTree.Pattern[], body: ESTree.BlockStatement): ESTree.FunctionExpression;
+    export function functionExpression(id: ESTree.Identifier|null, params: ESTree.Pattern[], body: ESTree.BlockStatement): ESTree.FunctionExpression;
     export function expressionStatement(expression: ESTree.Expression): ESTree.ExpressionStatement;
     export function blockStatement(body: ESTree.Statement[]): ESTree.BlockStatement;
     export function throwStatement(argument: ESTree.Expression): ESTree.ThrowStatement;
@@ -81,6 +86,7 @@ declare module 'ast-types' {
     export function unaryExpression(operator: ESTree.UnaryOperator, argument: ESTree.Expression): ESTree.UnaryExpression;
     export function objectExpression(properties: ESTree.Property[]): ESTree.ObjectExpression;
     export function property(kind: 'init'|'get'|'set', key: ESTree.Literal|ESTree.Identifier, value: ESTree.Expression): ESTree.Property;
+    export function arrayExpression(elements?: ESTree.Expression[]): ESTree.ArrayExpression;
     export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
     export function newExpression(callee: ESTree.Expression, arguments: ESTree.Expression[]): ESTree.NewExpression;
   }

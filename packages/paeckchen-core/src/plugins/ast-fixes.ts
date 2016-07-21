@@ -1,10 +1,8 @@
-import { visit, IPath } from 'ast-types';
+import { visit, IPath, IVisitor } from 'ast-types';
 
-import { IPaeckchenContext } from '../bundle';
-
-export function astFixes(program: ESTree.Program, currentModule: string, context: IPaeckchenContext): void {
+export function astFixes(program: ESTree.Program): void {
   visit(program, {
-    visitReturnStatement(path: IPath<ESTree.ReturnStatement>): void {
+    visitReturnStatement(this: IVisitor, path: IPath<ESTree.ReturnStatement>): void {
       if (path.node.argument && (path.node.argument as any).leadingComments) {
         // escodegen inserts a newline which results in incorrect code
         // e.g.

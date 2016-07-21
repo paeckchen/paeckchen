@@ -1,6 +1,6 @@
 import { dirname, join, resolve, sep } from 'path';
 import { runInNewContext } from 'vm';
-import { parse as acornParse, IParseOptions } from 'acorn';
+import * as acorn from 'acorn';
 import { attachComments } from 'estraverse';
 import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
@@ -67,7 +67,7 @@ export class HostMock implements IHost {
 export function parse(input: string): ESTree.Program {
   const comments: any[] = [];
   const tokens: any[] = [];
-  const acornOptions: IParseOptions = {
+  const acornOptions: acorn.Options = {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
@@ -76,13 +76,13 @@ export function parse(input: string): ESTree.Program {
     onComment: comments,
     onToken: tokens
   };
-  const ast = acornParse(input, acornOptions);
+  const ast = acorn.parse(input, acornOptions);
   attachComments(ast, comments, tokens);
   return ast;
 }
 
 export function generate(ast: ESTree.Program): string {
-  return escodegenGenerate(ast, {comment: true}).trim();
+  return escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}).trim();
 }
 
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {

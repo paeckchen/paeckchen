@@ -1,9 +1,10 @@
 # paeckchen
 
 [![GitHub license](https://img.shields.io/github/license/KnisterPeter/paeckchen.svg)]()
-[![Travis](https://img.shields.io/travis/KnisterPeter/paeckchen.svg)](https://travis-ci.org/KnisterPeter/paeckchen)
 [![Dependency Status](https://david-dm.org/KnisterPeter/paeckchen.svg)](https://david-dm.org/KnisterPeter/paeckchen)
 [![devDependency Status](https://david-dm.org/KnisterPeter/paeckchen/dev-status.svg)](https://david-dm.org/KnisterPeter/paeckchen#info=devDependencies)
+[![Travis](https://img.shields.io/travis/KnisterPeter/paeckchen.svg)](https://travis-ci.org/KnisterPeter/paeckchen)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/xql350i942kryjqn/branch/master?svg=true)](https://ci.appveyor.com/project/KnisterPeter/paeckchen/branch/master)
 [![Coveralls branch](https://img.shields.io/coveralls/KnisterPeter/paeckchen/master.svg)](https://coveralls.io/github/KnisterPeter/paeckchen)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 

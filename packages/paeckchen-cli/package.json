@@ -10,8 +10,6 @@
     "dist/src"
   ],
   "scripts": {
-    "#postinstall": "Remove bundled typings to use patched version without Promise support",
-    "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist .nyc_output coverage",
     "linter": "tslint '{src,test}/**/*.ts'",
     "prebuild": "npm run clean",
@@ -48,6 +46,8 @@
     "packaging"
   ],
   "devDependencies": {
+    "@types/minimist": "1.1.28",
+    "@types/node": "4.0.30",
     "ava": "0.15.2",
     "coveralls": "2.11.11",
     "cz-conventional-changelog": "1.1.6",

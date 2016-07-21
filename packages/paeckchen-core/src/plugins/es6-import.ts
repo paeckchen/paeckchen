@@ -15,8 +15,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
         const importModule = getModulePath(currentModule, source.value as string, context);
         const importModuleIndex = getModuleIndex(importModule, state);
 
-        const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
-        const tempIdentifier = b.identifier(`__import${importModuleIndex}_${loc(path.node.loc.start)}`);
+        const tempIdentifier = path.scope.declareTemporary(`__import${importModuleIndex}`);
         const imports = path.node.specifiers.map((specifier) => {
           if (n.ImportSpecifier.check(specifier)) {
             // e.g. import { a as b, c } from './dep';
@@ -46,17 +45,16 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
                 true
               )
             );
-          } else if (n.ImportNamespaceSpecifier.check(specifier)) {
-            // e.g. import * as dep from './dep';
-            return b.variableDeclarator(
-              b.identifier(specifier.local.name),
-              b.memberExpression(
-                tempIdentifier,
-                b.identifier('exports'),
-                false
-              )
-            );
           }
+          // e.g. import * as dep from './dep';
+          return b.variableDeclarator(
+            b.identifier((specifier as ESTree.ImportNamespaceSpecifier).local.name),
+            b.memberExpression(
+              tempIdentifier,
+              b.identifier('exports'),
+              false
+            )
+          );
         });
         path.replace(
           b.variableDeclaration(
@@ -78,6 +76,11 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
 
         enqueueModule(importModule);
       }
+      return false;
+    },
+    visitStatement: function(): boolean {
+      // es2015 imports are only allowed at the top level of a module
+      // => we could stop here
       return false;
     }
   });
