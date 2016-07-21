@@ -8,8 +8,6 @@
     "index.d.ts"
   ],
   "scripts": {
-    "#postinstall": "Remove bundled typings to use patched version without Promise support",
-    "postinstall": "rimraf node_modules/ava/index.d.ts",
     "clean": "rimraf dist .nyc_output coverage",
     "linter": "tslint '{src,test}/**/*.ts'",
     "prebuild": "npm run clean",
@@ -41,6 +39,10 @@
   },
   "homepage": "https://github.com/knisterpeter/paeckchen#readme",
   "devDependencies": {
+    "@types/acorn": "1.0.28",
+    "@types/estree": "0.0.29",
+    "@types/lodash": "0.0.28",
+    "@types/node": "4.0.30",
     "ava": "0.15.2",
     "common-tags": "1.3.1",
     "coveralls": "2.11.11",

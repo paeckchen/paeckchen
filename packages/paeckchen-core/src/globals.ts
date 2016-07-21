@@ -1,4 +1,4 @@
-import { visit, builders as b, IPath } from 'ast-types';
+import { visit, builders as b, IPath, IVisitor } from 'ast-types';
 import { getModulePath } from './module-path';
 import { getModuleIndex, enqueueModule } from './modules';
 import { IPaeckchenContext } from './bundle';
@@ -13,7 +13,7 @@ export interface IDetectedGlobals {
 export function checkGlobalIdentifier(name: string, ast: ESTree.Program): boolean {
   let detectedGlobalIdentifier = false;
   visit(ast, {
-    visitIdentifier: function(path: IPath<ESTree.Identifier>): void {
+    visitIdentifier: function(this: IVisitor, path: IPath<ESTree.Identifier>): void {
       if (path.node.name === name && path.scope.lookup(name) === null) {
         detectedGlobalIdentifier = true;
         this.abort();
