@@ -18,7 +18,6 @@ export class NoopLogger implements Logger {
     // noop
   }
 
-
   public debug(section: string, message: string): void {
     // noop
   }
