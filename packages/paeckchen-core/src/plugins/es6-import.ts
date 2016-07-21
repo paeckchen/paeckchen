@@ -45,19 +45,16 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
                 true
               )
             );
-          } else if (n.ImportNamespaceSpecifier.check(specifier)) {
-            // e.g. import * as dep from './dep';
-            return b.variableDeclarator(
-              b.identifier(specifier.local.name),
-              b.memberExpression(
-                tempIdentifier,
-                b.identifier('exports'),
-                false
-              )
-            );
-          } else {
-            throw new Error('Invalid import declaration');
           }
+          // e.g. import * as dep from './dep';
+          return b.variableDeclarator(
+            b.identifier((specifier as ESTree.ImportNamespaceSpecifier).local.name),
+            b.memberExpression(
+              tempIdentifier,
+              b.identifier('exports'),
+              false
+            )
+          );
         });
         path.replace(
           b.variableDeclaration(
