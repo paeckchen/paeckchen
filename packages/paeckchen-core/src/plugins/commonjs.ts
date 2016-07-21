@@ -32,7 +32,7 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
               )
             );
 
-            enqueueModule(modulePath);
+            enqueueModule(modulePath, state);
           }
         }
         return false;

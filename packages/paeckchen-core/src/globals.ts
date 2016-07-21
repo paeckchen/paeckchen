@@ -80,7 +80,7 @@ function injectProcess(ast: ESTree.Program, context: IPaeckchenContext, state: S
             ]
           )
         );
-        enqueueModule(processPath);
+        enqueueModule(processPath, state);
       }
       return false;
     }
@@ -119,7 +119,7 @@ function injectBuffer(ast: ESTree.Program, context: IPaeckchenContext, state: St
             ]
           )
         );
-        enqueueModule(bufferPath);
+        enqueueModule(bufferPath, state);
       }
       return false;
     }

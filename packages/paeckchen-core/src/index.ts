@@ -11,3 +11,6 @@ export {
   IHost,
   DefaultHost
 } from './host';
+export {
+  Logger
+} from './logger';
