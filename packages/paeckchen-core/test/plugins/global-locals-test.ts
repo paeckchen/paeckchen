@@ -23,8 +23,8 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     dirname(__dirname);
   `;
 
-  let calledFilename: string;
-  let calledDirname: string;
+  let calledFilename: string|undefined;
+  let calledDirname: string|undefined;
   executeExports(input, {}, {
     filename(name: string): void {
       calledFilename = name;
