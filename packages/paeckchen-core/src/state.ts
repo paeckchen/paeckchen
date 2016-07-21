@@ -9,46 +9,28 @@ export interface IWrappedModule {
 
 export class State {
 
-  private _detectedGlobals: IDetectedGlobals = {
+  public readonly detectedGlobals: IDetectedGlobals = {
     global: false,
     process: false,
     buffer: false
   };
 
-  private _modules: (ESTree.Expression | ESTree.SpreadElement)[];
+  public readonly modules: (ESTree.Expression | ESTree.SpreadElement)[];
 
-  private _wrappedModules: { [name: string]: IWrappedModule } = {};
+  public readonly wrappedModules: { [name: string]: IWrappedModule } = {};
 
   private _nextModuleIndex: number = 0;
 
-  private _moduleWatchCallbackAdded: boolean = false;
+  public moduleWatchCallbackAdded: boolean = false;
+
+  public readonly moduleBundleQueue: string[] = [];
 
   constructor(modules: (ESTree.Expression | ESTree.SpreadElement)[]) {
-    this._modules = modules;
-  }
-
-  public get detectedGlobals(): IDetectedGlobals {
-    return this._detectedGlobals;
-  }
-
-  public get modules(): (ESTree.Expression | ESTree.SpreadElement)[] {
-    return this._modules;
-  }
-
-  public get wrappedModules(): { [name: string]: IWrappedModule } {
-    return this._wrappedModules;
+    this.modules = modules;
   }
 
   public getAndIncrementModuleIndex(): number {
     return this._nextModuleIndex++;
-  }
-
-  public get moduleWatchCallbackAdded(): boolean {
-    return this._moduleWatchCallbackAdded;
-  }
-
-  public set moduleWatchCallbackAdded(watchCallbackAdded: boolean) {
-    this._moduleWatchCallbackAdded = watchCallbackAdded;
   }
 
 }

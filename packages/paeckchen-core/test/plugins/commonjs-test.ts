@@ -2,6 +2,7 @@ import test from 'ava';
 import { stripIndent } from 'common-tags';
 import { HostMock, parseAndProcess } from '../helper';
 import { State } from '../../src/state';
+import { NoopLogger } from '../../src/logger';
 
 import { rewriteRequireStatements } from '../../src/plugins/commonjs';
 
@@ -24,7 +25,8 @@ test('commonjs should rewrite require statements', t => {
       config: {
         aliases: {}
       } as any,
-      host
+      host,
+      logger: new NoopLogger()
     }, state));
 
   t.is(actual, expected);
@@ -48,7 +50,8 @@ test('commonjs should rewrite require statements which are nested inside call ch
       config: {
         aliases: {}
       } as any,
-      host
+      host,
+      logger: new NoopLogger()
     }, state));
 
   t.is(actual, expected);

@@ -1,13 +1,19 @@
 import test from 'ava';
+import { NoopLogger } from '../../src/logger';
 import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 
 import { rewriteGlobalLocals } from '../../src/plugins/global-locals';
 
 function rewriteExports(input: string, files: any = {}): string {
   const host = new HostMock(files, '/cwd');
+  const context = {
+    config: {} as any,
+    host,
+    logger: new NoopLogger()
+  };
 
   return parseAndProcess(input, ast => {
-    return rewriteGlobalLocals(ast, '/cwd/path/to/name', { config: {} as any, host });
+    return rewriteGlobalLocals(ast, '/cwd/path/to/name', context);
   });
 }
 

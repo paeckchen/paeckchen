@@ -47,19 +47,17 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program, state: Sta
   };
 }
 
-const moduleBundleQueue: string[] = [];
-
-export function enqueueModule(modulePath: string): void {
-  if (moduleBundleQueue.indexOf(modulePath) === -1) {
-    moduleBundleQueue.push(modulePath);
+export function enqueueModule(modulePath: string, state: State): void {
+  if (state.moduleBundleQueue.indexOf(modulePath) === -1) {
+    state.moduleBundleQueue.push(modulePath);
   }
 }
 
 export function bundleNextModule(state: State, context: IPaeckchenContext, plugins: any = defaultPlugins): boolean {
-  if (moduleBundleQueue.length === 0) {
+  if (state.moduleBundleQueue.length === 0) {
     return false;
   }
-  const modulePath = moduleBundleQueue.shift() as string;
+  const modulePath = state.moduleBundleQueue.shift() as string;
   watchModule(state, modulePath, context);
   wrapModule(modulePath, state, context, plugins);
   return true;
@@ -74,11 +72,11 @@ function watchModule(state: State, modulePath: string, context: IPaeckchenContex
           let rebundle = false;
           if (event === 'update') {
             updateModule(modulePath, false, state);
-            enqueueModule(modulePath);
+            enqueueModule(modulePath, state);
             rebundle = true;
           } else if (event === 'remove') {
             updateModule(modulePath, true, state);
-            enqueueModule(modulePath);
+            enqueueModule(modulePath, state);
             rebundle = true;
           }
           if (rebundle && context.rebundle) {
@@ -135,7 +133,7 @@ function wrapModule(modulePath: string, state: State, context: IPaeckchenContext
       );
     }
   } catch (e) {
-    console.error(`Failed to process module '${modulePath}'`);
+    context.logger.error('modules', e, `Failed to process module '${modulePath}'`);
     throw e;
   }
 }

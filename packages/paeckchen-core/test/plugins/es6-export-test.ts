@@ -2,6 +2,7 @@ import test from 'ava';
 import { stripIndent } from 'common-tags';
 import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 import { State } from '../../src/state';
+import { NoopLogger } from '../../src/logger';
 
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
@@ -14,7 +15,8 @@ function rewriteExports(input: string, files: any = {}): string {
       config: {
         aliases: {}
       } as any,
-      host
+      host,
+      logger: new NoopLogger()
     }, state);
   });
 }
