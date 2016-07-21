@@ -56,7 +56,7 @@ test('Watcher should register callbacks on the watcher if enabled', t => {
 });
 
 test('Watcher should ignore changes of new files not on the watch list', t => {
-  let updateFileName: string;
+  let updateFileName: string|undefined;
 
   const chokidar = new ChokidarMock();
   const onUpdate = (event: string, fileName: string): void => {
@@ -71,7 +71,7 @@ test('Watcher should ignore changes of new files not on the watch list', t => {
 });
 
 test('Watcher should ignore changes of existing files not on the watch list', t => {
-  let updateFileName: string;
+  let updateFileName: string|undefined;
 
   const chokidar = new ChokidarMock();
   const onUpdate = (event: string, fileName: string): void => {
@@ -86,7 +86,7 @@ test('Watcher should ignore changes of existing files not on the watch list', t 
 });
 
 test('Watcher should ignore removals of existing files not on the watch list', t => {
-  let updateFileName: string;
+  let updateFileName: string|undefined;
 
   const chokidar = new ChokidarMock();
   const onUpdate = (event: string, fileName: string): void => {
@@ -149,8 +149,8 @@ test('Watcher should keep watching folders if watched files left', t => {
 });
 
 test('Watcher should notify if watched file changes', t => {
-  let calledEvent: string;
-  let calledFile: string;
+  let calledEvent: string|undefined;
+  let calledFile: string|undefined;
   const onUpdate = (event: string, fileName: string): void => {
     calledEvent = event;
     calledFile = fileName;
@@ -167,8 +167,8 @@ test('Watcher should notify if watched file changes', t => {
 });
 
 test('Watcher should notify if watched file is added', t => {
-  let calledEvent: string;
-  let calledFile: string;
+  let calledEvent: string|undefined;
+  let calledFile: string|undefined;
   const onAdd = (event: string, fileName: string): void => {
     calledEvent = event;
     calledFile = fileName;

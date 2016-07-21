@@ -1,11 +1,25 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "outDir": "dist",
-    "noImplicitAny": true,
     "declaration": true,
-    "pretty": true
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "es5",
+      "es2015"
+    ],
+    "listEmittedFiles": false,
+    "module": "es2015",
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noResolve": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false, // Fails currently (e.g. last parameter is used, but last but one is unused)
+    "outDir": "dist",
+    "pretty": true,
+    "strictNullChecks": true,
+    "stripInternal": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "target": "es5"
   },
   "exclude": [
     "index.d.ts",

@@ -59,7 +59,7 @@ export function bundleNextModule(state: State, context: IPaeckchenContext, plugi
   if (moduleBundleQueue.length === 0) {
     return false;
   }
-  const modulePath = moduleBundleQueue.shift();
+  const modulePath = moduleBundleQueue.shift() as string;
   watchModule(state, modulePath, context);
   wrapModule(modulePath, state, context, plugins);
   return true;
@@ -69,19 +69,27 @@ function watchModule(state: State, modulePath: string, context: IPaeckchenContex
   if (context.config.watchMode) {
     if (!state.moduleWatchCallbackAdded) {
       state.moduleWatchCallbackAdded = true;
-      context.watcher.start((event, fileName) => {
-        if (event === 'update') {
-          updateModule(modulePath, false, state);
-          enqueueModule(modulePath);
-          context.rebundle();
-        } else if (event === 'remove') {
-          updateModule(modulePath, true, state);
-          enqueueModule(modulePath);
-          context.rebundle();
-        }
-      });
+      if (context.watcher) {
+        context.watcher.start((event) => {
+          let rebundle = false;
+          if (event === 'update') {
+            updateModule(modulePath, false, state);
+            enqueueModule(modulePath);
+            rebundle = true;
+          } else if (event === 'remove') {
+            updateModule(modulePath, true, state);
+            enqueueModule(modulePath);
+            rebundle = true;
+          }
+          if (rebundle && context.rebundle) {
+            context.rebundle();
+          }
+        });
+      }
     }
-    context.watcher.watchFile(modulePath);
+    if (context.watcher) {
+      context.watcher.watchFile(modulePath);
+    }
   }
 }
 
@@ -94,7 +102,7 @@ function wrapModule(modulePath: string, state: State, context: IPaeckchenContext
   }
 
   try {
-    let moduleAst: ESTree.Program = undefined;
+    let moduleAst: ESTree.Program|undefined = undefined;
     if (!state.wrappedModules[modulePath].remove) {
       if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
         moduleAst = wrapExternalModule(modulePath, context);
@@ -115,7 +123,7 @@ function wrapModule(modulePath: string, state: State, context: IPaeckchenContext
         moduleAst = processModule(modulePath, context, state, plugins);
       }
       state.wrappedModules[modulePath] = createModuleWrapper(modulePath, moduleAst, state);
-      state.modules[moduleIndex] = state.wrappedModules[modulePath].ast;
+      state.modules[moduleIndex] = state.wrappedModules[modulePath].ast as ESTree.Statement;
     } else {
       state.modules[moduleIndex] = b.throwStatement(
         b.newExpression(

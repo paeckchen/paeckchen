@@ -18,7 +18,7 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
     `
   });
 
-  let bundled: string;
+  let bundled = '';
   bundle({entryPoint: 'entry-point.js'}, host, result => bundled = result);
 
   let called = false;
@@ -48,7 +48,7 @@ test('bundle should bundle global dependencies', t => {
     alias: 'buffer=/BUFFER'
   };
 
-  let bundled: string;
+  let bundled = '';
   bundle(config, host, result => bundled = result);
 
   let called = false;
@@ -72,7 +72,7 @@ test('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  let bundled: string;
+  let bundled = '';
   bundle({}, host, result => bundled = result);
 
   let called = false;

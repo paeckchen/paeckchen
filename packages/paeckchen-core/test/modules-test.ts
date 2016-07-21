@@ -171,7 +171,7 @@ test('bundleNextModule should bundle a virtual empty module per external falsy c
 test('bundleNextModule should bundle an error for removed modules', t => {
   const state = new State([]);
   const plugins = {};
-  let callMeOnChangesFunction: Function;
+  let callMeOnChangesFunction: Function = () => t.fail();
   const context: IPaeckchenContext = {
     config: {
       externals: {},
@@ -240,7 +240,7 @@ test('bundleNextModule should remove sourceMapping comments', t => {
 });
 
 test('bundleNextModule should add modules to the watch list if enabled', t => {
-  let watchedFile: string;
+  let watchedFile: string|undefined;
   const state = new State([]);
   const host = new HostMock({
     '/some/mod.js': ''
@@ -267,7 +267,7 @@ test('bundleNextModule should add modules to the watch list if enabled', t => {
 
 test('bundleNextModule should trigger rebundle on watched file update', t => {
   const state = new State([]);
-  let callMeOnChangesFunction: Function;
+  let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
     '/some/mod.js': ''
   });
@@ -296,7 +296,7 @@ test('bundleNextModule should trigger rebundle on watched file update', t => {
 
 test('bundleNextModule should trigger rebundle on watched file removal', t => {
   const state = new State([]);
-  let callMeOnChangesFunction: Function;
+  let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
     '/some/mod.js': ''
   });
