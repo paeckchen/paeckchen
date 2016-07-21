@@ -8,7 +8,7 @@ export interface Logger {
 
   error(section: string, error: Error, message: string): void;
 
-  progress(current: number, total: number): void;
+  progress(step: string, current: number, total: number): void;
 
 }
 
@@ -30,7 +30,7 @@ export class NoopLogger implements Logger {
     // noop
   }
 
-  public progress(current: number, total: number): void {
+  public progress(step: string, current: number, total: number): void {
     // noop
   }
 
