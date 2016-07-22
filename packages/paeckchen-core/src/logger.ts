@@ -8,13 +8,13 @@ export enum ProgressStep {
 
 export interface Logger {
 
-  trace(section: string, message: string): void;
+  trace(section: string, message: string, ...params: any[]): void;
 
-  debug(section: string, message: string): void;
+  debug(section: string, message: string, ...params: any[]): void;
 
-  info(section: string, message: string): void;
+  info(section: string, message: string, ...params: any[]): void;
 
-  error(section: string, error: Error, message: string): void;
+  error(section: string, error: Error, message: string, ...params: any[]): void;
 
   progress(step: ProgressStep, current: number, total: number): void;
 
