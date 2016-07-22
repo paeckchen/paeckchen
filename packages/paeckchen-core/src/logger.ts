@@ -1,14 +1,22 @@
+export enum ProgressStep {
+  init = 0,
+  bundleModules = 20,
+  bundleGlobals = 80,
+  generateBundle = 90,
+  end = 100
+}
+
 export interface Logger {
 
-  trace(section: string, message: string): void;
+  trace(section: string, message: string, ...params: any[]): void;
 
-  debug(section: string, message: string): void;
+  debug(section: string, message: string, ...params: any[]): void;
 
-  info(section: string, message: string): void;
+  info(section: string, message: string, ...params: any[]): void;
 
-  error(section: string, error: Error, message: string): void;
+  error(section: string, error: Error, message: string, ...params: any[]): void;
 
-  progress(current: number, total: number): void;
+  progress(step: ProgressStep, current: number, total: number): void;
 
 }
 
@@ -30,7 +38,7 @@ export class NoopLogger implements Logger {
     // noop
   }
 
-  public progress(current: number, total: number): void {
+  public progress(step: ProgressStep, current: number, total: number): void {
     // noop
   }
 
