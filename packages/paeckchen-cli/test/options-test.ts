@@ -15,7 +15,8 @@ test.beforeEach(t => {
     alias: undefined,
     external: undefined,
     watchMode: false,
-    logger: new CliLogger()
+    logger: new CliLogger(),
+    sourceMap: false
   } as IBundleOptions;
 });
 
@@ -123,5 +124,11 @@ test('createOptions --watch', t => {
 test('createOptions -w', t => {
   t.context.opts.watchMode = true;
   const options = createOptions(['-w']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions --source-map', t => {
+  t.context.opts.sourceMap = true;
+  const options = createOptions(['--source-map']);
   t.deepEqual(options, t.context.opts);
 });
