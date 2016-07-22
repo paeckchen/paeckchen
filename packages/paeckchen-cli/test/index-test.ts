@@ -97,7 +97,7 @@ test.cb('cli without TERM should not fail', t => {
     '--entry',
     join('fixtures', 'entry.js')
   ];
-  execa('node', args, {env: { TERM: undefined }})
+  execa('node', args, {env: { TERM: '' }})
     .then(result => {
       t.not(result.stdout.toString(), '');
       t.end();
