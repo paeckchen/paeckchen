@@ -1,5 +1,6 @@
 import test from 'ava';
 import { IBundleOptions } from 'paeckchen-core';
+import { CliLogger } from '../src/cli-logger';
 
 import { createOptions } from '../src/options';
 
@@ -13,7 +14,8 @@ test.beforeEach(t => {
     runtime: undefined,
     alias: undefined,
     external: undefined,
-    watchMode: false
+    watchMode: false,
+    logger: new CliLogger()
   } as IBundleOptions;
 });
 
