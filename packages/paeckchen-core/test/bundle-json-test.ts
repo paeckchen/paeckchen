@@ -63,7 +63,8 @@ test('wrapJsonFile should return a requested json file as ast program exporting 
       output: {
         folder: './',
         file: undefined,
-        runtime: Runtime.browser
+        runtime: Runtime.browser,
+        sourceMap: false
       },
       aliases: {},
       externals: {},

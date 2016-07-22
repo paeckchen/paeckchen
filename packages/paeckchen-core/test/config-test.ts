@@ -18,7 +18,8 @@ test('createConfig should return the config defaults', t => {
     output: {
       folder: host.cwd(),
       file: undefined,
-      runtime: Runtime.browser
+      runtime: Runtime.browser,
+      sourceMap: false
     },
     aliases: {},
     externals: {},
@@ -44,6 +45,26 @@ test('createConfig should fallback to entry point of config', t => {
   const config = createConfig({}, host);
 
   t.is(config.input.entryPoint, 'config');
+});
+
+test('createConfig should prefer sourceMap of options', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": false}}'
+  }, '/');
+
+  const config = createConfig({sourceMap: true}, host);
+
+  t.true(config.output.sourceMap);
+});
+
+test('createConfig should fallback to sourceMap of config', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": true}}'
+  }, '/');
+
+  const config = createConfig({}, host);
+
+  t.true(config.output.sourceMap);
 });
 
 test('createConfig should prefer source level of options', t => {

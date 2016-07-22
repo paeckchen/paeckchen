@@ -167,6 +167,7 @@ function processModule(modulePath: string, context: IPaeckchenContext, state: St
     sourceType: 'module',
     locations: true,
     ranges: true,
+    sourceFile: modulePath,
     allowHashBang: true,
     onComment: comments,
     onToken: tokens

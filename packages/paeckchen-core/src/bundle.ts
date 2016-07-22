@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
+import { loadSync as sorceryLoadSync } from 'sorcery';
 
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -26,6 +27,7 @@ export interface IBundleOptions {
   external?: string|string[];
   watchMode?: boolean;
   logger?: Logger;
+  sourceMap?: boolean;
 }
 
 export interface IPaeckchenContext {
@@ -72,11 +74,25 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
 
   context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
   const bundleResult = generate(paeckchenAst, {
-    comment: true
+    comment: true,
+    sourceMap: context.config.output.sourceMap,
+    sourceMapWithCode: context.config.output.sourceMap
   });
 
   context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-  outputFunction(bundleResult, undefined, context);
+  if (typeof bundleResult === 'string') {
+    outputFunction(bundleResult, undefined, context);
+  } else {
+    const chain = sorceryLoadSync('paeckchen.js', {
+      content: {
+        'paeckchen.js': bundleResult.code
+      },
+      sourcemaps: {
+        'paeckchen.js': JSON.parse(bundleResult.map.toString())
+      }
+    });
+    outputFunction(bundleResult.code, chain.apply().toString(), context);
+  }
 }
 
 export type RebundleFactory = typeof rebundleFactory;
