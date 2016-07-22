@@ -46,6 +46,7 @@
     "packaging"
   ],
   "devDependencies": {
+    "@types/debug": "0.0.28",
     "@types/minimist": "1.1.28",
     "@types/node": "4.0.30",
     "ava": "0.15.2",
@@ -60,9 +61,11 @@
     "typescript": "2.0.0"
   },
   "dependencies": {
+    "debug": "2.2.0",
     "meow": "3.7.0",
     "minimist": "1.2.0",
-    "paeckchen-core": "0.2.0"
+    "paeckchen-core": "0.2.0",
+    "terminal-kit": "0.24.14"
   },
   "publishConfig": {
     "tag": "next"
