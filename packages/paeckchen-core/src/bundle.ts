@@ -9,7 +9,7 @@ import { injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
 import { State } from './state';
 import { Watcher } from './watcher';
-import { Logger, NoopLogger } from './logger';
+import { ProgressStep, Logger, NoopLogger } from './logger';
 
 export type SourceOptions =
     'es5'
@@ -60,18 +60,22 @@ const paeckchenSource = `
 export type BundlingFunction = typeof executeBundling;
 export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
     outputFunction: OutputFunction): void {
+  context.logger.progress(ProgressStep.init, state.moduleBundleQueue.length, state.modules.length);
   while (bundleNextModule(state, context)) {
-    context.logger.progress(state.moduleBundleQueue.length, state.modules.length);
+    context.logger.progress(ProgressStep.bundleModules, state.moduleBundleQueue.length, state.modules.length);
   }
+
   injectGlobals(state, paeckchenAst, context);
   while (bundleNextModule(state, context)) {
-    context.logger.progress(state.moduleBundleQueue.length, state.modules.length);
+    context.logger.progress(ProgressStep.bundleGlobals, state.moduleBundleQueue.length, state.modules.length);
   }
-  context.logger.progress(state.moduleBundleQueue.length, state.modules.length);
 
+  context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
   const bundleResult = generate(paeckchenAst, {
     comment: true
   });
+
+  context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
   outputFunction(bundleResult, context);
 }
 
