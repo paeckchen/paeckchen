@@ -27,6 +27,7 @@ export interface IBundleOptions {
   external?: string|string[];
   watchMode?: boolean;
   logger?: Logger;
+  sourceMap?: boolean;
 }
 
 export interface IPaeckchenContext {
@@ -72,12 +73,10 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
   }
 
   context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
-  // TODO: add to config
-  const sourceMaps = true;
   const bundleResult = generate(paeckchenAst, {
     comment: true,
-    sourceMap: sourceMaps,
-    sourceMapWithCode: sourceMaps
+    sourceMap: context.config.output.sourceMap,
+    sourceMapWithCode: context.config.output.sourceMap
   });
 
   context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
