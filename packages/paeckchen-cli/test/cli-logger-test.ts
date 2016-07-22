@@ -1,5 +1,6 @@
 import test from 'ava';
 import * as debug from 'debug';
+import { ProgressStep } from 'paeckchen-core';
 
 import { CliLogger } from '../src/cli-logger';
 
@@ -49,4 +50,13 @@ test('cli-logger should output trace message', t => {
   logger.trace('test', 'trace');
 
   t.truthy((t.context.stderrOutput as string).match(/trace/));
+});
+
+test('cli-logger should update progress after logging', t => {
+  const logger = new CliLogger();
+
+  logger.progress(ProgressStep.bundleModules, 50, 50);
+  logger.info('test', 'info');
+
+  t.truthy((t.context.stderrOutput as string).match(/info.*50% \[50|100\]/));
 });
