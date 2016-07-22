@@ -16,6 +16,6 @@ bundle(options, new DefaultHost(), (result: string, context: IPaeckchenContext) 
   }
   const endTime = new Date().getTime();
   if (options.logger) {
-    options.logger.info('cli', `Bundeling took ${(endTime - startTime) / 1000}s\n`);
+    options.logger.info('cli', `Bundeling took ${(endTime - startTime) / 1000}s`);
   }
 });
