@@ -102,7 +102,7 @@ declare module 'escodegen' {
      * sourceMap is the source maps's source filename, that's a name that will show up in the browser debugger for the generated source (if source-maps is enabled).
      * If a non-empty string value is provided, generate a source map.
      */
-    sourceMap?: string;
+    sourceMap?: string|boolean;
     /**
      * . If sourceMapWithCode is true generator returns output hash, where output.map is a source-map representation, which can be serialized as output.map.toString(). output.code is a string with generated JS code (note that it's not going to have //@ sourceMappingURL comment in it).
      */
@@ -135,7 +135,7 @@ declare module 'escodegen' {
      */
     verbatim?: string;
   }
-  
+
   /**
    * https://github.com/estools/escodegen/commit/adf113333cd4888cf59bfc4f957df98bf7db82b6
    */
@@ -170,7 +170,7 @@ declare module 'escodegen' {
    * @param ast The Abstract Syntax Tree to generate code from
    * @param options The generation options
    */
-  export function generate(ast: any, options?: GenerateOptions): string;
+  export function generate(ast: any, options?: GenerateOptions): string|{code: string; map: any};
   /**
    * Attaching the comments is needed to keep the comments and to allow blank lines to be preserved.
    */
