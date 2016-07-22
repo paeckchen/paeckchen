@@ -76,7 +76,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
   });
 
   context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-  outputFunction(bundleResult, context);
+  outputFunction(bundleResult, undefined, context);
 }
 
 export type RebundleFactory = typeof rebundleFactory;
@@ -94,11 +94,11 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
 }
 
 export type OutputFunction = typeof writeOutput;
-export function writeOutput(bundleResult: string, context: IPaeckchenContext): void {
+export function writeOutput(code: string, sourceMap: string|undefined, context: IPaeckchenContext): void {
   if (context.config.output.file) {
     context.host.writeFile(
       context.host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
+        code);
   }
 }
 
