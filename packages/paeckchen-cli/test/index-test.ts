@@ -90,20 +90,3 @@ test.cb('cli with entry-point and out-file should write bundle', t => {
       t.end();
     });
 });
-
-test.cb('cli without TERM should not fail', t => {
-  const args = [
-    resolve(process.cwd(), '..', 'src', 'index.js'),
-    '--entry',
-    join('fixtures', 'entry.js')
-  ];
-  execa('node', args, {env: { TERM: '' }})
-    .then(result => {
-      t.not(result.stdout.toString(), '');
-      t.end();
-    })
-    .catch(err => {
-      t.fail();
-      t.end();
-    });
-});

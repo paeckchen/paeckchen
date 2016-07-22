@@ -4,11 +4,6 @@ import { join } from 'path';
 import { createOptions } from './options';
 import { bundle, DefaultHost, IPaeckchenContext } from 'paeckchen-core';
 
-// https://github.com/cronvel/terminal-kit/issues/12
-if (!process.env.TERM) {
-  process.env.TERM = '';
-}
-
 const startTime = new Date().getTime();
 const options = createOptions(process.argv);
 bundle(options, new DefaultHost(), (result: string, context: IPaeckchenContext) => {

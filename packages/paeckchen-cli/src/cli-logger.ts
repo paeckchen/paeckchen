@@ -6,7 +6,6 @@ export class CliLogger implements Logger {
 
   private loggers: {[section: string]: debug.IDebugger} = {};
 
-  private lastWasProgress: boolean = false;
   private progressStep: ProgressStep;
   private progressCurrent: number;
   private progressTotal: number;
@@ -18,50 +17,34 @@ export class CliLogger implements Logger {
     return this.loggers[section];
   }
 
-  private clearProgress(): void {
-    if (this.lastWasProgress) {
-      terminal
-        .error.column(1)
-        .error.eraseLineAfter();
-    }
-  }
-
   public trace(section: string, message: string): void {
-    this.clearProgress();
     this.getLogger(section)(`${terminal.str.bold.dim('TRACE')} ${message}`);
-    this.lastWasProgress = false;
-    this.updateProgress();
+    this.updateProgress(false);
   }
 
   public debug(section: string, message: string): void {
-    this.clearProgress();
     this.getLogger(section)(`${terminal.str.bold.brightYellow('DEBUG')} ${message}`);
-    this.lastWasProgress = false;
-    this.updateProgress();
+    this.updateProgress(false);
   }
 
   public info(section: string, message: string): void {
-    this.clearProgress();
     this.getLogger(section)(`${terminal.str.bold.white('INFO')} ${message}`);
-    this.lastWasProgress = false;
-    this.updateProgress();
+    this.updateProgress(false);
   }
 
   public error(section: string, error: Error, message: string): void {
-    this.clearProgress();
     this.getLogger(section)(`${terminal.str.bold.red('ERROR')} ${message}\n${error.message}`);
-    this.lastWasProgress = false;
-    this.updateProgress();
+    this.updateProgress(false);
   }
 
   public progress(step: ProgressStep, current: number, total: number): void {
     this.progressStep = step;
     this.progressCurrent = current;
     this.progressTotal = total;
-    this.updateProgress();
+    this.updateProgress(true);
   }
 
-  private updateProgress(): void {
+  private updateProgress(fromProgress: boolean): void {
     const percent = Math.min(100, Math.ceil(this.progressTotal * 100 / (this.progressCurrent + this.progressTotal)));
     switch (this.progressStep) {
       case ProgressStep.init:
@@ -71,15 +54,15 @@ export class CliLogger implements Logger {
       case ProgressStep.bundleModules:
       case ProgressStep.bundleGlobals:
       case ProgressStep.generateBundle:
-        if (!this.lastWasProgress) {
+        if (!fromProgress) {
           terminal
             .error.nextLine(1);
         }
         terminal
-          .error.column(1)
           .error.eraseLineAfter()
           .error.brightGreen(`${percent}% `)
-          .error.brightBlack(`[${this.progressCurrent}|${this.progressCurrent + this.progressTotal}]`);
+          .error.brightBlack(`[${this.progressCurrent}|${this.progressCurrent + this.progressTotal}]`)
+          .error.column(1);
         break;
       case ProgressStep.end:
         terminal
@@ -87,7 +70,6 @@ export class CliLogger implements Logger {
           .error.hideCursor(false);
         break;
     }
-    this.lastWasProgress = true;
   }
 
 }

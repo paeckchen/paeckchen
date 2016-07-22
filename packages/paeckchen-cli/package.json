@@ -65,7 +65,7 @@
     "meow": "3.7.0",
     "minimist": "1.2.0",
     "paeckchen-core": "0.2.0",
-    "terminal-kit": "0.24.13"
+    "terminal-kit": "0.24.14"
   },
   "publishConfig": {
     "tag": "next"
