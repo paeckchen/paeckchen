@@ -12,5 +12,6 @@ export {
   DefaultHost
 } from './host';
 export {
+  ProgressStep,
   Logger
 } from './logger';
