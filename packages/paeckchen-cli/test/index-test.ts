@@ -23,9 +23,9 @@ test.cb('cli without parameters and config file should show error', t => {
       t.end();
     })
     .catch(err => {
-        t.regex(err.stderr.toString(), /Missing entry-point/);
-        t.end();
-      });
+      t.regex(err.stderr.toString(), /Missing entry-point/);
+      t.end();
+    });
 });
 
 test.cb('cli with entry-point should output bundle', t => {
@@ -52,11 +52,11 @@ test.cb('cli with entry-point should output bundle', t => {
       t.end();
     })
     .catch(err => {
-        console.error(err);
-        console.error(err.stack);
-        t.fail('There should be no error from the cli');
-        t.end();
-      });
+      console.error(err);
+      console.error(err.stack);
+      t.fail('There should be no error from the cli');
+      t.end();
+    });
 });
 
 test.cb('cli with entry-point and out-file should write bundle', t => {
@@ -85,8 +85,25 @@ test.cb('cli with entry-point and out-file should write bundle', t => {
       t.end();
     })
     .catch(err => {
-        console.error(err);
-        t.fail('There should be no error from the cli');
-        t.end();
-      });
+      console.error(err);
+      t.fail('There should be no error from the cli');
+      t.end();
+    });
+});
+
+test.cb('cli without TERM should not fail', t => {
+  const args = [
+    resolve(process.cwd(), '..', 'src', 'index.js'),
+    '--entry',
+    join('fixtures', 'entry.js')
+  ];
+  execa('node', args, {env: { TERM: undefined }})
+    .then(result => {
+      t.not(result.stdout.toString(), '');
+      t.end();
+    })
+    .catch(err => {
+      t.fail();
+      t.end();
+    });
 });
