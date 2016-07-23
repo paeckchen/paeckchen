@@ -437,7 +437,9 @@ function runCommandPublish(packageDir) {
           .then(stdout => stdout.match(/^\w+\s+([^ ]+)\s+\(\w+\)$/m)[1])
           .then(url => git('..', `clone ${url} publish-temp`))
           .then(() => git(path.join('..', 'publish-temp'), `checkout ${tag}`))
-          .then(() => npm(path.join('..', 'publish-temp'), 'publish'));
+          .then(() => npm(path.join('..', 'publish-temp'), 'install'))
+          .then(() => npm(path.join('..', 'publish-temp'), 'bootstrap'))
+          .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'publish'));
       }
     });
 }
