@@ -1,10 +1,10 @@
 declare module 'meow' {
   import * as minimist from 'minimist';
 
-  function meow(options: string|string[]|meow.MeowOptions, minimistOptions?: minimist.Opts): meow.MeowResult;
+  function meow(options: string | string[] | meow.Options, minimistOptions?: minimist.Opts): meow.Result;
   namespace meow {
 
-    export interface MeowOptions {
+    export interface Options {
       description?: string|boolean;
       help?: string|boolean;
       version?: string|boolean;
@@ -13,7 +13,7 @@ declare module 'meow' {
       inferType?: boolean;
     }
 
-    export interface MeowResult {
+    export interface Result {
       input: string[];
       flags: {[name: string]: any};
       pkg: any;
