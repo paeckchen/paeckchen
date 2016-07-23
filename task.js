@@ -1,5 +1,6 @@
 'use strict';
 
+const util = require('util');
 const path = require('path');
 const fs = require('fs');
 const childProcess = require('child_process');
@@ -8,6 +9,8 @@ const fsExtra = require('fs-extra');
 const NpmRegistryClient = require('npm-registry-client');
 const conventionalCommitsParser = require('conventional-commits-parser');
 const semver = require('semver');
+
+const gitlog = util.debuglog('git');
 
 function promisify(fn) {
   return function () {
@@ -36,7 +39,21 @@ const fsWriteJson = promisify(fsExtra.writeJson);
 const packagesDirectory = path.join(process.cwd(), 'packages');
 
 function forEach(list, task) {
-  return list.reduce((promise, entry) => promise.then(() => task(entry)), Promise.resolve());
+  return list.reduce((promise, entry) => {
+    return promise.then(continueReduce => {
+      if (continueReduce === false) {
+        console.log(`\n${commonTags.stripIndent`
+          -------------------------------------------------------------------------------
+
+            Skipping ${entry}
+
+          -------------------------------------------------------------------------------
+        `}\n`);
+        return false;
+      }
+      return task(entry);
+    });
+  }, Promise.resolve());
 }
 
 function getPackages() {
@@ -206,22 +223,35 @@ function getReleaseData(packageDir, npm) {
 function getReleaseCommits(packageDir, data) {
   return Promise.resolve()
     .then(() => {
-      return git(packageDir, `log -E --format=%B==END== ${data.lastGitHash}..HEAD`)
+      return git(packageDir, `log --extended-regexp --format=%h==HASH==%B==END== ${data.lastGitHash}..HEAD -- .`)
         .then(stdout => stdout.split('==END==\n'))
         .then(commits => commits.filter(commit => Boolean(commit.trim())))
-        .then(commits => {
-          const parsedCommits = [];
-          const parser = conventionalCommitsParser();
-          parser.on('data', parsed => parsedCommits.push(parsed));
-          commits.forEach(commit => parser.write(commit));
-          parser.end();
-          return parsedCommits;
-        })
+        .then(commits => commits.map(commit => {
+          const parts = commit.split('==HASH==');
+          return {
+            hash: parts[0],
+            message: parts[1]
+          };
+        }))
+        .then(commits => commits.map(commit => {
+          commit.message = conventionalCommitsParser.sync(commit.message);
+          commit.message.hash = commit.hash;
+          return commit.message;
+        }))
         .then(commits => commits.filter(commit => commit.scope === packageDir))
         .then(commits => {
           data.commits = commits;
           data.requireRelease = data.commits.length > 0;
           return data;
+        })
+        .then(data => {
+          return forEach(data.commits, commit => {
+            return git(packageDir, `show ${commit.hash}`)
+              .then(diff => {
+                commit.updatesPackageJson = diff.indexOf(`packages/${packageDir}/package.json`) > -1;
+              })
+              .then(() => data);
+          });
         });
     });
 }
@@ -239,8 +269,8 @@ function getNextVersion(packageDir, data) {
 
   return Promise.resolve()
     .then(() => {
-      const relaseIndex = data.commits.reduce((relase, commit) => {
-        let result = relase > (typeToReleaseIndex[commit.type] || 0) ? relase : typeToReleaseIndex[commit.type];
+      const relaseIndex = data.commits.reduce((release, commit) => {
+        let result = release > (typeToReleaseIndex[commit.type] || 0) ? release : typeToReleaseIndex[commit.type] || release;
         if (isBreakingChange(commit)) {
           result = 2;
         }
@@ -263,7 +293,9 @@ function git(packageDir, command) {
         cwd: path.join(packagesDirectory, packageDir),
         env: process.env
       };
-      return childProcess.execSync(`git ${command}`, opts);
+      const cmd = `git ${command}`;
+      gitlog(`executing '${cmd}'`);
+      return childProcess.execSync(cmd, opts);
     })
     .then(buffer => buffer.toString().trim());
 }
@@ -334,14 +366,15 @@ function runCommandRelease(packageDir) {
         return incrementPackageVersion(packageDir, data)
           .then(() => updateDependencies(packageDir, data))
           .then(() => runCommandNpmRun(packageDir, 'release'))
+          .then(() => runCommandNpmRun(packageDir, 'test'))
           .then(() => git('..', `status --porcelain`))
           .then(stdout => {
             if (stdout !== '') {
               return git('..', `add .`)
-                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`));
+                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`))
+                .then(() => false);
             }
-          })
-          .then(() => git('..', `tag ${packageDir}-${data.nextVersion}`));
+          });
       }
       console.log(`No release for ${packageDir} required`);
       return data;
@@ -384,6 +417,33 @@ function runCommandNpm(packageDir, args) {
     }));
 }
 
+function runCommandPublish(packageDir) {
+  return remoteNpmGet(packageDir)
+    .then(npm => getReleaseData(packageDir, npm))
+    .then(data => {
+      if (data.lastVersion === data.pkg.version) {
+        console.log(`No publish for ${packageDir} requried; Already published to npm`);
+      } else {
+        const tag = `${data.pkg.name}-${data.pkg.version}`;
+        return git(packageDir, `rev-list --abbrev-commit -n 1 ${tag}`)
+          .then(hash => console.log(`No git tag for ${packageDir} requried; Already tagged commit ${hash}`))
+          .catch(() => {
+            return getReleaseCommits(packageDir, data)
+              .then(() => data.commits.find(commit => commit.updatesPackageJson))
+              .then(commit => git('..', `tag ${packageDir}-${data.nextVersion} ${commit.hash}`));
+          })
+          .then(() => git('..', 'push --follow-tags'))
+          .then(() => git('..', 'remote -v'))
+          .then(stdout => stdout.match(/^\w+\s+([^ ]+)\s+\(\w+\)$/m)[1])
+          .then(url => git('..', `clone ${url} publish-temp`))
+          .then(() => git(path.join('..', 'publish-temp'), `checkout ${tag}`))
+          .then(() => npm(path.join('..', 'publish-temp'), 'install'))
+          .then(() => npm(path.join('..', 'publish-temp'), 'bootstrap'))
+          .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'publish'));
+      }
+    });
+}
+
 const commands = {
   bootstrap(packageDir) {
     console.log(`\n${commonTags.stripIndent`
@@ -424,6 +484,16 @@ const commands = {
       -------------------------------------------------------------------------------
     `}\n`);
     return runCommandRelease(packageDir);
+  },
+  publish(packageDir) {
+    console.log(`\n${commonTags.stripIndent`
+      -------------------------------------------------------------------------------
+
+        Publish ${packageDir}
+
+      -------------------------------------------------------------------------------
+    `}\n`);
+    return runCommandPublish(packageDir);
   },
   run(packageDir, task) {
     console.log(`\n${commonTags.stripIndent`
