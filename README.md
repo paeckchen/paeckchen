@@ -58,6 +58,7 @@ stay tuned
 * [X] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
 * [X] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
 * [X] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
+* [X] SourceMaps
 
 ---
 
