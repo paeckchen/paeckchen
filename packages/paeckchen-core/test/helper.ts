@@ -1,7 +1,6 @@
 import { dirname, join, resolve, sep } from 'path';
 import { runInNewContext } from 'vm';
 import * as acorn from 'acorn';
-import { attachComments } from 'estraverse';
 import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
@@ -65,19 +64,14 @@ export class HostMock implements IHost {
 }
 
 export function parse(input: string): ESTree.Program {
-  const comments: any[] = [];
-  const tokens: any[] = [];
   const acornOptions: acorn.Options = {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
     ranges: true,
-    allowHashBang: true,
-    onComment: comments,
-    onToken: tokens
+    allowHashBang: true
   };
   const ast = acorn.parse(input, acornOptions);
-  attachComments(ast, comments, tokens);
   return ast;
 }
 
