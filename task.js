@@ -39,7 +39,21 @@ const fsWriteJson = promisify(fsExtra.writeJson);
 const packagesDirectory = path.join(process.cwd(), 'packages');
 
 function forEach(list, task) {
-  return list.reduce((promise, entry) => promise.then(() => task(entry)), Promise.resolve());
+  return list.reduce((promise, entry) => {
+    return promise.then(continueReduce => {
+      if (continueReduce === false) {
+        console.log(`\n${commonTags.stripIndent`
+          -------------------------------------------------------------------------------
+
+            Skipping ${entry}
+
+          -------------------------------------------------------------------------------
+        `}\n`);
+        return false;
+      }
+      return task(entry);
+    });
+  }, Promise.resolve());
 }
 
 function getPackages() {
@@ -357,7 +371,8 @@ function runCommandRelease(packageDir) {
           .then(stdout => {
             if (stdout !== '') {
               return git('..', `add .`)
-                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`));
+                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`))
+                .then(() => false);
             }
           });
       }
