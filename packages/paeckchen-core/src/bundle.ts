@@ -112,9 +112,7 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
 export type OutputFunction = typeof writeOutput;
 export function writeOutput(code: string, sourceMap: string|undefined, context: IPaeckchenContext): void {
   if (context.config.output.file) {
-    context.host.writeFile(
-      context.host.joinPath(context.config.output.folder, context.config.output.file),
-        code);
+    context.host.writeFile(join(context.config.output.folder, context.config.output.file), code);
   }
 }
 

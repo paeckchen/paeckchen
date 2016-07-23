@@ -1,3 +1,4 @@
+import { dirname } from 'path';
 import { FSWatcher } from 'chokidar';
 import { IHost } from './host';
 
@@ -41,14 +42,14 @@ export class Watcher {
   private onUnlink(fileName: string, updateHandler: (event: string, fileName: string) => void): void {
     if (this.files[fileName]) {
       delete this.files[fileName];
-      const dir = this.host.dirname(fileName);
+      const dir = dirname(fileName);
       this.watchers[dir]--;
       updateHandler('remove', fileName);
     }
   }
 
   public watchFile(fileName: string): void {
-    const dir = this.host.dirname(fileName);
+    const dir = dirname(fileName);
     if (!this.watchers[dir]) {
       this.watchers[dir] = 0;
       this.watcher.add(dir);
@@ -60,7 +61,7 @@ export class Watcher {
   }
 
   public unwatchFile(fileName: string): void {
-    const dir = this.host.dirname(fileName);
+    const dir = dirname(fileName);
     if (this.files[fileName]) {
       delete this.files[fileName];
       this.watchers[dir]--;

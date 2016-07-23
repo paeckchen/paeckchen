@@ -1,4 +1,4 @@
-import { dirname, join, resolve, sep } from 'path';
+import { resolve } from 'path';
 import { runInNewContext } from 'vm';
 import * as acorn from 'acorn';
 import { generate as escodegenGenerate } from 'escodegen';
@@ -7,8 +7,6 @@ import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
-  public pathSep: string = sep;
-
   public basePath: string;
   public files: any = {};
 
@@ -16,8 +14,6 @@ export class HostMock implements IHost {
     this.fileExists = this.fileExists.bind(this);
     this.isFile = this.isFile.bind(this);
     this.readFile = this.readFile.bind(this);
-    this.joinPath = this.joinPath.bind(this);
-    this.dirname = this.dirname.bind(this);
 
     this.basePath = resolve(basePath);
 
@@ -54,13 +50,6 @@ export class HostMock implements IHost {
     this.files[resolve(filePath)] = content;
   }
 
-  public joinPath(...paths: string[]): string {
-    return join(...paths);
-  }
-
-  public dirname(filePath: string): string {
-    return dirname(filePath);
-  }
 }
 
 export function parse(input: string): ESTree.Program {
