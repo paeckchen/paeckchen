@@ -1,5 +1,4 @@
 import { parse } from 'acorn';
-import { attachComments } from 'estraverse';
 import { builders as b } from 'ast-types';
 
 import { IPaeckchenContext } from './bundle';
@@ -160,21 +159,14 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): EST
 function processModule(modulePath: string, context: IPaeckchenContext, state: State,
     plugins: any): ESTree.Program {
   // parse...
-  const comments: any[] = [];
-  const tokens: any[] = [];
   const moduleAst = parse(context.host.readFile(modulePath).toString(), {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
     ranges: true,
     sourceFile: modulePath,
-    allowHashBang: true,
-    onComment: comments,
-    onToken: tokens
+    allowHashBang: true
   });
-  // only attach comments which are not sourceMaps
-  attachComments(moduleAst,
-    comments.filter((comment: any) => comment.value.indexOf('# sourceMappingURL=') === -1), tokens);
 
   // ... check for global features...
   checkGlobals(state, moduleAst);
