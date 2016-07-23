@@ -11,3 +11,7 @@ export {
   IHost,
   DefaultHost
 } from './host';
+export {
+  ProgressStep,
+  Logger
+} from './logger';

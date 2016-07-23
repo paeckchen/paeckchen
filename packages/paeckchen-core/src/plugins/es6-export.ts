@@ -115,7 +115,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
         exportAllKeys(tempIdentifier)
       );
 
-      enqueueModule(reexportModuleName);
+      enqueueModule(reexportModuleName, state);
       return false;
     },
     visitExportNamedDeclaration: function (path: IPath<ESTree.ExportNamedDeclaration>): boolean {
@@ -191,7 +191,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
             ...exports
           );
 
-          enqueueModule(reexportModuleName);
+          enqueueModule(reexportModuleName, state);
         } else {
           // e.g. export {a as b};
           const exports = path.node.specifiers

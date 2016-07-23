@@ -74,7 +74,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
           )
         );
 
-        enqueueModule(importModule);
+        enqueueModule(importModule, state);
       }
       return false;
     },

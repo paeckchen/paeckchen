@@ -2,6 +2,7 @@ import test from 'ava';
 import { resolve } from 'path';
 import { HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
+import { DefaultHost } from '../src/host';
 
 import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
 
@@ -155,4 +156,22 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
   bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction);
 
   t.is(bundleFunctionCalled, 1);
+});
+
+test('bundle with source maps should add mappings via sorcery', t => {
+  const config: IBundleOptions = {
+    entryPoint: './fixtures/main.js',
+    sourceMap: true
+  };
+
+  let code: string|undefined;
+  let sourceMap: any;
+  bundle(config, new DefaultHost(), (_code: string, _sourceMap: string) => {
+    code = _code;
+    sourceMap = JSON.parse(_sourceMap);
+  });
+
+  t.not(code, undefined);
+  t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
+  t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
 });
