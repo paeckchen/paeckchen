@@ -35,6 +35,7 @@ const fsMove = promisify(fsExtra.move);
 const fsRemove = promisify(fsExtra.remove);
 const fsReadJson = promisify(fsExtra.readJson);
 const fsWriteJson = promisify(fsExtra.writeJson);
+const fsMkdirs = promisify(fsExtra.mkdirs);
 
 const packagesDirectory = path.join(process.cwd(), 'packages');
 
@@ -409,23 +410,20 @@ function runCommandPublish(packageDir) {
       if (data.lastVersion === data.pkg.version) {
         console.log(`No publish for ${packageDir} requried; Already published to npm`);
       } else {
-        return git(packageDir, `rev-list --abbrev-commit -n 1 ${data.pkg.name}-${data.pkg.version}`)
-          .then(hash => {
-            console.log(`No git tag for ${packageDir} requried; Already tagged commit ${hash}`);
-          })
+        const tag = `${data.pkg.name}-${data.pkg.version}`;
+        return git(packageDir, `rev-list --abbrev-commit -n 1 ${tag}`)
+          .then(hash => console.log(`No git tag for ${packageDir} requried; Already tagged commit ${hash}`))
           .catch(() => {
             return getReleaseCommits(packageDir, data)
               .then(() => data.commits.find(commit => commit.updatesPackageJson))
               .then(commit => git('..', `tag ${packageDir}-${data.nextVersion} ${commit.hash}`));
           })
-          .then(() => {
-            console.log(commonTags.stripIndent`
-              TODOs:
-                * git push tags
-                * git checkout tagged version in new folder
-                * npm publish
-            `);
-          });
+          .then(() => git('..', 'push --follow-tags'))
+          .then(() => git('..', 'remote -v'))
+          .then(stdout => stdout.match(/^\w+\s+([^ ]+)\s+\(\w+\)$/m)[1])
+          .then(url => git('..', `clone ${url} publish-temp`))
+          .then(() => git(path.join('..', 'publish-temp'), `checkout ${tag}`))
+          .then(() => npm(path.join('..', 'publish-temp'), 'publish'));
       }
     });
 }
