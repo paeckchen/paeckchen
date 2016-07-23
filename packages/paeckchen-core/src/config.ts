@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { IBundleOptions, SourceOptions } from './bundle';
 import { IHost } from './host';
 
@@ -76,7 +77,7 @@ function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key
 }
 
 export function createConfig(options: IBundleOptions, host: IHost): IConfig {
-  const configPath = host.joinPath(host.cwd(), options.configFile || 'paeckchen.json');
+  const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');
   let configFile: any = {};
   if (host.fileExists(configPath)) {
     try {

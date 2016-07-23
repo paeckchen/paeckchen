@@ -1,3 +1,4 @@
+import { dirname } from 'path';
 import { visit, builders as b, IPath, IVisitor } from 'ast-types';
 
 import { IPaeckchenContext } from '../bundle';
@@ -35,7 +36,7 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
           ),
           [
             b.literal(currentModule),
-            b.literal(context.host.dirname(currentModule))
+            b.literal(dirname(currentModule))
           ]
         )
       )
