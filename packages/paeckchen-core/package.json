@@ -60,7 +60,6 @@
     "browser-resolve": "1.11.2",
     "chokidar": "1.6.0",
     "escodegen": "1.8.0",
-    "estraverse": "4.2.0",
     "node-libs-browser": "1.0.0",
     "sorcery": "0.10.0"
   },
