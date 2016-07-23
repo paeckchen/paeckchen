@@ -1,5 +1,6 @@
 import test from 'ava';
 import { IBundleOptions } from 'paeckchen-core';
+import { CliLogger } from '../src/cli-logger';
 
 import { createOptions } from '../src/options';
 
@@ -13,7 +14,9 @@ test.beforeEach(t => {
     runtime: undefined,
     alias: undefined,
     external: undefined,
-    watchMode: false
+    watchMode: false,
+    logger: new CliLogger(),
+    sourceMap: false
   } as IBundleOptions;
 });
 
@@ -121,5 +124,11 @@ test('createOptions --watch', t => {
 test('createOptions -w', t => {
   t.context.opts.watchMode = true;
   const options = createOptions(['-w']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions --source-map', t => {
+  t.context.opts.sourceMap = true;
+  const options = createOptions(['--source-map']);
   t.deepEqual(options, t.context.opts);
 });

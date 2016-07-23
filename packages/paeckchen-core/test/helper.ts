@@ -1,6 +1,6 @@
-import { dirname, join, resolve } from 'path';
+import { dirname, join, resolve, sep } from 'path';
 import { runInNewContext } from 'vm';
-import { parse as acornParse, IParseOptions } from 'acorn';
+import * as acorn from 'acorn';
 import { attachComments } from 'estraverse';
 import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
@@ -8,9 +8,9 @@ import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export class HostMock implements IHost {
-  public pathSep: string = '/';
+  public pathSep: string = sep;
 
-  public basePath: string = process.cwd();
+  public basePath: string;
   public files: any = {};
 
   constructor(files: {[path: string]: string}, basePath: string = process.cwd()) {
@@ -20,7 +20,7 @@ export class HostMock implements IHost {
     this.joinPath = this.joinPath.bind(this);
     this.dirname = this.dirname.bind(this);
 
-    this.basePath = basePath;
+    this.basePath = resolve(basePath);
 
     this.files = Object
       .keys(files)
@@ -36,23 +36,23 @@ export class HostMock implements IHost {
   }
 
   public fileExists(filePath: string): boolean {
-    return filePath in this.files;
+    return resolve(filePath) in this.files;
   }
 
   public isFile(filePath: string): boolean {
-    return filePath in this.files;
+    return resolve(filePath) in this.files;
   }
 
   public readFile(filePath: string): string {
     if (this.fileExists(filePath)) {
-      return this.files[filePath];
+      return this.files[resolve(filePath)];
     }
-    throw new Error(oneLine`ENOENT: Could not read file ${filePath} from HostMock fs.
+    throw new Error(oneLine`ENOENT: Could not read file ${resolve(filePath)} from HostMock fs.
       Available files: ${Object.keys(this.files)}`);
   }
 
   public writeFile(filePath: string, content: string): void {
-    this.files[filePath] = content;
+    this.files[resolve(filePath)] = content;
   }
 
   public joinPath(...paths: string[]): string {
@@ -67,7 +67,7 @@ export class HostMock implements IHost {
 export function parse(input: string): ESTree.Program {
   const comments: any[] = [];
   const tokens: any[] = [];
-  const acornOptions: IParseOptions = {
+  const acornOptions: acorn.Options = {
     ecmaVersion: 7,
     sourceType: 'module',
     locations: true,
@@ -76,13 +76,13 @@ export function parse(input: string): ESTree.Program {
     onComment: comments,
     onToken: tokens
   };
-  const ast = acornParse(input, acornOptions);
+  const ast = acorn.parse(input, acornOptions);
   attachComments(ast, comments, tokens);
   return ast;
 }
 
 export function generate(ast: ESTree.Program): string {
-  return escodegenGenerate(ast, {comment: true}).trim();
+  return (escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}) as string).trim();
 }
 
 export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {

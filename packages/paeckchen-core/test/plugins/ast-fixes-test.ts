@@ -1,15 +1,13 @@
 import test from 'ava';
 import { runInNewContext } from 'vm';
 import { stripIndent } from 'common-tags';
-import { HostMock, parseAndProcess } from '../helper';
+import { parseAndProcess } from '../helper';
 
 import { astFixes } from '../../src/plugins/ast-fixes';
 
 function fixComments(input: string, files: any = {}): string {
-  const host = new HostMock(files);
-
   return parseAndProcess(input, ast => {
-    return astFixes(ast, 'name', { config: {} as any, host });
+    return astFixes(ast);
   });
 }
 

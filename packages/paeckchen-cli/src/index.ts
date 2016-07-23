@@ -1,19 +1,35 @@
 #!/usr/bin/env node
 
-import { join } from 'path';
+import { join, basename } from 'path';
 import { createOptions } from './options';
 import { bundle, DefaultHost, IPaeckchenContext } from 'paeckchen-core';
 
+const sourceMappingURL = '\n//# sourceMappingURL=';
+
 const startTime = new Date().getTime();
 const options = createOptions(process.argv);
-bundle(options, new DefaultHost(), (result: string, context: IPaeckchenContext) => {
-  if (result) {
-    if (options.outputFile) {
-      context.host.writeFile(join(context.config.output.folder, context.config.output.file), result);
+bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, context: IPaeckchenContext) => {
+  if (code) {
+    if (context.config.output.file) {
+      const bundleName = join(context.config.output.folder, context.config.output.file);
+      const mapName = bundleName + '.map';
+      if (sourceMap) {
+        context.host.writeFile(bundleName, code + sourceMappingURL + basename(mapName));
+        context.host.writeFile(mapName, sourceMap);
+      } else {
+        context.host.writeFile(bundleName, code);
+      }
     } else {
-      process.stdout.write(result);
+      let output = code;
+      if (sourceMap) {
+        output += sourceMappingURL
+          + 'data:application/json;charset=utf-8;base64,' + new Buffer(sourceMap).toString('base64');
+      }
+      process.stdout.write(output);
     }
   }
   const endTime = new Date().getTime();
-  process.stderr.write(`Bundeling took ${(endTime - startTime) / 1000}s\n`);
+  if (options.logger) {
+    options.logger.info('cli', `Bundeling took ${(endTime - startTime) / 1000}s`);
+  }
 });

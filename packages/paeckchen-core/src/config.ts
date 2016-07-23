@@ -13,13 +13,14 @@ export enum Runtime {
 
 export interface IConfig {
   input: {
-    entryPoint: string;
+    entryPoint: string|undefined;
     source: SourceSpec;
   };
   output: {
     folder: string;
-    file: string;
+    file: string|undefined;
     runtime: Runtime;
+    sourceMap: boolean;
   };
   aliases: {[name: string]: string};
   externals: {[name: string]: string|boolean};
@@ -54,7 +55,7 @@ function getRuntime(input: string): Runtime {
   throw new Error(`Invalid runtime ${input}`);
 }
 
-function processKeyValueOption<V>(list: string|string[], config: {[key: string]: V}): {[key: string]: V} {
+function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key: string]: V}): {[key: string]: V} {
   let map = config || {} as {[key: string]: V};
   if (list && list.length > 0) {
     const split = (alias: string) => alias.split('=');
@@ -75,8 +76,6 @@ function processKeyValueOption<V>(list: string|string[], config: {[key: string]:
 }
 
 export function createConfig(options: IBundleOptions, host: IHost): IConfig {
-  const config: IConfig = {} as any;
-
   const configPath = host.joinPath(host.cwd(), options.configFile || 'paeckchen.json');
   let configFile: any = {};
   if (host.fileExists(configPath)) {
@@ -87,17 +86,19 @@ export function createConfig(options: IBundleOptions, host: IHost): IConfig {
     }
   }
 
-  config.input = {} as any;
-  config.input.entryPoint = options.entryPoint || configFile.input && configFile.input.entry || undefined;
-  config.input.source = getSource(options.source || configFile.input && configFile.input.source || 'es2015');
-  config.output = undefined;
-  config.output = {} as any;
-  config.output.folder = options.outputDirectory || configFile.output && configFile.output.folder || host.cwd();
-  config.output.file = options.outputFile || configFile.output && configFile.output.file || 'paeckchen.js';
-  config.output.runtime = getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser');
-  config.aliases = processKeyValueOption<string>(options.alias, configFile.aliases);
-  config.externals = processKeyValueOption<string|boolean>(options.external, configFile.externals);
-  config.watchMode = options.watchMode || configFile.watchMode || false;
-
-  return config;
+  return {
+    input: {
+      entryPoint: options.entryPoint || configFile.input && configFile.input.entry || undefined,
+      source: getSource(options.source || configFile.input && configFile.input.source || 'es2015')
+    },
+    output: {
+      folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
+      file: options.outputFile || configFile.output && configFile.output.file || undefined,
+      runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
+      sourceMap: options.sourceMap || configFile.output && configFile.output.sourceMap || false
+    },
+    aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
+    externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
+    watchMode: options.watchMode || configFile.watchMode || false
+  };
 }

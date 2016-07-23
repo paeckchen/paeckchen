@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
+import { loadSync as sorceryLoadSync } from 'sorcery';
 
 import { IHost, DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -9,6 +10,7 @@ import { injectGlobals } from './globals';
 import { createConfig, IConfig } from './config';
 import { State } from './state';
 import { Watcher } from './watcher';
+import { ProgressStep, Logger, NoopLogger } from './logger';
 
 export type SourceOptions =
     'es5'
@@ -24,6 +26,8 @@ export interface IBundleOptions {
   alias?: string|string[];
   external?: string|string[];
   watchMode?: boolean;
+  logger?: Logger;
+  sourceMap?: boolean;
 }
 
 export interface IPaeckchenContext {
@@ -31,6 +35,7 @@ export interface IPaeckchenContext {
   host: IHost;
   watcher?: Watcher;
   rebundle?: () => void;
+  logger: Logger;
 }
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
@@ -57,19 +62,37 @@ const paeckchenSource = `
 export type BundlingFunction = typeof executeBundling;
 export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
     outputFunction: OutputFunction): void {
+  context.logger.progress(ProgressStep.init, state.moduleBundleQueue.length, state.modules.length);
   while (bundleNextModule(state, context)) {
-    process.stderr.write('.');
+    context.logger.progress(ProgressStep.bundleModules, state.moduleBundleQueue.length, state.modules.length);
   }
+
   injectGlobals(state, paeckchenAst, context);
   while (bundleNextModule(state, context)) {
-    process.stderr.write('.');
+    context.logger.progress(ProgressStep.bundleGlobals, state.moduleBundleQueue.length, state.modules.length);
   }
-  process.stderr.write('\n');
 
+  context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
   const bundleResult = generate(paeckchenAst, {
-    comment: true
+    comment: true,
+    sourceMap: context.config.output.sourceMap,
+    sourceMapWithCode: context.config.output.sourceMap
   });
-  outputFunction(bundleResult, context);
+
+  context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
+  if (typeof bundleResult === 'string') {
+    outputFunction(bundleResult, undefined, context);
+  } else {
+    const chain = sorceryLoadSync('paeckchen.js', {
+      content: {
+        'paeckchen.js': bundleResult.code
+      },
+      sourcemaps: {
+        'paeckchen.js': JSON.parse(bundleResult.map.toString())
+      }
+    });
+    outputFunction(bundleResult.code, chain.apply().toString(), context);
+  }
 }
 
 export type RebundleFactory = typeof rebundleFactory;
@@ -87,11 +110,11 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
 }
 
 export type OutputFunction = typeof writeOutput;
-export function writeOutput(bundleResult: string, context: IPaeckchenContext): void {
+export function writeOutput(code: string, sourceMap: string|undefined, context: IPaeckchenContext): void {
   if (context.config.output.file) {
     context.host.writeFile(
       context.host.joinPath(context.config.output.folder, context.config.output.file),
-        bundleResult);
+        code);
   }
 }
 
@@ -101,7 +124,8 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
         rebundleFactoryFunction: RebundleFactory = rebundleFactory): void {
   const context: IPaeckchenContext = {
     config: createConfig(options, host),
-    host
+    host,
+    logger: options.logger || new NoopLogger()
   };
   if (!context.config.input.entryPoint) {
     throw new Error('Missing entry-point');
@@ -114,7 +138,7 @@ export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(),
   const state = new State(getModules(paeckchenAst).elements);
   const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-  enqueueModule(getModulePath('.', absoluteEntryPath, context));
+  enqueueModule(getModulePath('.', absoluteEntryPath, context), state);
 
   if (context.config.watchMode) {
     context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction, outputFunction);

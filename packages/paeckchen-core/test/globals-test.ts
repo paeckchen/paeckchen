@@ -2,6 +2,7 @@ import test from 'ava';
 import { runInNewContext } from 'vm';
 import { parse, generate, HostMock } from './helper';
 import { State } from '../src/state';
+import { NoopLogger } from '../src/logger';
 
 import { checkGlobalIdentifier, injectGlobals } from '../src/globals';
 
@@ -40,8 +41,15 @@ test('injectGlobals should define global if not already in scope', t => {
     ];
     modules[0]();
   `);
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
 
-  injectGlobals(state, ast, { config: { aliases: {} } as any, host });
+  injectGlobals(state, ast, context);
 
   const sandbox: any = {
     console,

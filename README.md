@@ -1,13 +1,12 @@
 # paeckchen
 
 [![GitHub license](https://img.shields.io/github/license/KnisterPeter/paeckchen.svg)]()
+[![Dependency Status](https://david-dm.org/KnisterPeter/paeckchen.svg)](https://david-dm.org/KnisterPeter/paeckchen)
+[![devDependency Status](https://david-dm.org/KnisterPeter/paeckchen/dev-status.svg)](https://david-dm.org/KnisterPeter/paeckchen#info=devDependencies)
 [![Travis](https://img.shields.io/travis/KnisterPeter/paeckchen.svg)](https://travis-ci.org/KnisterPeter/paeckchen)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/xql350i942kryjqn/branch/master?svg=true)](https://ci.appveyor.com/project/KnisterPeter/paeckchen/branch/master)
 [![Coveralls branch](https://img.shields.io/coveralls/KnisterPeter/paeckchen/master.svg)](https://coveralls.io/github/KnisterPeter/paeckchen)
-[![David](https://img.shields.io/david/KnisterPeter/paeckchen.svg)](https://david-dm.org/KnisterPeter/paeckchen)
-[![David](https://img.shields.io/david/dev/KnisterPeter/paeckchen.svg)](https://david-dm.org/KnisterPeter/paeckchen#info=devDependencies&view=table)
-[![npm](https://img.shields.io/npm/v/paeckchen.svg)](https://www.npmjs.com/package/paeckchen)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-[![Standard Version](https://img.shields.io/badge/release-standard%20version-brightgreen.svg)](https://github.com/conventional-changelog/standard-version)
 
 ## Rationale
 
@@ -20,18 +19,27 @@ development servers and so on. This breadth of features inevitably comes with tr
 paeckchen on the other hand is designed to do exactly one thing: It bundles your JavaScript modules. This focus allows
 paeckchen to do its job fast and efficiently.
 
+## packages
+
+paeckchen is developed as a monorepository, this means all packages belonging to paeckchen live in this repository.
+
+| Package | Version |
+|---------|---------|
+| paeckchen-core | [![npm](https://img.shields.io/npm/v/paeckchen-core.svg)](https://www.npmjs.com/package/paeckchen-core) |
+| paeckchen-cli | [![npm](https://img.shields.io/npm/v/paeckchen-cli.svg)](https://www.npmjs.com/package/paeckchen-cli) |
+
 ## Installation
 
 Grab paeckchen via [npm](https://www.npmjs.com/package/paeckchen):
 
 ```shell
-npm install paeckchen
+npm install paeckchen-cli
 ```
 
 ## Usage
 
-```javascript
-stay tuned
+```shell
+./node_modules/.bin/paeckchen --entry <path/to/your/entrypoint>
 ```
 
 ## API documentation
@@ -48,18 +56,12 @@ stay tuned
 * [x] Basic support for `browser` field | [Reference](https://github.com/defunctzombie/package-browser-field-spec)
 * [x] Incremental bundling
 * [X] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
+* [X] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
+* [X] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
 
 ---
 
-See [Roadmap](#Roadmap) for upcoming stuff.
-
-## Roadmap
-
-paeckchen is under active development, expect the items on this list to move to
-[Features](#features) over time.
-
-* [ ] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
-* [ ] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
+See [Roadmap](https://github.com/KnisterPeter/paeckchen/milestones) for upcoming stuff.
 
 ---
 paeckchen is built by KnisterPeter and [contributors](https://github.com/KnisterPeter/paeckchen/graphs/contributors)

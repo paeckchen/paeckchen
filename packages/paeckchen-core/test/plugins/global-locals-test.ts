@@ -1,13 +1,19 @@
 import test from 'ava';
+import { NoopLogger } from '../../src/logger';
 import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
 
 import { rewriteGlobalLocals } from '../../src/plugins/global-locals';
 
 function rewriteExports(input: string, files: any = {}): string {
   const host = new HostMock(files, '/cwd');
+  const context = {
+    config: {} as any,
+    host,
+    logger: new NoopLogger()
+  };
 
   return parseAndProcess(input, ast => {
-    return rewriteGlobalLocals(ast, '/cwd/path/to/name', { config: {} as any, host });
+    return rewriteGlobalLocals(ast, '/cwd/path/to/name', context);
   });
 }
 
@@ -23,8 +29,8 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     dirname(__dirname);
   `;
 
-  let calledFilename: string;
-  let calledDirname: string;
+  let calledFilename: string|undefined;
+  let calledDirname: string|undefined;
   executeExports(input, {}, {
     filename(name: string): void {
       calledFilename = name;
@@ -34,6 +40,6 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     }
   });
 
-  t.is(calledFilename, '/path/to/name');
-  t.is(calledDirname, '/path/to');
+  t.is(calledFilename, '/cwd/path/to/name');
+  t.is(calledDirname, '/cwd/path/to');
 });

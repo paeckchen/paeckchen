@@ -108,15 +108,14 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
       const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, context);
       const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
 
-      const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
-      const tempIdentifier = b.identifier(`__export${reexportModuleIndex}_${loc(path.node.loc.start)}`);
+      const tempIdentifier = path.scope.declareTemporary(`__export${reexportModuleIndex}`);
 
       path.replace(
         importModule(tempIdentifier, reexportModuleIndex),
         exportAllKeys(tempIdentifier)
       );
 
-      enqueueModule(reexportModuleName);
+      enqueueModule(reexportModuleName, state);
       return false;
     },
     visitExportNamedDeclaration: function (path: IPath<ESTree.ExportNamedDeclaration>): boolean {
@@ -154,8 +153,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           const reexportModuleName = getModulePath(currentModule, path.node.source.value as string, context);
           const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
 
-          const loc = (pos: ESTree.Position) => `${pos.line}_${pos.column}`;
-          const tempIdentifier = b.identifier(`__export${reexportModuleIndex}_${loc(path.node.loc.start)}`);
+          const tempIdentifier = path.scope.declareTemporary(`__export${reexportModuleIndex}`);
           const exports = path.node.specifiers
             .map(specifier =>
               b.expressionStatement(
@@ -193,7 +191,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
             ...exports
           );
 
-          enqueueModule(reexportModuleName);
+          enqueueModule(reexportModuleName, state);
         } else {
           // e.g. export {a as b};
           const exports = path.node.specifiers
@@ -249,6 +247,11 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           )
         );
       }
+      return false;
+    },
+    visitStatement: function(): boolean {
+      // es2015 exports are only allowed at the top level of a module
+      // => we could stop here
       return false;
     }
   });

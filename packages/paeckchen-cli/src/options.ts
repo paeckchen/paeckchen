@@ -1,5 +1,6 @@
 import * as meow from 'meow';
 import { IBundleOptions } from 'paeckchen-core';
+import { CliLogger } from './cli-logger';
 
 export function createOptions(argv: string[]): IBundleOptions {
   const cli = meow({
@@ -53,6 +54,8 @@ export function createOptions(argv: string[]): IBundleOptions {
         --watch, -w
               enables watch mode
 
+        --source-map
+              enables generation of source-map
     `
   }, {
       string: [
@@ -65,7 +68,7 @@ export function createOptions(argv: string[]): IBundleOptions {
         'alias',
         'external'
       ],
-      boolean: ['watch'],
+      boolean: ['watch', 'source-map'],
       alias: {
         h: 'help',
         c: 'config',
@@ -88,6 +91,8 @@ export function createOptions(argv: string[]): IBundleOptions {
     runtime: cli.flags['runtime'],
     alias: cli.flags['alias'],
     external: cli.flags['external'],
-    watchMode: cli.flags['watch']
+    watchMode: cli.flags['watch'],
+    logger: new CliLogger(),
+    sourceMap: cli.flags['sourceMap']
   };
 }

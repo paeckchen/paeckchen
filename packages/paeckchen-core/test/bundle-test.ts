@@ -1,6 +1,8 @@
 import test from 'ava';
+import { resolve } from 'path';
 import { HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
+import { DefaultHost } from '../src/host';
 
 import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
 
@@ -17,7 +19,7 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
     `
   });
 
-  let bundled: string;
+  let bundled = '';
   bundle({entryPoint: 'entry-point.js'}, host, result => bundled = result);
 
   let called = false;
@@ -47,7 +49,7 @@ test('bundle should bundle global dependencies', t => {
     alias: 'buffer=/BUFFER'
   };
 
-  let bundled: string;
+  let bundled = '';
   bundle(config, host, result => bundled = result);
 
   let called = false;
@@ -71,7 +73,7 @@ test('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  let bundled: string;
+  let bundled = '';
   bundle({}, host, result => bundled = result);
 
   let called = false;
@@ -106,7 +108,7 @@ test('bundle should write result to disk if output file given', t => {
 
   bundle({}, host);
 
-  t.true('/result.js' in host.files);
+  t.true(resolve('/result.js') in host.files);
 });
 
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
@@ -154,4 +156,22 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
   bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction);
 
   t.is(bundleFunctionCalled, 1);
+});
+
+test('bundle with source maps should add mappings via sorcery', t => {
+  const config: IBundleOptions = {
+    entryPoint: './fixtures/main.js',
+    sourceMap: true
+  };
+
+  let code: string|undefined;
+  let sourceMap: any;
+  bundle(config, new DefaultHost(), (_code: string, _sourceMap: string) => {
+    code = _code;
+    sourceMap = JSON.parse(_sourceMap);
+  });
+
+  t.not(code, undefined);
+  t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
+  t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
 });
