@@ -35,7 +35,6 @@ const fsMove = promisify(fsExtra.move);
 const fsRemove = promisify(fsExtra.remove);
 const fsReadJson = promisify(fsExtra.readJson);
 const fsWriteJson = promisify(fsExtra.writeJson);
-const fsMkdirs = promisify(fsExtra.mkdirs);
 
 const packagesDirectory = path.join(process.cwd(), 'packages');
 
