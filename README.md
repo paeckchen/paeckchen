@@ -1,11 +1,11 @@
 # paeckchen
 
-[![GitHub license](https://img.shields.io/github/license/KnisterPeter/paeckchen.svg)]()
-[![Dependency Status](https://david-dm.org/KnisterPeter/paeckchen.svg)](https://david-dm.org/KnisterPeter/paeckchen)
-[![devDependency Status](https://david-dm.org/KnisterPeter/paeckchen/dev-status.svg)](https://david-dm.org/KnisterPeter/paeckchen#info=devDependencies)
-[![Travis](https://img.shields.io/travis/KnisterPeter/paeckchen.svg)](https://travis-ci.org/KnisterPeter/paeckchen)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/xql350i942kryjqn/branch/master?svg=true)](https://ci.appveyor.com/project/KnisterPeter/paeckchen/branch/master)
-[![Coveralls branch](https://img.shields.io/coveralls/KnisterPeter/paeckchen/master.svg)](https://coveralls.io/github/KnisterPeter/paeckchen)
+[![GitHub license](https://img.shields.io/github/license/paeckchen/paeckchen.svg)]()
+[![Dependency Status](https://david-dm.org/paeckchen/paeckchen.svg)](https://david-dm.org/paeckchen/paeckchen)
+[![devDependency Status](https://david-dm.org/paeckchen/paeckchen/dev-status.svg)](https://david-dm.org/paeckchen/paeckchen#info=devDependencies)
+[![Travis](https://img.shields.io/travis/paeckchen/paeckchen.svg)](https://travis-ci.org/paeckchen/paeckchen)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/orjc50h3g8sh7x08/branch/master?svg=true)](https://ci.appveyor.com/project/KnisterPeter/paeckchen/branch/master)
+[![Coveralls branch](https://img.shields.io/coveralls/paeckchen/paeckchen/master.svg)](https://coveralls.io/github/paeckchen/paeckchen)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 ## Rationale
@@ -55,15 +55,16 @@ stay tuned
 * [x] Basic support for `jsnext:main` field | [Reference](https://github.com/rollup/rollup/wiki/jsnext:main)
 * [x] Basic support for `browser` field | [Reference](https://github.com/defunctzombie/package-browser-field-spec)
 * [x] Incremental bundling
-* [X] Support for [file based configuration](https://github.com/KnisterPeter/paeckchen/issues/29)
-* [X] Separate [Command line interface](https://github.com/KnisterPeter/paeckchen/issues/41) module
-* [X] [Watch mode](https://github.com/KnisterPeter/paeckchen/issues/27)
+* [X] Support for [file based configuration](https://github.com/paeckchen/paeckchen/issues/29)
+* [X] Separate [Command line interface](https://github.com/paeckchen/paeckchen/issues/41) module
+* [X] [Watch mode](https://github.com/paeckchen/paeckchen/issues/27)
 * [X] SourceMaps
 
 ---
 
-See [Roadmap](https://github.com/KnisterPeter/paeckchen/milestones) for upcoming stuff.
+See [Roadmap](https://github.com/paeckchen/paeckchen/milestones) for upcoming stuff.
 
 ---
-paeckchen is built by KnisterPeter and [contributors](https://github.com/KnisterPeter/paeckchen/graphs/contributors)
-and released under the [MIT](./LICENSE) license.
+paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
+[contributors](https://github.com/paeckchen/paeckchen/graphs/contributors) and released under the
+[MIT](./LICENSE) license.
