@@ -105,10 +105,11 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
           sourceMapWithCode: context.config.output.sourceMap
         });
 
-        context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
         if (typeof bundleResult === 'string') {
+          context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
           outputFunction(bundleResult, undefined, context);
         } else {
+          context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
           const chain = sorceryLoadSync('paeckchen.js', {
             content: {
               'paeckchen.js': bundleResult.code
@@ -117,6 +118,8 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
               'paeckchen.js': JSON.parse(bundleResult.map.toString())
             }
           });
+
+          context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
           outputFunction(bundleResult.code, chain.apply().toString(), context);
         }
       })
