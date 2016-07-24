@@ -32,4 +32,10 @@ bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, c
   if (options.logger) {
     options.logger.info('cli', `Bundeling took ${(endTime - startTime) / 1000}s`);
   }
+})
+.catch(e => {
+  if (options.logger) {
+    options.logger.error('cli', e, 'Bundeling failed');
+  }
+  process.exit(1);
 });
