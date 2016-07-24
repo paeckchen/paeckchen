@@ -16,5 +16,6 @@ export {
   Logger
 } from './logger';
 export {
-  Config
+  Config,
+  LogLevel
 } from './config';

@@ -56,6 +56,10 @@ export function createOptions(argv: string[]): BundleOptions {
 
         --source-map
               enables generation of source-map
+
+        --loglevel <level>, -v
+              sets the log output level. Can be 'default', 'debug' or 'trace'.
+              '-v' means debug
     `
   }, {
       string: [
@@ -66,9 +70,10 @@ export function createOptions(argv: string[]): BundleOptions {
         'out-dir',
         'out-file',
         'alias',
-        'external'
+        'external',
+        'loglevel'
       ],
-      boolean: ['watch', 'source-map'],
+      boolean: ['watch', 'source-map', 'v'],
       alias: {
         h: 'help',
         c: 'config',
@@ -93,6 +98,7 @@ export function createOptions(argv: string[]): BundleOptions {
     external: cli.flags['external'],
     watchMode: cli.flags['watch'],
     logger: new CliLogger(),
-    sourceMap: cli.flags['sourceMap']
+    sourceMap: cli.flags['sourceMap'],
+    logLevel: cli.flags['loglevel'] || (cli.flags['v'] ? 'debug' : undefined)
   };
 }

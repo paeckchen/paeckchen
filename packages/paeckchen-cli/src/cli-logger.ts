@@ -1,34 +1,43 @@
 import * as debug from 'debug';
 import { terminal } from 'terminal-kit';
-import { ProgressStep, Logger, Config } from 'paeckchen-core';
+import { ProgressStep, Logger, Config, LogLevel } from 'paeckchen-core';
 
 export class CliLogger implements Logger {
 
   private loggers: {[section: string]: debug.IDebugger} = {};
+
+  private enabledTrace: boolean = false;
+  private enabledDebug: boolean = false;
 
   private progressStep: ProgressStep;
   private progressCurrent: number;
   private progressTotal: number;
 
   public configure(config: Config): void {
-    // TODO
+    this.enabledTrace = config.logLevel === LogLevel.trace;
+    this.enabledDebug = config.logLevel === LogLevel.debug || this.enabledTrace;
   }
 
   private getLogger(section: string): debug.IDebugger {
     if (!(section in this.loggers)) {
+      debug.enable(section);
       this.loggers[section] = debug(section);
     }
     return this.loggers[section];
   }
 
   public trace(section: string, message: string): void {
-    this.getLogger(section)(`${terminal.str.bold.dim('TRACE')} ${message}`);
-    this.updateProgress(false);
+    if (this.enabledTrace) {
+      this.getLogger(section)(`${terminal.str.bold.dim('TRACE')} ${message}`);
+      this.updateProgress(false);
+    }
   }
 
   public debug(section: string, message: string): void {
-    this.getLogger(section)(`${terminal.str.bold.brightYellow('DEBUG')} ${message}`);
-    this.updateProgress(false);
+    if (this.enabledDebug) {
+      this.getLogger(section)(`${terminal.str.bold.brightYellow('DEBUG')} ${message}`);
+      this.updateProgress(false);
+    }
   }
 
   public info(section: string, message: string): void {
