@@ -189,6 +189,9 @@ test.cb('bundle should log on chunk error', t => {
   const config: IBundleOptions = {
     entryPoint: '/entry',
     logger: {
+      configure(): void {
+        //
+      },
       trace(): void {
         //
       },

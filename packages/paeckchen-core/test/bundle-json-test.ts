@@ -1,6 +1,6 @@
 import test from 'ava';
 import { IPaeckchenContext } from '../src/bundle';
-import { SourceSpec, Runtime } from '../src/config';
+import { SourceSpec, Runtime, LogLevel } from '../src/config';
 import { NoopLogger } from '../src/logger';
 import { generate, HostMock, virtualModule } from './helper';
 
@@ -92,7 +92,8 @@ test('wrapJsonFile should return a requested json file as ast program exporting 
       },
       aliases: {},
       externals: {},
-      watchMode: false
+      watchMode: false,
+      logLevel: LogLevel.default
     },
     host: new HostMock({
       '/file.json': `{"key": "value"}`
