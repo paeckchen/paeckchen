@@ -4,7 +4,7 @@ import * as acorn from 'acorn';
 import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
-import { IHost } from '../src/host';
+import { Host } from '../src/host';
 
 export const errorLogger = {
   configure: () => undefined,
@@ -17,7 +17,7 @@ export const errorLogger = {
   progress: () => undefined
 };
 
-export class HostMock implements IHost {
+export class HostMock implements Host {
   public basePath: string;
   public files: any = {};
 

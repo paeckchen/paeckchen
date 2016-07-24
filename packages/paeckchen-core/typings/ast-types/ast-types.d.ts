@@ -14,7 +14,7 @@ declare module 'ast-types' {
     getGlobalScope(): IScope;
   }
 
-  export interface IPath<T> {
+  export interface Path<T> {
     node: T;
     scope: IScope;
     get<CT>(...name: (string|number)[]): INodePath<CT>;
@@ -24,15 +24,15 @@ declare module 'ast-types' {
     prune(): void;
   }
 
-  export interface INodePath<T> extends IPath<T> {
+  export interface INodePath<T> extends Path<T> {
     value: T;
   }
 
   export function visit(ast: ESTree.Node, visitors: any): void;
 
-  export interface IVisitor {
+  export interface Visitor {
     abort(): void;
-    traverse<T>(path: IPath<T>): void;
+    traverse<T>(path: Path<T>): void;
   }
 
   export namespace namedTypes {

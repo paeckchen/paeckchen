@@ -2,13 +2,13 @@
 
 import { join, basename } from 'path';
 import { createOptions } from './options';
-import { bundle, DefaultHost, IPaeckchenContext } from 'paeckchen-core';
+import { bundle, DefaultHost, PaeckchenContext } from 'paeckchen-core';
 
 const sourceMappingURL = '\n//# sourceMappingURL=';
 
 const startTime = new Date().getTime();
 const options = createOptions(process.argv);
-bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, context: IPaeckchenContext) => {
+bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, context: PaeckchenContext) => {
   if (code) {
     if (context.config.output.file) {
       const bundleName = join(context.config.output.folder, context.config.output.file);

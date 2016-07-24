@@ -1,8 +1,8 @@
 import * as meow from 'meow';
-import { IBundleOptions } from 'paeckchen-core';
+import { BundleOptions } from 'paeckchen-core';
 import { CliLogger } from './cli-logger';
 
-export function createOptions(argv: string[]): IBundleOptions {
+export function createOptions(argv: string[]): BundleOptions {
   const cli = meow({
     argv,
     help: `

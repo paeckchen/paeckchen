@@ -1,8 +1,8 @@
-import { IPaeckchenContext } from '../bundle';
+import { PaeckchenContext } from '../bundle';
 import { State } from '../state';
 
 export interface Plugins {
-  [name: string]: (program: ESTree.Program, currentModule: string, context: IPaeckchenContext,
+  [name: string]: (program: ESTree.Program, currentModule: string, context: PaeckchenContext,
     state: State) => Promise<void>;
 }
 

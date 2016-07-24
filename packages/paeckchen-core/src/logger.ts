@@ -1,4 +1,4 @@
-import { IConfig } from './config';
+import { Config } from './config';
 
 export enum ProgressStep {
   init = 0,
@@ -11,7 +11,7 @@ export enum ProgressStep {
 
 export interface Logger {
 
-  configure(config: IConfig): void;
+  configure(config: Config): void;
 
   trace(section: string, message: string, ...params: any[]): void;
 
@@ -27,7 +27,7 @@ export interface Logger {
 
 export class NoopLogger implements Logger {
 
-  public configure(config: IConfig): void {
+  public configure(config: Config): void {
     // noop
   }
 

@@ -3,11 +3,11 @@ import { parse } from 'acorn';
 import { generate } from 'escodegen';
 import { loadSync as sorceryLoadSync } from 'sorcery';
 
-import { IHost, DefaultHost } from './host';
+import { Host, DefaultHost } from './host';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModules } from './modules';
 import { injectGlobals } from './globals';
-import { createConfig, IConfig } from './config';
+import { createConfig, Config } from './config';
 import { State } from './state';
 import { Watcher } from './watcher';
 import { ProgressStep, Logger, NoopLogger } from './logger';
@@ -16,7 +16,7 @@ export type SourceOptions =
     'es5'
   | 'es6' | 'es2015';
 
-export interface IBundleOptions {
+export interface BundleOptions {
   configFile?: string;
   entryPoint?: string;
   source?: SourceOptions;
@@ -31,9 +31,9 @@ export interface IBundleOptions {
   logLevel?: 'default' | 'debug' | 'trace';
 }
 
-export interface IPaeckchenContext {
-  config: IConfig;
-  host: IHost;
+export interface PaeckchenContext {
+  config: Config;
+  host: Host;
   watcher?: Watcher;
   rebundle?: () => void;
   logger: Logger;
@@ -64,7 +64,7 @@ export type BundleChunkFunction = typeof bundleChunks;
 /**
  * Recursivly bundle chunks of modules wich are enqueued.
  */
-export function bundleChunks(step: ProgressStep, state: State, context: IPaeckchenContext): Promise<void> {
+export function bundleChunks(step: ProgressStep, state: State, context: PaeckchenContext): Promise<void> {
   const fns = bundleNextModules(state, context);
   if (fns.length > 0) {
     let num = fns.length - 1;
@@ -90,7 +90,7 @@ export type BundlingFunction = typeof executeBundling;
  * * create source-map
  * * output result
  */
-export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
+export function executeBundling(state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext,
     outputFunction: OutputFunction, bundleChunkFunction: BundleChunkFunction = bundleChunks): void {
   context.logger.progress(ProgressStep.init, state.moduleBundleQueue.length, state.modules.length);
 
@@ -129,7 +129,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
 }
 
 export type RebundleFactory = typeof rebundleFactory;
-export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: IPaeckchenContext,
+export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext,
     bundleFunction: BundlingFunction, outputFunction: OutputFunction): () => void {
   let timer: NodeJS.Timer;
   return () => {
@@ -143,11 +143,11 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
 }
 
 export interface OutputFunction {
-  (code: string, sourceMap: string|undefined, context: IPaeckchenContext): void;
+  (code: string, sourceMap: string|undefined, context: PaeckchenContext): void;
 }
 
-function createContext(config: IConfig, host: IHost, options: IBundleOptions): IPaeckchenContext {
-  const context: IPaeckchenContext = {
+function createContext(config: Config, host: Host, options: BundleOptions): PaeckchenContext {
+  const context: PaeckchenContext = {
     config,
     host,
     logger: options.logger || new NoopLogger()
@@ -162,13 +162,12 @@ function createContext(config: IConfig, host: IHost, options: IBundleOptions): I
   return context;
 }
 
-export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(), outputFunction: OutputFunction,
+export function bundle(options: BundleOptions, host: Host = new DefaultHost(), outputFunction: OutputFunction,
     bundleFunction: BundlingFunction = executeBundling,
       rebundleFactoryFunction: RebundleFactory = rebundleFactory): Promise<void> {
   return createConfig(options, host)
     .then(config => {
       const context = createContext(config, host, options);
-
       const paeckchenAst = parse(paeckchenSource);
       const state = new State(getModules(paeckchenAst).elements);
       const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);

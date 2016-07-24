@@ -1,21 +1,21 @@
-import { visit, builders as b, namedTypes as n, IPath, IVisitor } from 'ast-types';
+import { visit, builders as b, namedTypes as n, Path, Visitor } from 'ast-types';
 
 import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
-import { IPaeckchenContext } from '../bundle';
+import { PaeckchenContext } from '../bundle';
 import { State } from '../state';
 
 export function rewriteRequireStatements(program: ESTree.Program, currentModule: string,
-    context: IPaeckchenContext, state: State): Promise<void> {
+    context: PaeckchenContext, state: State): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('plugin', `rewriteRequireStatements [currentModule=${currentModule}]`);
     })
     .then(() => {
-      const requireUpdates: [string, IPath<ESTree.CallExpression>][] = [];
+      const requireUpdates: [string, Path<ESTree.CallExpression>][] = [];
 
       visit(program, {
-        visitCallExpression(this: IVisitor, path: IPath<ESTree.CallExpression>): boolean|void {
+        visitCallExpression(this: Visitor, path: Path<ESTree.CallExpression>): boolean|void {
           const callee = path.node.callee;
           // TODO: check binding here, not name
           if (n.Identifier.check(callee) && callee.name === 'require') {
@@ -44,7 +44,7 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
     });
 }
 
-function replaceRequireCall(path: IPath<ESTree.CallExpression>, moduleIndex: number): void {
+function replaceRequireCall(path: Path<ESTree.CallExpression>, moduleIndex: number): void {
   path.replace(
     b.memberExpression(
       b.callExpression(

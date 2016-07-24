@@ -3,7 +3,7 @@ import { errorLogger, HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
 import { DefaultHost } from '../src/host';
 
-import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
+import { bundle, rebundleFactory, PaeckchenContext, BundleOptions } from '../src/bundle';
 
 test.cb('bundle should bundle the given entry-point and its dependencies', t => {
   const host = new HostMock({
@@ -51,7 +51,7 @@ test.cb('bundle should bundle global dependencies', t => {
       };
     `
   }, '/');
-  const config: IBundleOptions = {
+  const config: BundleOptions = {
     entryPoint: '/entry-point.js',
     alias: 'buffer=/BUFFER'
   };
@@ -141,7 +141,7 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
   const rebundle = () => {
     //
   };
-  const bundleFunction: any = (ast: any, modules: any, context: IPaeckchenContext) => {
+  const bundleFunction: any = (ast: any, modules: any, context: PaeckchenContext) => {
     t.truthy(context.watcher);
     t.is(context.rebundle, rebundle);
     bundleFunctionCalled++;
@@ -149,7 +149,7 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
   const rebundleFactoryFunction: any = () => {
     return rebundle;
   };
-  const config: IBundleOptions = {
+  const config: BundleOptions = {
     entryPoint: '/entry',
     watchMode: true
   };
@@ -161,7 +161,7 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
 });
 
 test.cb('bundle with source maps should add mappings via sorcery', t => {
-  const config: IBundleOptions = {
+  const config: BundleOptions = {
     entryPoint: './fixtures/main.js',
     sourceMap: true
   };
@@ -186,7 +186,7 @@ test.cb('bundle should log on chunk error', t => {
   const host = new HostMock({
     '/entry': 'function(){}'
   }, '/');
-  const config: IBundleOptions = {
+  const config: BundleOptions = {
     entryPoint: '/entry',
     logger: {
       configure(): void {
