@@ -134,7 +134,6 @@ test('createOptions --source-map', t => {
   t.deepEqual(options, t.context.opts);
 });
 
-
 test('createOptions --loglevel', t => {
   t.context.opts.logLevel = 'default';
   const options = createOptions(['--loglevel', 'default']);
