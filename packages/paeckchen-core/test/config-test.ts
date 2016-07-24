@@ -84,6 +84,42 @@ test('createConfig should prefer sourceMap of options (inline)', t => {
     });
 });
 
+test('createConfig should allow sourceMap "true"', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": "true"}}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.is(config.output.sourceMap, true);
+    });
+});
+
+test('createConfig should allow sourceMap "false"', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": "false"}}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.is(config.output.sourceMap, false);
+    });
+});
+
+test('createConfig should fail on invalid sourceMap values', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": "foo"}}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.fail('Expected exception');
+    })
+    .catch(e => {
+      t.regex(e.message, /Invalid sourceMap/);
+    });
+});
+
 test('createConfig should prefer source level of options', t => {
   const host = new HostMock({
     '/paeckchen.json': '{"source": "es2015"}'
