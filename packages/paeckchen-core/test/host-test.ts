@@ -34,11 +34,32 @@ test('DefaultHost#isFile should return false for directory', t => {
     });
 });
 
+test('DefaultHost#isFile should fail for non existing file', t => {
+  return (t.context.host as DefaultHost).isFile('../../package.jsno')
+    .then(result => {
+      t.fail('Exception expected');
+    })
+    .catch(e => {
+      t.truthy(e.message.match(/no such file/));
+    });
+});
+
 test('DefaultHost#readFile should return the file content', t => {
   const path = '../../package.json';
   return (t.context.host as DefaultHost).readFile(path)
     .then(data => {
       t.deepEqual(data, readFileSync(path).toString());
+    });
+});
+
+test('DefaultHost#readFile should fail for non existing file', t => {
+  const path = '../../package.jsno';
+  return (t.context.host as DefaultHost).readFile(path)
+    .then(data => {
+      t.fail('Exception expected');
+    })
+    .catch(e => {
+      t.truthy(e.message.match(/no such file/));
     });
 });
 
