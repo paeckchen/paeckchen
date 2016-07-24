@@ -150,7 +150,7 @@ test.cb('cli with entry-point, out-file and source-map should write external map
     });
 });
 
-test.cb("cli with entry-point, out-file and source-map 'inline' should write external map", t => {
+test.cb("cli with entry-point, out-file and source-map 'inline' should write inline map", t => {
   const args = [
     resolve(process.cwd(), '..', 'src', 'index.js'),
     '--entry',
@@ -162,6 +162,12 @@ test.cb("cli with entry-point, out-file and source-map 'inline' should write ext
   execa('node', args)
     .then(result => {
       const code = readFileSync(t.context.codeFile).toString();
+      try {
+        statSync(t.context.mapFile);
+        t.fail('There should be no external map file');
+      } catch (e) {
+        // ignore
+      }
 
       t.regex(code, /\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,/);
       t.end();
