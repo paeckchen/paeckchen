@@ -58,7 +58,7 @@ test('createConfig should prefer sourceMap of options', t => {
 
   return createConfig({sourceMap: true}, host)
     .then(config => {
-      t.true(config.output.sourceMap);
+      t.is(config.output.sourceMap, true);
     });
 });
 
@@ -69,7 +69,18 @@ test('createConfig should fallback to sourceMap of config', t => {
 
   return createConfig({}, host)
     .then(config => {
-      t.true(config.output.sourceMap);
+      t.is(config.output.sourceMap, true);
+    });
+});
+
+test('createConfig should prefer sourceMap of options (inline)', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"output": {"sourceMap": true}}'
+  }, '/');
+
+  return createConfig({sourceMap: 'inline'}, host)
+    .then(config => {
+      t.is(config.output.sourceMap as string, 'inline');
     });
 });
 

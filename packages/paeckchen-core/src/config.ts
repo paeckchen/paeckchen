@@ -27,7 +27,7 @@ export interface Config {
     folder: string;
     file: string|undefined;
     runtime: Runtime;
-    sourceMap: boolean;
+    sourceMap: boolean|'inline';
   };
   aliases: {[name: string]: string};
   externals: {[name: string]: string|boolean};
@@ -66,6 +66,21 @@ function getLogLevel(input: string): LogLevel {
       return LogLevel.trace;
   }
   throw new Error(`Invalid logLevel ${input}`);
+}
+
+function getSourceMap(input: boolean|'inline'): boolean|'inline' {
+  if (typeof input === 'boolean') {
+    return input;
+  }
+  switch (input.toLowerCase()) {
+    case 'true':
+      return true;
+    case 'false':
+      return false;
+    case 'inline':
+      return 'inline';
+  }
+  throw new Error(`Invalid sourceMap ${input}`);
 }
 
 function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key: string]: V}): {[key: string]: V} {
@@ -113,7 +128,7 @@ export function createConfig(options: BundleOptions, host: Host): Promise<Config
           folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
           file: options.outputFile || configFile.output && configFile.output.file || undefined,
           runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
-          sourceMap: options.sourceMap || configFile.output && configFile.output.sourceMap || false
+          sourceMap: getSourceMap(options.sourceMap || configFile.output && configFile.output.sourceMap || false)
         },
         aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
         externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),

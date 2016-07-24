@@ -27,7 +27,7 @@ export interface BundleOptions {
   external?: string|string[];
   watchMode?: boolean;
   logger?: Logger;
-  sourceMap?: boolean;
+  sourceMap?: boolean|'inline';
   logLevel?: 'default' | 'debug' | 'trace';
 }
 
@@ -101,8 +101,8 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
         const bundleResult = generate(paeckchenAst, {
           comment: true,
-          sourceMap: context.config.output.sourceMap,
-          sourceMapWithCode: context.config.output.sourceMap
+          sourceMap: Boolean(context.config.output.sourceMap),
+          sourceMapWithCode: Boolean(context.config.output.sourceMap)
         });
 
         if (typeof bundleResult === 'string') {
