@@ -5,24 +5,28 @@ import * as execa from 'execa';
 import { runInNewContext } from 'vm';
 
 test.beforeEach('remove test file', t => {
-  const codeFile = join('fixtures', 'result.js');
-  const mapFile = join('fixtures', 'result.js.map');
-  try {
-    if (statSync(codeFile).isFile()) {
-      unlinkSync(codeFile);
-    }
-  } catch (e) {
-    // ignore if there is no file
-  }
-  try {
-    if (statSync(mapFile).isFile()) {
-      unlinkSync(mapFile);
-    }
-  } catch (e) {
-    // ignore if there is no file
-  }
+  const seed = Math.random() * 1000000000000000;
+  const codeFile = join('fixtures', `result-${seed}.js`);
+  const mapFile = join('fixtures', `result-${seed}.js.map`);
   t.context.codeFile = codeFile;
   t.context.mapFile = mapFile;
+});
+
+test.afterEach(t => {
+  try {
+    if (statSync(t.context.codeFile).isFile()) {
+      unlinkSync(t.context.codeFile);
+    }
+  } catch (e) {
+    // ignore if there is no file
+  }
+  try {
+    if (statSync(t.context.mapFile).isFile()) {
+      unlinkSync(t.context.mapFile);
+    }
+  } catch (e) {
+    // ignore if there is no file
+  }
 });
 
 test.cb('cli without parameters and config file should show error', t => {
