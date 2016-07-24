@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "KnisterPeter/paeckchen"
+    "url": "paeckchen/paeckchen"
   },
   "author": {
     "name": "Markus Wolf",
@@ -25,9 +25,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/knisterpeter/paeckchen/issues"
+    "url": "https://github.com/paeckchen/paeckchen/issues"
   },
-  "homepage": "https://github.com/knisterpeter/paeckchen#readme",
+  "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
     "common-tags": "1.3.1",
     "conventional-changelog-lint": "1.0.0",
