@@ -3,6 +3,7 @@ export enum ProgressStep {
   bundleModules = 20,
   bundleGlobals = 80,
   generateBundle = 90,
+  generateSourceMap = 95,
   end = 100
 }
 
