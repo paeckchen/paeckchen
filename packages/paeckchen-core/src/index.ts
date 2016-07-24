@@ -15,3 +15,6 @@ export {
   ProgressStep,
   Logger
 } from './logger';
+export {
+  IConfig
+} from './config';

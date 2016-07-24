@@ -12,6 +12,12 @@ export enum Runtime {
   node
 }
 
+export enum LogLevel {
+  default,
+  debug,
+  trace
+}
+
 export interface IConfig {
   input: {
     entryPoint: string|undefined;
@@ -26,32 +32,38 @@ export interface IConfig {
   aliases: {[name: string]: string};
   externals: {[name: string]: string|boolean};
   watchMode: boolean;
+  logLevel: LogLevel;
 }
 
 function getSource(input: SourceOptions): SourceSpec {
-  switch (input) {
+  switch (input.toLowerCase()) {
     case 'es5':
-    case 'ES5':
       return SourceSpec.ES5;
     case 'es6':
-    case 'ES6':
     case 'es2015':
-    case 'ES2015':
       return SourceSpec.ES2015;
   }
   throw new Error(`Invalid source option ${input}`);
 }
 
 function getRuntime(input: string): Runtime {
-  switch (input) {
+  switch (input.toLowerCase()) {
     case 'browser':
-    case 'Browser':
-    case 'BROWSER':
       return Runtime.browser;
     case 'node':
-    case 'Node':
-    case 'NODE':
       return Runtime.node;
+  }
+  throw new Error(`Invalid runtime ${input}`);
+}
+
+function getLogLevel(input: string): LogLevel {
+  switch (input.toLowerCase()) {
+    case 'default':
+      return LogLevel.default;
+    case 'debug':
+      return LogLevel.debug;
+    case 'trace':
+      return LogLevel.trace;
   }
   throw new Error(`Invalid runtime ${input}`);
 }
@@ -105,7 +117,8 @@ export function createConfig(options: IBundleOptions, host: IHost): Promise<ICon
         },
         aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
         externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
-        watchMode: options.watchMode || configFile.watchMode || false
+        watchMode: options.watchMode || configFile.watchMode || false,
+        logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default')
       };
     });
 }

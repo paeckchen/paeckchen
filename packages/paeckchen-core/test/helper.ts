@@ -7,6 +7,7 @@ import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
 export const errorLogger = {
+  configure: () => undefined,
   trace: () => undefined,
   debug: () => undefined,
   info: () => undefined,

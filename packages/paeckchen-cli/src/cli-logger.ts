@@ -1,6 +1,6 @@
 import * as debug from 'debug';
 import { terminal } from 'terminal-kit';
-import { ProgressStep, Logger } from 'paeckchen-core';
+import { ProgressStep, Logger, IConfig } from 'paeckchen-core';
 
 export class CliLogger implements Logger {
 
@@ -9,6 +9,10 @@ export class CliLogger implements Logger {
   private progressStep: ProgressStep;
   private progressCurrent: number;
   private progressTotal: number;
+
+  public configure(config: IConfig): void {
+    // TODO
+  }
 
   private getLogger(section: string): debug.IDebugger {
     if (!(section in this.loggers)) {

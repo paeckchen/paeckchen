@@ -28,6 +28,7 @@ export interface IBundleOptions {
   watchMode?: boolean;
   logger?: Logger;
   sourceMap?: boolean;
+  logLevel?: 'default' | 'debug' | 'trace';
 }
 
 export interface IPaeckchenContext {
@@ -138,24 +139,32 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
   };
 }
 
-export type OutputFunction = (code: string, sourceMap: string|undefined, context: IPaeckchenContext) => void;
+export interface OutputFunction {
+  (code: string, sourceMap: string|undefined, context: IPaeckchenContext): void;
+}
+
+function createContext(config: IConfig, host: IHost, options: IBundleOptions): IPaeckchenContext {
+  const context: IPaeckchenContext = {
+    config,
+    host,
+    logger: options.logger || new NoopLogger()
+  };
+  context.logger.configure(config);
+  if (!context.config.input.entryPoint) {
+    throw new Error('Missing entry-point');
+  }
+  if (context.config.watchMode) {
+    context.watcher = new Watcher();
+  }
+  return context;
+}
 
 export function bundle(options: IBundleOptions, host: IHost = new DefaultHost(), outputFunction: OutputFunction,
     bundleFunction: BundlingFunction = executeBundling,
       rebundleFactoryFunction: RebundleFactory = rebundleFactory): Promise<void> {
   return createConfig(options, host)
     .then(config => {
-      const context: IPaeckchenContext = {
-        config,
-        host,
-        logger: options.logger || new NoopLogger()
-      };
-      if (!context.config.input.entryPoint) {
-        throw new Error('Missing entry-point');
-      }
-      if (context.config.watchMode) {
-        context.watcher = new Watcher();
-      }
+      const context = createContext(config, host, options);
 
       const paeckchenAst = parse(paeckchenSource);
       const state = new State(getModules(paeckchenAst).elements);

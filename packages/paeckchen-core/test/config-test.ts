@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { createConfig, IConfig, SourceSpec, Runtime } from '../src/config';
+import { createConfig, IConfig, SourceSpec, Runtime, LogLevel } from '../src/config';
 import { HostMock } from './helper';
 
 test('createConfig should return the config defaults', t => {
@@ -23,7 +23,8 @@ test('createConfig should return the config defaults', t => {
         },
         aliases: {},
         externals: {},
-        watchMode: false
+        watchMode: false,
+        logLevel: LogLevel.default
       } as IConfig);
     });
 });
@@ -272,5 +273,27 @@ test('createConfig should create options from externals', t => {
         name: 'var',
       };
       t.deepEqual(config.externals, expected);
+    });
+});
+
+test('createConfig should read loglevel from config file', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"logLevel": "debug"}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config.logLevel, LogLevel.debug);
+    });
+});
+
+test('createConfig should prefer loglevel from options', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"logLevel": "debug"}'
+  }, '/');
+
+  return createConfig({logLevel: 'trace'}, host)
+    .then(config => {
+      t.deepEqual(config.logLevel, LogLevel.trace);
     });
 });
