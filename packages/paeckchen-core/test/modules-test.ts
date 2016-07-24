@@ -1,5 +1,4 @@
 import test from 'ava';
-import { visit } from 'ast-types';
 import { runInNewContext } from 'vm';
 import { State } from '../src/state';
 import { NoopLogger } from '../src/logger';
