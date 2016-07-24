@@ -27,6 +27,28 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
   };
 }
 
+function nodebackReadFile(context: IPaeckchenContext, file: string,
+    cb: (err: Error|null, file?: Buffer) => void): void {
+  context.host.readFile(file)
+    .then(data => cb(null, new Buffer(data)))
+    .catch(cb);
+}
+
+function nodebackIsFile(context: IPaeckchenContext, file: string,
+    cb: (err: Error|null, isFile?: boolean) => void): void {
+  try {
+    if (!context.host.fileExists(file)) {
+      cb(null, false);
+    } else {
+      context.host.isFile(file)
+        .then(isFile => cb(null, isFile))
+        .catch(cb);
+    }
+  } catch (e) {
+    cb(e);
+  }
+}
+
 /**
  * Return a resolved module path
  *
@@ -48,24 +70,10 @@ export function getModulePath(filename: string, importIdentifier: string, contex
       filename: filename,
       modules: nodeCoreLibs,
       packageFilter: normalizePackageFactory(context),
-      readFile: (file: string, cb: (err: Error|undefined|null, file: Buffer|undefined|null) => void) => {
-        context.host.readFile(file)
-          .then(data => cb(undefined, new Buffer(data)))
-          .catch(e => cb(e, undefined));
-      },
-      isFile: (file: string, cb: (err: Error|undefined|null, isFile: boolean|undefined|null) => void) => {
-        try {
-          if (!context.host.fileExists(file)) {
-            cb(undefined, false);
-          } else {
-            context.host.isFile(file)
-              .then(isFile => cb(undefined, isFile))
-              .catch(e => cb(e, undefined));
-          }
-        } catch (e) {
-          cb(e, undefined);
-        }
-      }
+      readFile: (file: string, cb: (err: Error|undefined|null, file: Buffer|undefined|null) => void) =>
+        nodebackReadFile(context, file, cb),
+      isFile: (file: string, cb: (err: Error|undefined|null, isFile: boolean|undefined|null) => void) =>
+        nodebackIsFile(context, file, cb)
     };
     browserResolve(importOrAliasIdentifier, opts, (err, resolved) => {
       if (err) {

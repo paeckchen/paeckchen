@@ -234,3 +234,99 @@ test('getModulePath should use the alias name if possible', t => {
       t.is(resolved, path.resolve('/alias.js'));
     });
 });
+
+test('getModulePath should throw if an error occurs during file reading', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      return true;
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.resolve(true);
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.truthy(e.toString().match(/TypeError/));
+    });
+});
+
+test('getModulePath should throw if file existance check throws', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      throw new Error('failed');
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.resolve(true);
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.truthy(e.message.match(/Cannot find module/));
+    });
+});
+
+test('getModulePath should throw if file check throws', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      return true;
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.reject(new Error('failed'));
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.truthy(e.message.match(/Cannot find module/));
+    });
+});
