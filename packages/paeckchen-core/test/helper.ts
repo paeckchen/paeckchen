@@ -6,6 +6,16 @@ import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
 import { IHost } from '../src/host';
 
+export const errorLogger = {
+  trace: () => undefined,
+  debug: () => undefined,
+  info: () => undefined,
+  error: (section: string, error: Error, message: string) => {
+    console.log(`${message}: ${error.message}`);
+  },
+  progress: () => undefined
+};
+
 export class HostMock implements IHost {
   public basePath: string;
   public files: any = {};
@@ -34,16 +44,22 @@ export class HostMock implements IHost {
     return resolve(filePath) in this.files;
   }
 
-  public isFile(filePath: string): boolean {
-    return resolve(filePath) in this.files;
+  public isFile(filePath: string): Promise<boolean> {
+    return Promise.resolve()
+      .then(() => {
+        return resolve(filePath) in this.files;
+      });
   }
 
-  public readFile(filePath: string): string {
-    if (this.fileExists(filePath)) {
-      return this.files[resolve(filePath)];
-    }
-    throw new Error(oneLine`ENOENT: Could not read file ${resolve(filePath)} from HostMock fs.
-      Available files: ${Object.keys(this.files)}`);
+  public readFile(filePath: string): Promise<string> {
+    return Promise.resolve()
+      .then(() => {
+        if (this.fileExists(filePath)) {
+          return this.files[resolve(filePath)];
+        }
+        throw new Error(oneLine`ENOENT: Could not read file ${resolve(filePath)} from HostMock fs.
+          Available files: ${Object.keys(this.files)}`);
+      });
   }
 
   public writeFile(filePath: string, content: string): void {
@@ -52,26 +68,26 @@ export class HostMock implements IHost {
 
 }
 
-export function parse(input: string): ESTree.Program {
-  const acornOptions: acorn.Options = {
-    ecmaVersion: 7,
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    allowHashBang: true
-  };
-  const ast = acorn.parse(input, acornOptions);
-  return ast;
+export function parse(input: string): Promise<ESTree.Program> {
+  return Promise.resolve()
+    .then(() => {
+      const acornOptions: acorn.Options = {
+        ecmaVersion: 7,
+        sourceType: 'module',
+        locations: true,
+        ranges: true,
+        allowHashBang: true
+      };
+      const ast = acorn.parse(input, acornOptions);
+      return ast;
+    });
 }
 
-export function generate(ast: ESTree.Program): string {
-  return (escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}) as string).trim();
-}
-
-export function parseAndProcess(input: string, fn: (ast: ESTree.Program) => void): string {
-  const ast = parse(input);
-  fn(ast);
-  return generate(ast);
+export function generate(ast: ESTree.Program): Promise<string> {
+  return Promise.resolve()
+    .then(() => {
+      return (escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}) as string).trim();
+    });
 }
 
 const defaultSandbox = {

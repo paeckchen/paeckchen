@@ -1,30 +1,32 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
+import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 import { State } from '../../src/state';
 import { NoopLogger } from '../../src/logger';
 
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
-function rewriteExports(input: string, files: any = {}): string {
+function rewriteExports(input: string, files: any = {}): Promise<string> {
   const state = new State([]);
   const host = new HostMock(files);
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
 
-  return parseAndProcess(input, ast => {
-    return rewriteExportNamedDeclaration(ast, 'name', {
-      config: {
-        aliases: {}
-      } as any,
-      host,
-      logger: new NoopLogger()
-    }, state);
-  });
+  return parse(input)
+    .then(ast =>
+      rewriteExportNamedDeclaration(ast, 'name', context, state).then(() =>
+        generate(ast)));
 }
 
 function executeExports(input: string, files: any = {}, settings: any = {},
-    requireResults: any[] = []): virtualModuleResult {
-  const processed = rewriteExports(input, files);
-  return virtualModule(processed, settings, requireResults);
+    requireResults: any[] = []): Promise<virtualModuleResult> {
+  return rewriteExports(input, files).then(processed =>
+    virtualModule(processed, settings, requireResults));
 }
 
 test('es6-export plugin should rewrite variable assignment exports correctly', t => {
@@ -38,8 +40,10 @@ test('es6-export plugin should rewrite variable assignment exports correctly', t
     bar: 'foo'
   };
 
-  const actual = executeExports(input);
-  t.deepEqual(actual, expected);
+  return executeExports(input)
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-export plugin should rewrite default exports correctly', t => {
@@ -52,8 +56,10 @@ test('es6-export plugin should rewrite default exports correctly', t => {
     default: 'bar'
   };
 
-  const actual = executeExports(input);
-  t.deepEqual(actual, expected);
+  return executeExports(input)
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-export plugin should rewrite anonymous function default export correctly', t => {
@@ -61,8 +67,10 @@ test('es6-export plugin should rewrite anonymous function default export correct
     export default function () {}
   `;
 
-  const actual = executeExports(input);
-  t.truthy(typeof actual['default'] === 'function');
+  return executeExports(input)
+    .then(actual => {
+      t.truthy(typeof actual['default'] === 'function');
+    });
 });
 
 test('es6-export plugin should rewrite class default export correctly', t => {
@@ -71,8 +79,10 @@ test('es6-export plugin should rewrite class default export correctly', t => {
     export default class Foo {}
   `;
 
-  const actual = executeExports(input);
-  t.truthy(typeof actual['default'] === 'function');
+  return executeExports(input)
+    .then(actual => {
+      t.truthy(typeof actual['default'] === 'function');
+    });
 });
 
 test('es6-export plugin should rewrite named function default export correctly', t => {
@@ -80,8 +90,10 @@ test('es6-export plugin should rewrite named function default export correctly',
     export default function foo () {}
   `;
 
-  const actual = executeExports(input);
-  t.truthy(typeof actual['default'] === 'function');
+  return executeExports(input)
+    .then(actual => {
+      t.truthy(typeof actual['default'] === 'function');
+    });
 });
 
 test('es6-export plugin should rewrite named exports correctly', t => {
@@ -94,35 +106,42 @@ test('es6-export plugin should rewrite named exports correctly', t => {
     bar: 'foo'
   };
 
-  const actual = executeExports(input);
-  t.deepEqual(actual, expected);
+  return executeExports(input)
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-export plugin should rewrite named reexports correctly', t => {
   const input = stripIndent`
     export {foo as bar} from './dependency';
   `;
-
   const exported = {
     exports: {
       foo: 'bar',
     }
+  };
+  const files = {
+    'dependency.js': ''
   };
 
   const expected = {
     bar: 'bar'
   };
 
-  const actual = executeExports(input, {
-    'dependency.js': ''
-  }, {}, [exported]);
-  t.deepEqual(actual, expected);
+  return executeExports(input, files, {}, [exported])
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-export plugin should rewrite export-all declarations correctly', t => {
   const input = stripIndent`
     export * from './dependency';
   `;
+  const files = {
+    'dependency.js': ''
+  };
 
   const expected = {
     exports: {
@@ -131,13 +150,10 @@ test('es6-export plugin should rewrite export-all declarations correctly', t => 
     }
   };
 
-  const actual = executeExports(input,
-    {'dependency.js': ''},
-    {},
-    [expected]
-  );
-
-  t.deepEqual(actual, expected.exports);
+  return executeExports(input, files, {}, [expected])
+    .then(actual => {
+      t.deepEqual(actual, expected.exports);
+    });
 });
 
 test('es6-export plugin should rewrite exported function declarations correctly', t => {
@@ -145,6 +161,8 @@ test('es6-export plugin should rewrite exported function declarations correctly'
     export function exported() {};
   `;
 
-  const actual = executeExports(input);
-  t.truthy(typeof actual['exported'] === 'function');
+  return executeExports(input)
+    .then(actual => {
+      t.truthy(typeof actual['exported'] === 'function');
+    });
 });

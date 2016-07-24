@@ -8,23 +8,24 @@ test('createConfig should return the config defaults', t => {
     '/paeckchen.json': '{}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.deepEqual(config, {
-    input: {
-      entryPoint: undefined,
-      source: SourceSpec.ES2015,
-    },
-    output: {
-      folder: host.cwd(),
-      file: undefined,
-      runtime: Runtime.browser,
-      sourceMap: false
-    },
-    aliases: {},
-    externals: {},
-    watchMode: false
-  } as IConfig);
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config, {
+        input: {
+          entryPoint: undefined,
+          source: SourceSpec.ES2015,
+        },
+        output: {
+          folder: host.cwd(),
+          file: undefined,
+          runtime: Runtime.browser,
+          sourceMap: false
+        },
+        aliases: {},
+        externals: {},
+        watchMode: false
+      } as IConfig);
+    });
 });
 
 test('createConfig should prefer entry point of options', t => {
@@ -32,9 +33,10 @@ test('createConfig should prefer entry point of options', t => {
     '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
-  const config = createConfig({entryPoint: 'options'}, host);
-
-  t.is(config.input.entryPoint, 'options');
+  return createConfig({entryPoint: 'options'}, host)
+    .then(config => {
+      t.is(config.input.entryPoint, 'options');
+    });
 });
 
 test('createConfig should fallback to entry point of config', t => {
@@ -42,9 +44,10 @@ test('createConfig should fallback to entry point of config', t => {
     '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.is(config.input.entryPoint, 'config');
+  return createConfig({}, host)
+    .then(config => {
+      t.is(config.input.entryPoint, 'config');
+    });
 });
 
 test('createConfig should prefer sourceMap of options', t => {
@@ -52,9 +55,10 @@ test('createConfig should prefer sourceMap of options', t => {
     '/paeckchen.json': '{"output": {"sourceMap": false}}'
   }, '/');
 
-  const config = createConfig({sourceMap: true}, host);
-
-  t.true(config.output.sourceMap);
+  return createConfig({sourceMap: true}, host)
+    .then(config => {
+      t.true(config.output.sourceMap);
+    });
 });
 
 test('createConfig should fallback to sourceMap of config', t => {
@@ -62,9 +66,10 @@ test('createConfig should fallback to sourceMap of config', t => {
     '/paeckchen.json': '{"output": {"sourceMap": true}}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.true(config.output.sourceMap);
+  return createConfig({}, host)
+    .then(config => {
+      t.true(config.output.sourceMap);
+    });
 });
 
 test('createConfig should prefer source level of options', t => {
@@ -72,9 +77,10 @@ test('createConfig should prefer source level of options', t => {
     '/paeckchen.json': '{"source": "es2015"}'
   }, '/');
 
-  const config = createConfig({source: 'es5'}, host);
-
-  t.is(config.input.source, SourceSpec.ES5);
+  return createConfig({source: 'es5'}, host)
+    .then(config => {
+      t.is(config.input.source, SourceSpec.ES5);
+    });
 });
 
 test('createConfig should throw on invalid source value', t => {
@@ -82,7 +88,11 @@ test('createConfig should throw on invalid source value', t => {
     '/paeckchen.json': '{"input": {"source": "abc"}}'
   }, '/');
 
-  t.throws(() => createConfig({}, host), 'Invalid source option abc');
+  return createConfig({}, host)
+    .then(() => t.fail('Expected error'))
+    .catch(e => {
+      t.is(e.message, 'Invalid source option abc');
+    });
 });
 
 test('createConfig should throw on invalid runtime value', t => {
@@ -90,7 +100,11 @@ test('createConfig should throw on invalid runtime value', t => {
     '/paeckchen.json': '{"output": {"runtime": "abc"}}'
   }, '/');
 
-  t.throws(() => createConfig({}, host), 'Invalid runtime abc');
+  return createConfig({}, host)
+    .then(() => t.fail('Expected error'))
+    .catch(e => {
+      t.is(e.message, 'Invalid runtime abc');
+    });
 });
 
 test('createConfig should throw on invalid config file', t => {
@@ -98,7 +112,11 @@ test('createConfig should throw on invalid config file', t => {
     '/paeckchen.json': "{'test': value}"
   }, '/');
 
-  t.throws(() => createConfig({}, host), /Failed to read config file/);
+  return createConfig({}, host)
+    .then(() => t.fail('Expected error'))
+    .catch(e => {
+      t.truthy(e.message.match(/Failed to read config file/));
+    });
 });
 
 test('createConfig should prefer output directory option', t => {
@@ -106,9 +124,10 @@ test('createConfig should prefer output directory option', t => {
     '/paeckchen.json': '{"output": {"folder": "foo"}}'
   }, '/');
 
-  const config = createConfig({outputDirectory: 'bar'}, host);
-
-  t.is(config.output.folder, 'bar');
+  return createConfig({outputDirectory: 'bar'}, host)
+    .then(config => {
+      t.is(config.output.folder, 'bar');
+    });
 });
 
 test('createConfig should prefer output file option', t => {
@@ -116,9 +135,10 @@ test('createConfig should prefer output file option', t => {
     '/paeckchen.json': '{"output": {"file": "foo"}}'
   }, '/');
 
-  const config = createConfig({outputFile: 'bar'}, host);
-
-  t.is(config.output.file, 'bar');
+  return createConfig({outputFile: 'bar'}, host)
+    .then(config => {
+      t.is(config.output.file, 'bar');
+    });
 });
 
 test('createConfig should read alias from config file', t => {
@@ -126,9 +146,10 @@ test('createConfig should read alias from config file', t => {
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.deepEqual(config.aliases, {'module': '/some/path'} as {[name: string]: string});
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config.aliases, {'module': '/some/path'} as {[name: string]: string});
+    });
 });
 
 test('createConfig should join single alias into config', t => {
@@ -136,13 +157,14 @@ test('createConfig should join single alias into config', t => {
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  const config = createConfig({alias: 'name=path'}, host);
-
-  const expected: {[name: string]: string} = {
-    module: '/some/path',
-    name: 'path'
-  };
-  t.deepEqual(config.aliases, expected);
+  return createConfig({alias: 'name=path'}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        module: '/some/path',
+        name: 'path'
+      };
+      t.deepEqual(config.aliases, expected);
+    });
 });
 
 test('createConfig should join multi aliases into config', t => {
@@ -150,14 +172,15 @@ test('createConfig should join multi aliases into config', t => {
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  const config = createConfig({alias: ['name=path', 'name2=path2']}, host);
-
-  const expected: {[name: string]: string} = {
-    module: '/some/path',
-    name: 'path',
-    name2: 'path2'
-  };
-  t.deepEqual(config.aliases, expected);
+  return createConfig({alias: ['name=path', 'name2=path2']}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        module: '/some/path',
+        name: 'path',
+        name2: 'path2'
+      };
+      t.deepEqual(config.aliases, expected);
+    });
 });
 
 test('createConfig should create options from aliases', t => {
@@ -165,12 +188,13 @@ test('createConfig should create options from aliases', t => {
     '/paeckchen.json': '{}'
   }, '/');
 
-  const config = createConfig({alias: 'name=path'}, host);
-
-  const expected: {[name: string]: string} = {
-    name: 'path',
-  };
-  t.deepEqual(config.aliases, expected);
+  return createConfig({alias: 'name=path'}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        name: 'path',
+      };
+      t.deepEqual(config.aliases, expected);
+    });
 });
 
 test('createConfig should read runtime from config file', t => {
@@ -178,9 +202,10 @@ test('createConfig should read runtime from config file', t => {
     '/paeckchen.json': '{"output": {"runtime": "node"}}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.deepEqual(config.output.runtime, Runtime.node);
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config.output.runtime, Runtime.node);
+    });
 });
 
 test('createConfig should prefer runtime from options', t => {
@@ -188,9 +213,10 @@ test('createConfig should prefer runtime from options', t => {
     '/paeckchen.json': '{"output": {"runtime": "node"}}'
   }, '/');
 
-  const config = createConfig({runtime: 'browser'}, host);
-
-  t.deepEqual(config.output.runtime, Runtime.browser);
+  return createConfig({runtime: 'browser'}, host)
+    .then(config => {
+      t.deepEqual(config.output.runtime, Runtime.browser);
+    });
 });
 
 test('createConfig should read externals from config file', t => {
@@ -198,9 +224,10 @@ test('createConfig should read externals from config file', t => {
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  const config = createConfig({}, host);
-
-  t.deepEqual(config.externals, {'module': 'Global'} as {[name: string]: string});
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config.externals, {'module': 'Global'} as {[name: string]: string});
+    });
 });
 
 test('createConfig should join single external into config', t => {
@@ -208,13 +235,14 @@ test('createConfig should join single external into config', t => {
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  const config = createConfig({external: 'name=var'}, host);
-
-  const expected: {[name: string]: string} = {
-    module: 'Global',
-    name: 'var'
-  };
-  t.deepEqual(config.externals, expected);
+  return createConfig({external: 'name=var'}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        module: 'Global',
+        name: 'var'
+      };
+      t.deepEqual(config.externals, expected);
+    });
 });
 
 test('createConfig should join multi externals into config', t => {
@@ -222,14 +250,15 @@ test('createConfig should join multi externals into config', t => {
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  const config = createConfig({external: ['name=var', 'name2=var2']}, host);
-
-  const expected: {[name: string]: string} = {
-    module: 'Global',
-    name: 'var',
-    name2: 'var2'
-  };
-  t.deepEqual(config.externals, expected);
+  return createConfig({external: ['name=var', 'name2=var2']}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        module: 'Global',
+        name: 'var',
+        name2: 'var2'
+      };
+      t.deepEqual(config.externals, expected);
+    });
 });
 
 test('createConfig should create options from externals', t => {
@@ -237,10 +266,11 @@ test('createConfig should create options from externals', t => {
     '/paeckchen.json': '{}'
   }, '/');
 
-  const config = createConfig({external: 'name=var'}, host);
-
-  const expected: {[name: string]: string} = {
-    name: 'var',
-  };
-  t.deepEqual(config.externals, expected);
+  return createConfig({external: 'name=var'}, host)
+    .then(config => {
+      const expected: {[name: string]: string} = {
+        name: 'var',
+      };
+      t.deepEqual(config.externals, expected);
+    });
 });

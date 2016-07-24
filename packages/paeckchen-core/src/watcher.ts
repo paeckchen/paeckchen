@@ -1,13 +1,10 @@
 import { dirname } from 'path';
 import { FSWatcher } from 'chokidar';
-import { IHost } from './host';
 
 type FileMap = { [name: string]: boolean };
 type WatcherMap = { [name: string]: number };
 
 export class Watcher {
-
-  private host: IHost;
 
   private watcher: FSWatcher;
 
@@ -15,8 +12,7 @@ export class Watcher {
 
   private files: FileMap = {};
 
-  constructor(host: IHost, watcher: FSWatcher = new FSWatcher()) {
-    this.host = host;
+  constructor(watcher: FSWatcher = new FSWatcher()) {
     this.watcher = watcher;
   }
 

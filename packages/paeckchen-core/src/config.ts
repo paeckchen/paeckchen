@@ -76,30 +76,36 @@ function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key
   return map;
 }
 
-export function createConfig(options: IBundleOptions, host: IHost): IConfig {
-  const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');
-  let configFile: any = {};
-  if (host.fileExists(configPath)) {
-    try {
-      configFile = JSON.parse(host.readFile(configPath));
-    } catch (e) {
-      throw new Error(`Failed to read config file [file=${configPath}, message=${e.message}]`);
-    }
-  }
-
-  return {
-    input: {
-      entryPoint: options.entryPoint || configFile.input && configFile.input.entry || undefined,
-      source: getSource(options.source || configFile.input && configFile.input.source || 'es2015')
-    },
-    output: {
-      folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
-      file: options.outputFile || configFile.output && configFile.output.file || undefined,
-      runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
-      sourceMap: options.sourceMap || configFile.output && configFile.output.sourceMap || false
-    },
-    aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
-    externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
-    watchMode: options.watchMode || configFile.watchMode || false
-  };
+export function createConfig(options: IBundleOptions, host: IHost): Promise<IConfig> {
+  return Promise.resolve()
+    .then(() => {
+      const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');
+      if (host.fileExists(configPath)) {
+        return host.readFile(configPath)
+          .then(data => {
+            return JSON.parse(data);
+          })
+          .catch(e => {
+            throw new Error(`Failed to read config file [file=${configPath}, message=${e.message}]`);
+          });
+      }
+      return {};
+    })
+    .then((configFile: any) => {
+      return {
+        input: {
+          entryPoint: options.entryPoint || configFile.input && configFile.input.entry || undefined,
+          source: getSource(options.source || configFile.input && configFile.input.source || 'es2015')
+        },
+        output: {
+          folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
+          file: options.outputFile || configFile.output && configFile.output.file || undefined,
+          runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
+          sourceMap: options.sourceMap || configFile.output && configFile.output.sourceMap || false
+        },
+        aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
+        externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
+        watchMode: options.watchMode || configFile.watchMode || false
+      };
+    });
 }

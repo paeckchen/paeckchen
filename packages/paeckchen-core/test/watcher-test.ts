@@ -1,6 +1,5 @@
 import test from 'ava';
 import { FSWatcher } from 'chokidar';
-import { HostMock } from './helper';
 
 import { Watcher } from '../src/watcher';
 
@@ -49,7 +48,7 @@ test('Watcher should register callbacks on the watcher if enabled', t => {
   const chokidar = new ChokidarMock();
   const onUpdate = (event: string, fileName: string): void => undefined;
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
 
   t.deepEqual(chokidar.onCalls, ['add', 'change', 'unlink']);
@@ -63,7 +62,7 @@ test('Watcher should ignore changes of new files not on the watch list', t => {
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   chokidar.emit('add', 'new-file');
 
@@ -78,7 +77,7 @@ test('Watcher should ignore changes of existing files not on the watch list', t 
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   chokidar.emit('change', 'changed-file');
 
@@ -93,7 +92,7 @@ test('Watcher should ignore removals of existing files not on the watch list', t
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   chokidar.emit('unlink', 'removed-file');
 
@@ -108,7 +107,7 @@ test('Watcher should register folders with new files to the watcher', t => {
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   watcher.watchFile('dir/new-file');
 
@@ -123,7 +122,7 @@ test('Watcher should remove folders from the watcher if no watched files left', 
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   watcher.watchFile('dir/file');
   watcher.unwatchFile('dir/file');
@@ -139,7 +138,7 @@ test('Watcher should keep watching folders if watched files left', t => {
     updateFileName = fileName;
   };
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   watcher.watchFile('dir/file1');
   watcher.watchFile('dir/file2');
@@ -157,7 +156,7 @@ test('Watcher should notify if watched file changes', t => {
   };
   const chokidar = new ChokidarMock();
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onUpdate);
   watcher.watchFile('dir/file');
   chokidar.emit('change', 'dir/file');
@@ -175,7 +174,7 @@ test('Watcher should notify if watched file is added', t => {
   };
   const chokidar = new ChokidarMock();
 
-  const watcher = new Watcher(new HostMock({}), chokidar);
+  const watcher = new Watcher(chokidar);
   watcher.start(onAdd);
   watcher.watchFile('dir/file');
   chokidar.emit('add', 'dir/file');

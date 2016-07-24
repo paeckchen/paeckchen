@@ -1,4 +1,4 @@
-import { sync as browserResolveSync } from 'browser-resolve';
+import * as browserResolve from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
 import { IPaeckchenContext } from './bundle';
 import { SourceSpec } from './config';
@@ -36,16 +36,42 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
  * @return either the absolute path to the requested module or the name of a node core module
  * @throws when failing to resolve requested module
  */
-export function getModulePath(filename: string, importIdentifier: string, context: IPaeckchenContext): string {
-  let importOrAliasIdentifier = importIdentifier;
-  if (importIdentifier in context.config.aliases) {
-    importOrAliasIdentifier = context.config.aliases[importIdentifier];
-  }
-  return browserResolveSync(importOrAliasIdentifier, {
-    filename: filename,
-    modules: nodeCoreLibs,
-    packageFilter: normalizePackageFactory(context),
-    readFileSync: (path: string): Buffer => new Buffer(context.host.readFile(path)),
-    isFile: (filePath: string): boolean => context.host.fileExists(filePath) && context.host.isFile(filePath)
+export function getModulePath(filename: string, importIdentifier: string, context: IPaeckchenContext): Promise<string> {
+  return new Promise((resolve, reject) => {
+    context.logger.trace('module-path', `getModulePath [filename=${filename}, importIdentifier=${importIdentifier}]`);
+
+    let importOrAliasIdentifier = importIdentifier;
+    if (importIdentifier in context.config.aliases) {
+      importOrAliasIdentifier = context.config.aliases[importIdentifier];
+    }
+    const opts = {
+      filename: filename,
+      modules: nodeCoreLibs,
+      packageFilter: normalizePackageFactory(context),
+      readFile: (file: string, cb: (err: Error|undefined|null, file: Buffer|undefined|null) => void) => {
+        context.host.readFile(file)
+          .then(data => cb(undefined, new Buffer(data)))
+          .catch(e => cb(e, undefined));
+      },
+      isFile: (file: string, cb: (err: Error|undefined|null, isFile: boolean|undefined|null) => void) => {
+        try {
+          if (!context.host.fileExists(file)) {
+            cb(undefined, false);
+          } else {
+            context.host.isFile(file)
+              .then(isFile => cb(undefined, isFile))
+              .catch(e => cb(e, undefined));
+          }
+        } catch (e) {
+          cb(e, undefined);
+        }
+      }
+    };
+    browserResolve(importOrAliasIdentifier, opts, (err, resolved) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(resolved);
+    });
   });
 }

@@ -1,30 +1,32 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
+import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 import { State } from '../../src/state';
 import { NoopLogger } from '../../src/logger';
 
 import { rewriteImportDeclaration } from '../../src/plugins/es6-import';
 
-function rewriteImports(input: string, files: any = {}): string {
+function rewriteImports(input: string, files: any = {}): Promise<string> {
   const state = new State([]);
   const host = new HostMock(files);
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
 
-  return parseAndProcess(input, ast => {
-    return rewriteImportDeclaration(ast, 'name', {
-      config: {
-        aliases: {}
-      } as any,
-      host,
-      logger: new NoopLogger()
-    }, state);
-  });
+  return parse(input)
+    .then(ast =>
+      rewriteImportDeclaration(ast, 'name', context, state).then(() =>
+        generate(ast)));
 }
 
 function executeImports(input: string, files: any = {}, settings: any = {},
-    requireResults: any[] = []): virtualModuleResult {
-  const processed = rewriteImports(input, files);
-  return virtualModule(processed, settings, requireResults);
+    requireResults: any[] = []): Promise<virtualModuleResult> {
+  return rewriteImports(input, files).then(processed =>
+    virtualModule(processed, settings, requireResults));
 }
 
 test('es6-import plugin should rewrite import specifiers correctly', t => {
@@ -38,13 +40,15 @@ test('es6-import plugin should rewrite import specifiers correctly', t => {
       baz: baz
     };
   `;
-
   const exported = {
     exports: {
       foo: 'foo',
       baz: 'baz',
       foobar: 'foobar'
     }
+  };
+  const files = {
+    './bar.js': ''
   };
 
   const expected = {
@@ -53,11 +57,10 @@ test('es6-import plugin should rewrite import specifiers correctly', t => {
     foobar: 'baz'
   };
 
-  const actual = executeImports(input, {
-    './bar.js': ''
-  }, {}, [exported]);
-
-  t.deepEqual(actual, expected);
+  return executeImports(input, files, {}, [exported])
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-import plugin should rewrite default import specifiers correctly', t => {
@@ -65,7 +68,6 @@ test('es6-import plugin should rewrite default import specifiers correctly', t =
     import foo from './bar';
     module.exports = foo;
   `;
-
   const exported = {
     exports: {
       default: {
@@ -73,14 +75,16 @@ test('es6-import plugin should rewrite default import specifiers correctly', t =
       }
     }
   };
+  const files = {
+    './bar.js': ''
+  };
 
   const expected = exported.exports.default;
 
-  const actual = executeImports(input, {
-    './bar.js': ''
-  }, {}, [exported]);
-
-  t.deepEqual(actual, expected);
+  return executeImports(input, files, {}, [exported])
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
 
 test('es6-import plugin should rewrite namespace import specifiers correctly', t => {
@@ -88,19 +92,20 @@ test('es6-import plugin should rewrite namespace import specifiers correctly', t
     import * as foo from './bar';
     module.exports = foo;
   `;
-
   const exported = {
     exports: {
       foo: 'foo',
       bar: 'bar'
     }
   };
+  const files = {
+    './bar.js': ''
+  };
 
   const expected = exported.exports;
 
-  const actual = executeImports(input, {
-    './bar.js': ''
-  }, {}, [exported]);
-
-  t.deepEqual(actual, expected);
+  return executeImports(input, files, {}, [exported])
+    .then(actual => {
+      t.deepEqual(actual, expected);
+    });
 });
