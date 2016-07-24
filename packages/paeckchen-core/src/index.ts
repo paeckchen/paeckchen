@@ -1,14 +1,14 @@
 export {
   bundle,
-  IBundleOptions,
+  BundleOptions,
   SourceOptions,
   OutputFunction,
   BundlingFunction,
   RebundleFactory,
-  IPaeckchenContext
+  PaeckchenContext
 } from './bundle';
 export {
-  IHost,
+  Host,
   DefaultHost
 } from './host';
 export {
@@ -16,5 +16,5 @@ export {
   Logger
 } from './logger';
 export {
-  IConfig
+  Config
 } from './config';

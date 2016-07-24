@@ -1,11 +1,11 @@
 import { parse } from 'acorn';
 import { builders as b } from 'ast-types';
 
-import { IPaeckchenContext } from './bundle';
+import { PaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
 import { Plugins } from './plugins';
 import { checkGlobals } from './globals';
-import { IWrappedModule, State } from './state';
+import { WrappedModule, State } from './state';
 import { wrapJsonFile } from './bundle-json';
 
 export function getModuleIndex(moduleName: string, state: State): number {
@@ -28,8 +28,8 @@ export function updateModule(moduleName: string, remove: boolean, state: State):
   }
 }
 
-function createModuleWrapper(context: IPaeckchenContext, name: string, moduleAst: ESTree.Program,
-    state: State): IWrappedModule {
+function createModuleWrapper(context: PaeckchenContext, name: string, moduleAst: ESTree.Program,
+    state: State): WrappedModule {
   context.logger.trace('module', `createModuleWrapper [name=${name}]`);
   const index = getModuleIndex(name, state);
   return {
@@ -49,14 +49,14 @@ function createModuleWrapper(context: IPaeckchenContext, name: string, moduleAst
   };
 }
 
-export function enqueueModule(modulePath: string, state: State, context: IPaeckchenContext): void {
+export function enqueueModule(modulePath: string, state: State, context: PaeckchenContext): void {
   context.logger.trace('module', `enqueueModule [modulePath=${modulePath}]`);
   if (state.moduleBundleQueue.indexOf(modulePath) === -1) {
     state.moduleBundleQueue.push(modulePath);
   }
 }
 
-export function bundleNextModules(state: State, context: IPaeckchenContext,
+export function bundleNextModules(state: State, context: PaeckchenContext,
     plugins: any = defaultPlugins): Promise<void>[] {
   if (state.moduleBundleQueue.length === 0) {
     return [];
@@ -69,7 +69,7 @@ export function bundleNextModules(state: State, context: IPaeckchenContext,
   });
 }
 
-function watchModule(state: State, modulePath: string, context: IPaeckchenContext): Promise<void> {
+function watchModule(state: State, modulePath: string, context: PaeckchenContext): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
@@ -103,7 +103,7 @@ function watchModule(state: State, modulePath: string, context: IPaeckchenContex
     });
 }
 
-function wrapModule(modulePath: string, state: State, context: IPaeckchenContext, plugins: any): Promise<void> {
+function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
@@ -175,7 +175,7 @@ function wrapThrowOnRemovedModule(modulePath: string): Promise<ESTree.Statement>
   ));
 }
 
-function wrapExternalModule(modulePath: string, context: IPaeckchenContext): Promise<ESTree.Program> {
+function wrapExternalModule(modulePath: string, context: PaeckchenContext): Promise<ESTree.Program> {
   const external = context.config.externals[modulePath] === false
     ? b.objectExpression([])
     : b.identifier(context.config.externals[modulePath] as string);
@@ -194,7 +194,7 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): Pro
   ]));
 }
 
-function processModule(modulePath: string, context: IPaeckchenContext, state: State,
+function processModule(modulePath: string, context: PaeckchenContext, state: State,
     plugins: Plugins): Promise<ESTree.Program> {
   context.logger.trace('module', `processModule [modulePath=${modulePath}]`);
   return context.host.readFile(modulePath)

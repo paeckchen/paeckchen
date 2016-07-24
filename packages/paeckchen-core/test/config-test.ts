@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { createConfig, IConfig, SourceSpec, Runtime, LogLevel } from '../src/config';
+import { createConfig, Config, SourceSpec, Runtime, LogLevel } from '../src/config';
 import { HostMock } from './helper';
 
 test('createConfig should return the config defaults', t => {
@@ -25,7 +25,7 @@ test('createConfig should return the config defaults', t => {
         externals: {},
         watchMode: false,
         logLevel: LogLevel.default
-      } as IConfig);
+      } as Config);
     });
 });
 

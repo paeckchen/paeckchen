@@ -1,6 +1,6 @@
 import { join } from 'path';
-import { IBundleOptions, SourceOptions } from './bundle';
-import { IHost } from './host';
+import { BundleOptions, SourceOptions } from './bundle';
+import { Host } from './host';
 
 export enum SourceSpec {
   ES5,
@@ -18,7 +18,7 @@ export enum LogLevel {
   trace
 }
 
-export interface IConfig {
+export interface Config {
   input: {
     entryPoint: string|undefined;
     source: SourceSpec;
@@ -88,7 +88,7 @@ function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key
   return map;
 }
 
-export function createConfig(options: IBundleOptions, host: IHost): Promise<IConfig> {
+export function createConfig(options: BundleOptions, host: Host): Promise<Config> {
   return Promise.resolve()
     .then(() => {
       const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');

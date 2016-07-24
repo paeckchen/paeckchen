@@ -1,5 +1,5 @@
 import test from 'ava';
-import { IPaeckchenContext } from '../src/bundle';
+import { PaeckchenContext } from '../src/bundle';
 import { SourceSpec, Runtime, LogLevel } from '../src/config';
 import { NoopLogger } from '../src/logger';
 import { generate, HostMock, virtualModule } from './helper';
@@ -78,7 +78,7 @@ test('buildValue should allow nesting', t => {
 });
 
 test('wrapJsonFile should return a requested json file as ast program exporting the json data', t => {
-  const context: IPaeckchenContext =  {
+  const context: PaeckchenContext =  {
     config: {
       input: {
         entryPoint: '',

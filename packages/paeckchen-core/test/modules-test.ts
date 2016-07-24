@@ -2,7 +2,7 @@ import test from 'ava';
 import { runInNewContext } from 'vm';
 import { State } from '../src/state';
 import { NoopLogger } from '../src/logger';
-import { IPaeckchenContext } from '../src/bundle';
+import { PaeckchenContext } from '../src/bundle';
 import { HostMock, generate } from './helper';
 
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModules } from '../src/modules';
@@ -249,7 +249,7 @@ test('bundleNextModules should bundle an error for removed modules', t => {
   const state = new State([]);
   const plugins = {};
   let callMeOnChangesFunction: Function = () => t.fail();
-  const context: IPaeckchenContext = {
+  const context: PaeckchenContext = {
     config: {
       externals: {},
       watchMode: true
@@ -325,7 +325,7 @@ test('bundleNextModules should add modules to the watch list if enabled', t => {
   const host = new HostMock({
     '/some/mod.js': ''
   });
-  const context: IPaeckchenContext = {
+  const context: PaeckchenContext = {
     config: {
       externals: {},
       watchMode: true
@@ -354,7 +354,7 @@ test('bundleNextModules should trigger rebundle on watched file update', t => {
     '/some/mod.js': ''
   });
   let calledRebundle = false;
-  const context: IPaeckchenContext = {
+  const context: PaeckchenContext = {
     config: {
       externals: {},
       watchMode: true
@@ -386,7 +386,7 @@ test('bundleNextModules should trigger rebundle on watched file removal', t => {
     '/some/mod.js': ''
   });
   let calledRebundle = false;
-  const context: IPaeckchenContext = {
+  const context: PaeckchenContext = {
     config: {
       externals: {},
       watchMode: true
@@ -416,7 +416,7 @@ test('bundleNextModules should bundle json file', t => {
   const host = new HostMock({
     '/some.json': '{"a": true}'
   });
-  const context: IPaeckchenContext = {
+  const context: PaeckchenContext = {
     config: {
       externals: {},
       watchMode: true

@@ -1,21 +1,21 @@
-import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
+import { visit, builders as b, namedTypes as n, Path } from 'ast-types';
 
 import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
-import { IPaeckchenContext } from '../bundle';
+import { PaeckchenContext } from '../bundle';
 import { State } from '../state';
 
 export function rewriteImportDeclaration(program: ESTree.Program, currentModule: string,
-    context: IPaeckchenContext, state: State): Promise<void> {
+    context: PaeckchenContext, state: State): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('plugin', `rewriteImportDeclaration [currentModule=${currentModule}]`);
     })
     .then(() => {
-      const updates: [string, IPath<ESTree.ImportDeclaration>][] = [];
+      const updates: [string, Path<ESTree.ImportDeclaration>][] = [];
 
       visit(program, {
-        visitImportDeclaration: function(path: IPath<ESTree.ImportDeclaration>): boolean {
+        visitImportDeclaration: function(path: Path<ESTree.ImportDeclaration>): boolean {
           updates.push([path.node.source.value as string, path]);
           return false;
         },
@@ -80,7 +80,7 @@ function convertImport(tempIdentifier: ESTree.Identifier, specifier: ESTree.Impo
   );
 }
 
-function replaceImports(path: IPath<ESTree.ImportDeclaration>, importModuleIndex: number): void {
+function replaceImports(path: Path<ESTree.ImportDeclaration>, importModuleIndex: number): void {
   const tempIdentifier = path.scope.declareTemporary(`__import${importModuleIndex}`);
   const imports = path.node.specifiers.map((specifier) => convertImport(tempIdentifier, specifier));
   path.replace(

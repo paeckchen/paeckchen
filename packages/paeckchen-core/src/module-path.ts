@@ -1,16 +1,16 @@
 import * as browserResolve from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
-import { IPaeckchenContext } from './bundle';
+import { PaeckchenContext } from './bundle';
 import { SourceSpec } from './config';
 
-interface IPackage {
+interface Package {
   main: string;
   browser?: string;
   'jsnext:main'?: string;
 }
 
-function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) => IPackage {
-  return function normalizePackage(pkg: IPackage): IPackage {
+function normalizePackageFactory(context: PaeckchenContext): (pkg: Package) => Package {
+  return function normalizePackage(pkg: Package): Package {
     // .browser, use package data as is
     if ('browser' in pkg) {
       return pkg;
@@ -27,14 +27,14 @@ function normalizePackageFactory(context: IPaeckchenContext): (pkg: IPackage) =>
   };
 }
 
-function nodebackReadFile(context: IPaeckchenContext, file: string,
+function nodebackReadFile(context: PaeckchenContext, file: string,
     cb: (err: Error|null, file?: Buffer) => void): void {
   context.host.readFile(file)
     .then(data => cb(null, new Buffer(data)))
     .catch(cb);
 }
 
-function nodebackIsFile(context: IPaeckchenContext, file: string,
+function nodebackIsFile(context: PaeckchenContext, file: string,
     cb: (err: Error|null, isFile?: boolean) => void): void {
   try {
     if (!context.host.fileExists(file)) {
@@ -58,7 +58,7 @@ function nodebackIsFile(context: IPaeckchenContext, file: string,
  * @return either the absolute path to the requested module or the name of a node core module
  * @throws when failing to resolve requested module
  */
-export function getModulePath(filename: string, importIdentifier: string, context: IPaeckchenContext): Promise<string> {
+export function getModulePath(filename: string, importIdentifier: string, context: PaeckchenContext): Promise<string> {
   return new Promise((resolve, reject) => {
     context.logger.trace('module-path', `getModulePath [filename=${filename}, importIdentifier=${importIdentifier}]`);
 

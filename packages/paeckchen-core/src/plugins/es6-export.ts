@@ -1,27 +1,27 @@
-import { visit, builders as b, namedTypes as n, IPath } from 'ast-types';
+import { visit, builders as b, namedTypes as n, Path } from 'ast-types';
 
 import { getModuleIndex, enqueueModule } from '../modules';
 import { getModulePath } from '../module-path';
-import { IPaeckchenContext } from '../bundle';
+import { PaeckchenContext } from '../bundle';
 import { State } from '../state';
 
 export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string,
-    context: IPaeckchenContext, state: State): Promise<void> {
+    context: PaeckchenContext, state: State): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('plugin', `rewriteExportNamedDeclaration [currentModule=${currentModule}]`);
     })
     .then(() => {
-      const exportAllUpdates: [string, IPath<ESTree.ExportAllDeclaration>][] = [];
-      const exportNamedUpdates: [string, IPath<ESTree.ExportNamedDeclaration>][] = [];
+      const exportAllUpdates: [string, Path<ESTree.ExportAllDeclaration>][] = [];
+      const exportNamedUpdates: [string, Path<ESTree.ExportNamedDeclaration>][] = [];
 
       visit(program, {
-        visitExportAllDeclaration: function(path: IPath<ESTree.ExportAllDeclaration>): boolean {
+        visitExportAllDeclaration: function(path: Path<ESTree.ExportAllDeclaration>): boolean {
           // e.g. export * from './a';
           exportAllUpdates.push([path.node.source.value as string, path]);
           return false;
         },
-        visitExportNamedDeclaration: function (path: IPath<ESTree.ExportNamedDeclaration>): boolean {
+        visitExportNamedDeclaration: function (path: Path<ESTree.ExportNamedDeclaration>): boolean {
           if (path.node.declaration) {
             replaceExportNamedDeclaration(path);
           } else {
@@ -35,7 +35,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           }
           return false;
         },
-        visitExportDefaultDeclaration: function(path: IPath<ESTree.ExportDefaultDeclaration>): boolean {
+        visitExportDefaultDeclaration: function(path: Path<ESTree.ExportDefaultDeclaration>): boolean {
           const declaration = path.node.declaration;
 
           if (n.Identifier.check(declaration)) {
@@ -107,7 +107,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
     });
 }
 
-function replaceExportAll(path: IPath<ESTree.ExportAllDeclaration>, reexportModuleIndex: number): void {
+function replaceExportAll(path: Path<ESTree.ExportAllDeclaration>, reexportModuleIndex: number): void {
   const tempIdentifier = path.scope.declareTemporary(`__export${reexportModuleIndex}`);
 
   path.replace(
@@ -116,7 +116,7 @@ function replaceExportAll(path: IPath<ESTree.ExportAllDeclaration>, reexportModu
   );
 }
 
-function replaceExportNamedDeclaration(path: IPath<ESTree.ExportNamedDeclaration>): void {
+function replaceExportNamedDeclaration(path: Path<ESTree.ExportNamedDeclaration>): void {
   const declaration = path.node.declaration;
   if (n.VariableDeclaration.check(declaration)) {
     // e.g. export var a = 0;
@@ -146,7 +146,7 @@ function replaceExportNamedDeclaration(path: IPath<ESTree.ExportNamedDeclaration
   }
 }
 
-function replaceReexportRename(path: IPath<ESTree.ExportNamedDeclaration>, reexportModuleIndex: number): void {
+function replaceReexportRename(path: Path<ESTree.ExportNamedDeclaration>, reexportModuleIndex: number): void {
   const tempIdentifier = path.scope.declareTemporary(`__export${reexportModuleIndex}`);
   const exports = path.node.specifiers
     .map(specifier =>
@@ -186,7 +186,7 @@ function replaceReexportRename(path: IPath<ESTree.ExportNamedDeclaration>, reexp
   );
 }
 
-function replaceExportRename(path: IPath<ESTree.ExportNamedDeclaration>): void {
+function replaceExportRename(path: Path<ESTree.ExportNamedDeclaration>): void {
   const exports = path.node.specifiers
     .map(specifier =>
       b.expressionStatement(

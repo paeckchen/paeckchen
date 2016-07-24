@@ -1,5 +1,5 @@
 import test from 'ava';
-import { IBundleOptions } from 'paeckchen-core';
+import { BundleOptions } from 'paeckchen-core';
 import { CliLogger } from '../src/cli-logger';
 
 import { createOptions } from '../src/options';
@@ -17,7 +17,7 @@ test.beforeEach(t => {
     watchMode: false,
     logger: new CliLogger(),
     sourceMap: false
-  } as IBundleOptions;
+  } as BundleOptions;
 });
 
 test('createOptions with no flags should return an empty configuration', t => {

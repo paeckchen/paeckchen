@@ -1,10 +1,10 @@
 import { dirname } from 'path';
-import { visit, builders as b, IPath, IVisitor } from 'ast-types';
+import { visit, builders as b, Path, Visitor } from 'ast-types';
 
-import { IPaeckchenContext } from '../bundle';
+import { PaeckchenContext } from '../bundle';
 
 export function rewriteGlobalLocals(program: ESTree.Program, currentModule: string,
-    context: IPaeckchenContext): Promise<void> {
+    context: PaeckchenContext): Promise<void> {
   return Promise.resolve()
     .then(() => {
       context.logger.trace('plugin', `rewriteGlobalLocals [currentModule=${currentModule}]`);
@@ -13,7 +13,7 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
       let detectedFilename = false;
       let detectedDirname = false;
       visit(program, {
-        visitIdentifier: function(this: IVisitor, path: IPath<ESTree.Identifier>): void {
+        visitIdentifier: function(this: Visitor, path: Path<ESTree.Identifier>): void {
           if (path.node.name === '__filename' && path.scope.lookup('__filename') === null) {
             detectedFilename = true;
           } else if (path.node.name === '__dirname' && path.scope.lookup('__dirname') === null) {

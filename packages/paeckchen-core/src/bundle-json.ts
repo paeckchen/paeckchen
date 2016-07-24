@@ -1,5 +1,5 @@
 import { builders as b } from 'ast-types';
-import { IPaeckchenContext } from './bundle';
+import { PaeckchenContext } from './bundle';
 
 export function buildValue(data: any): ESTree.ObjectExpression|ESTree.ArrayExpression|ESTree.Literal {
   if (data === null) {
@@ -33,7 +33,7 @@ export function buildArray(data: any[]): ESTree.ArrayExpression {
   );
 }
 
-export function wrapJsonFile(modulePath: string, context: IPaeckchenContext): Promise<ESTree.Program> {
+export function wrapJsonFile(modulePath: string, context: PaeckchenContext): Promise<ESTree.Program> {
   return context.host.readFile(modulePath)
     .then(data => JSON.parse(data))
     .then(data => {

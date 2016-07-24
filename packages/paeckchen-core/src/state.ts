@@ -1,6 +1,6 @@
-import { IDetectedGlobals } from './globals';
+import { DetectedGlobals } from './globals';
 
-export interface IWrappedModule {
+export interface WrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
@@ -9,7 +9,7 @@ export interface IWrappedModule {
 
 export class State {
 
-  public readonly detectedGlobals: IDetectedGlobals = {
+  public readonly detectedGlobals: DetectedGlobals = {
     global: false,
     process: false,
     buffer: false
@@ -17,7 +17,7 @@ export class State {
 
   public readonly modules: (ESTree.Expression | ESTree.SpreadElement)[];
 
-  public readonly wrappedModules: { [name: string]: IWrappedModule } = {};
+  public readonly wrappedModules: { [name: string]: WrappedModule } = {};
 
   private _nextModuleIndex: number = 0;
 

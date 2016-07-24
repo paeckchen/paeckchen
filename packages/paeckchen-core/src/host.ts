@@ -1,6 +1,6 @@
 import { existsSync, readFile, writeFileSync, stat } from 'fs';
 
-export interface IHost {
+export interface Host {
   cwd(): string;
   fileExists(path: string): boolean;
   isFile(path: string): Promise<boolean>;
@@ -8,7 +8,7 @@ export interface IHost {
   writeFile(path: string, content: string): void;
 }
 
-export class DefaultHost implements IHost {
+export class DefaultHost implements Host {
   public cwd(): string {
     return process.cwd();
   }
