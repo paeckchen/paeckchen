@@ -30,7 +30,6 @@ export class NoopLogger implements Logger {
     // noop
   }
 
-
   public trace(section: string, message: string): void {
     // noop
   }
