@@ -54,7 +54,7 @@ export function createOptions(argv: string[]): BundleOptions {
         --watch, -w
               enables watch mode
 
-        --source-map
+        --source-map [true|false|inline]
               enables generation of source-map
 
         --loglevel <level>, -v
@@ -71,9 +71,10 @@ export function createOptions(argv: string[]): BundleOptions {
         'out-file',
         'alias',
         'external',
-        'loglevel'
+        'loglevel',
+        'source-map'
       ],
-      boolean: ['watch', 'source-map', 'v'],
+      boolean: ['watch', 'v'],
       alias: {
         h: 'help',
         c: 'config',
@@ -98,7 +99,7 @@ export function createOptions(argv: string[]): BundleOptions {
     external: cli.flags['external'],
     watchMode: cli.flags['watch'],
     logger: new CliLogger(),
-    sourceMap: cli.flags['sourceMap'],
+    sourceMap: cli.flags['sourceMap'] || false,
     logLevel: cli.flags['loglevel'] || (cli.flags['v'] ? 'debug' : undefined)
   };
 }
