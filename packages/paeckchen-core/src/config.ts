@@ -65,7 +65,7 @@ function getLogLevel(input: string): LogLevel {
     case 'trace':
       return LogLevel.trace;
   }
-  throw new Error(`Invalid runtime ${input}`);
+  throw new Error(`Invalid logLevel ${input}`);
 }
 
 function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key: string]: V}): {[key: string]: V} {

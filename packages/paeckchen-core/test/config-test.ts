@@ -297,3 +297,17 @@ test('createConfig should prefer loglevel from options', t => {
       t.deepEqual(config.logLevel, LogLevel.trace);
     });
 });
+
+test('createConfig should fail on invalid loglevel', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"logLevel": "foo"}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.fail('Expected exception');
+    })
+    .catch(e => {
+      t.regex(e.message, /Invalid logLevel/);
+    });
+});
