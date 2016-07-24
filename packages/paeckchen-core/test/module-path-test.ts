@@ -295,7 +295,7 @@ test('getModulePath should throw if file existance check throws', t => {
       t.fail('Expected to throw');
     })
     .catch(e => {
-      t.truthy(e.message.match(/Cannot find module/));
+      t.regex(e.message, /Cannot find module/);
     });
 });
 
@@ -327,6 +327,6 @@ test('getModulePath should throw if file check throws', t => {
       t.fail('Expected to throw');
     })
     .catch(e => {
-      t.truthy(e.message.match(/Cannot find module/));
+      t.regex(e.message, /Cannot find module/);
     });
 });

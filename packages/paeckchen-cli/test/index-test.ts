@@ -24,7 +24,7 @@ test.beforeEach('remove test file', t => {
 test.cb('cli without parameters and config file should show error', t => {
   const options = {
     env: {
-      DEBUG: '*'
+      DEBUG: 'cli'
     }
   };
   execa('node', [resolve(process.cwd(), '..', 'src', 'index.js')], options)
