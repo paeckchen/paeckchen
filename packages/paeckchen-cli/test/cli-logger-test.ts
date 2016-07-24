@@ -1,6 +1,6 @@
 import test from 'ava';
 import * as debug from 'debug';
-import { ProgressStep } from 'paeckchen-core';
+import { ProgressStep, LogLevel } from 'paeckchen-core';
 
 import { CliLogger } from '../src/cli-logger';
 
@@ -24,8 +24,8 @@ test('cli-logger should output error message', t => {
 
   logger.error('test', new Error('message'), 'error');
 
-  t.truthy((t.context.stderrOutput as string).match(/error/));
-  t.truthy((t.context.stderrOutput as string).match(/message/));
+  t.regex(t.context.stderrOutput as string, /error/);
+  t.regex(t.context.stderrOutput as string, /message/);
 });
 
 test('cli-logger should output info message', t => {
@@ -33,23 +33,51 @@ test('cli-logger should output info message', t => {
 
   logger.info('test', 'info');
 
-  t.truthy((t.context.stderrOutput as string).match(/info/));
+  t.regex(t.context.stderrOutput as string, /info/);
 });
 
 test('cli-logger should output debug message', t => {
   const logger = new CliLogger();
+  logger.configure({
+    logLevel: LogLevel.debug
+  } as any);
 
   logger.debug('test', 'debug');
 
-  t.truthy((t.context.stderrOutput as string).match(/debug/));
+  t.regex(t.context.stderrOutput as string, /debug/);
+});
+
+test('cli-logger should not output debug message if only default loglevel is set', t => {
+  const logger = new CliLogger();
+  logger.configure({
+    logLevel: LogLevel.default
+  } as any);
+
+  logger.debug('test', 'debug');
+
+  t.is(t.context.stderrOutput as string, '');
+});
+
+test('cli-logger should not output debug message if trace loglevel is set', t => {
+  const logger = new CliLogger();
+  logger.configure({
+    logLevel: LogLevel.trace
+  } as any);
+
+  logger.debug('test', 'debug');
+
+  t.regex(t.context.stderrOutput as string, /debug/);
 });
 
 test('cli-logger should output trace message', t => {
   const logger = new CliLogger();
+  logger.configure({
+    logLevel: LogLevel.trace
+  } as any);
 
   logger.trace('test', 'trace');
 
-  t.truthy((t.context.stderrOutput as string).match(/trace/));
+  t.regex(t.context.stderrOutput as string, /trace/);
 });
 
 test('cli-logger should update progress after logging', t => {
@@ -58,5 +86,5 @@ test('cli-logger should update progress after logging', t => {
   logger.progress(ProgressStep.bundleModules, 50, 50);
   logger.info('test', 'info');
 
-  t.truthy((t.context.stderrOutput as string).match(/info.*50% \[50|100\]/));
+  t.regex(t.context.stderrOutput as string, /info.*50% \[50|100\]/);
 });

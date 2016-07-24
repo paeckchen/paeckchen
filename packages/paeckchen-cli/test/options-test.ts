@@ -16,7 +16,8 @@ test.beforeEach(t => {
     external: undefined,
     watchMode: false,
     logger: new CliLogger(),
-    sourceMap: false
+    sourceMap: false,
+    logLevel: undefined
   } as BundleOptions;
 });
 
@@ -130,5 +131,17 @@ test('createOptions -w', t => {
 test('createOptions --source-map', t => {
   t.context.opts.sourceMap = true;
   const options = createOptions(['--source-map']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions --loglevel', t => {
+  t.context.opts.logLevel = 'default';
+  const options = createOptions(['--loglevel', 'default']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions -v', t => {
+  t.context.opts.logLevel = 'debug';
+  const options = createOptions(['-v']);
   t.deepEqual(options, t.context.opts);
 });
