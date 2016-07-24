@@ -5,20 +5,28 @@ import * as execa from 'execa';
 import { runInNewContext } from 'vm';
 
 test.beforeEach('remove test file', t => {
-  const codeFile = join('fixtures', 'result.js');
-  const mapFile = join('fixtures', 'result.js.map');
+  const seed = Math.random() * 1000000000000000;
+  const codeFile = join('fixtures', `result-${seed}.js`);
+  const mapFile = join('fixtures', `result-${seed}.js.map`);
+  t.context.codeFile = codeFile;
+  t.context.mapFile = mapFile;
+});
+
+test.afterEach(t => {
   try {
-    if (statSync(codeFile).isFile()) {
-      unlinkSync(codeFile);
-    }
-    if (statSync(mapFile).isFile()) {
-      unlinkSync(mapFile);
+    if (statSync(t.context.codeFile).isFile()) {
+      unlinkSync(t.context.codeFile);
     }
   } catch (e) {
     // ignore if there is no file
   }
-  t.context.codeFile = codeFile;
-  t.context.mapFile = mapFile;
+  try {
+    if (statSync(t.context.mapFile).isFile()) {
+      unlinkSync(t.context.mapFile);
+    }
+  } catch (e) {
+    // ignore if there is no file
+  }
 });
 
 test.cb('cli without parameters and config file should show error', t => {
@@ -106,13 +114,13 @@ test.cb('cli with entry-point and source-map should output bundle', t => {
     resolve(process.cwd(), '..', 'src', 'index.js'),
     '--entry',
     join('fixtures', 'entry.js'),
-    '--source-map'
+    '--source-map', 'true'
   ];
   execa('node', args)
     .then(result => {
       const code = result.stdout.toString();
 
-      t.truthy(code.match(/\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,/));
+      t.regex(code, /\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,/);
       t.end();
     })
     .catch(err => {
@@ -130,7 +138,7 @@ test.cb('cli with entry-point, out-file and source-map should write external map
     join('fixtures', 'entry.js'),
     '--out-file',
     t.context.codeFile,
-    '--source-map'
+    '--source-map', 'true'
   ];
   execa('node', args)
     .then(result => {
@@ -141,7 +149,36 @@ test.cb('cli with entry-point, out-file and source-map should write external map
     })
     .catch(err => {
       console.error(err);
-      t.fail('There should a type-annotation in the source-map');
+      t.fail('There should be a type-annotation in the source-map');
+      t.end();
+    });
+});
+
+test.cb("cli with entry-point, out-file and source-map 'inline' should write inline map", t => {
+  const args = [
+    resolve(process.cwd(), '..', 'src', 'index.js'),
+    '--entry',
+    join('fixtures', 'entry.js'),
+    '--out-file',
+    t.context.codeFile,
+    '--source-map', 'inline'
+  ];
+  execa('node', args)
+    .then(result => {
+      const code = readFileSync(t.context.codeFile).toString();
+      try {
+        statSync(t.context.mapFile);
+        t.fail('There should be no external map file');
+      } catch (e) {
+        // ignore
+      }
+
+      t.regex(code, /\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,/);
+      t.end();
+    })
+    .catch(err => {
+      console.error(err);
+      t.fail('There should be an inline source-map');
       t.end();
     });
 });

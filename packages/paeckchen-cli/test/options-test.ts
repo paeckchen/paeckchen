@@ -129,8 +129,14 @@ test('createOptions -w', t => {
 });
 
 test('createOptions --source-map', t => {
-  t.context.opts.sourceMap = true;
-  const options = createOptions(['--source-map']);
+  t.context.opts.sourceMap = 'true';
+  const options = createOptions(['--source-map', 'true']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions --source-map', t => {
+  t.context.opts.sourceMap = 'inline';
+  const options = createOptions(['--source-map', 'inline']);
   t.deepEqual(options, t.context.opts);
 });
 
