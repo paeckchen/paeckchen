@@ -22,7 +22,12 @@ test.beforeEach('remove test file', t => {
 });
 
 test.cb('cli without parameters and config file should show error', t => {
-  execa('node', [resolve(process.cwd(), '..', 'src', 'index.js')])
+  const options = {
+    env: {
+      DEBUG: 'cli'
+    }
+  };
+  execa('node', [resolve(process.cwd(), '..', 'src', 'index.js')], options)
     .then(result => {
       t.fail('There should be an error from the cli');
       t.end();

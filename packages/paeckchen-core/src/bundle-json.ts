@@ -33,18 +33,22 @@ export function buildArray(data: any[]): ESTree.ArrayExpression {
   );
 }
 
-export function wrapJsonFile(modulePath: string, context: IPaeckchenContext): ESTree.Program {
-  return b.program([
-    b.expressionStatement(
-      b.assignmentExpression(
-        '=',
-        b.memberExpression(
-          b.identifier('module'),
-          b.identifier('exports'),
-          false
-        ),
-        buildValue(JSON.parse(context.host.readFile(modulePath)))
-      )
-    )
-  ]);
+export function wrapJsonFile(modulePath: string, context: IPaeckchenContext): Promise<ESTree.Program> {
+  return context.host.readFile(modulePath)
+    .then(data => JSON.parse(data))
+    .then(data => {
+      return b.program([
+        b.expressionStatement(
+          b.assignmentExpression(
+            '=',
+            b.memberExpression(
+              b.identifier('module'),
+              b.identifier('exports'),
+              false
+            ),
+            buildValue(data)
+          )
+        )
+      ]);
+    });
 }

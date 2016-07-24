@@ -1,10 +1,10 @@
-import { existsSync, readFileSync, writeFileSync, statSync } from 'fs';
+import { existsSync, readFile, writeFileSync, stat } from 'fs';
 
 export interface IHost {
   cwd(): string;
   fileExists(path: string): boolean;
-  isFile(path: string): boolean;
-  readFile(path: string): string;
+  isFile(path: string): Promise<boolean>;
+  readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): void;
 }
 
@@ -17,12 +17,26 @@ export class DefaultHost implements IHost {
     return existsSync(path);
   }
 
-  public isFile(path: string): boolean {
-    return statSync(path).isFile();
+  public isFile(path: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      stat(path, (err, stats) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(stats.isFile());
+      });
+    });
   }
 
-  public readFile(path: string): string {
-    return readFileSync(path).toString();
+  public readFile(path: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        readFile(path, (err, data) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(data.toString());
+        });
+      });
   }
 
   public writeFile(path: string, content: string): void {

@@ -3,6 +3,7 @@ import { builders as b } from 'ast-types';
 
 import { IPaeckchenContext } from './bundle';
 import * as defaultPlugins from './plugins';
+import { Plugins } from './plugins';
 import { checkGlobals } from './globals';
 import { IWrappedModule, State } from './state';
 import { wrapJsonFile } from './bundle-json';
@@ -27,7 +28,9 @@ export function updateModule(moduleName: string, remove: boolean, state: State):
   }
 }
 
-function createModuleWrapper(name: string, moduleAst: ESTree.Program, state: State): IWrappedModule {
+function createModuleWrapper(context: IPaeckchenContext, name: string, moduleAst: ESTree.Program,
+    state: State): IWrappedModule {
+  context.logger.trace('module', `createModuleWrapper [name=${name}]`);
   const index = getModuleIndex(name, state);
   return {
     index,
@@ -46,102 +49,137 @@ function createModuleWrapper(name: string, moduleAst: ESTree.Program, state: Sta
   };
 }
 
-export function enqueueModule(modulePath: string, state: State): void {
+export function enqueueModule(modulePath: string, state: State, context: IPaeckchenContext): void {
+  context.logger.trace('module', `enqueueModule [modulePath=${modulePath}]`);
   if (state.moduleBundleQueue.indexOf(modulePath) === -1) {
     state.moduleBundleQueue.push(modulePath);
   }
 }
 
-export function bundleNextModule(state: State, context: IPaeckchenContext, plugins: any = defaultPlugins): boolean {
+export function bundleNextModules(state: State, context: IPaeckchenContext,
+    plugins: any = defaultPlugins): Promise<void>[] {
   if (state.moduleBundleQueue.length === 0) {
-    return false;
+    return [];
   }
-  const modulePath = state.moduleBundleQueue.shift() as string;
-  watchModule(state, modulePath, context);
-  wrapModule(modulePath, state, context, plugins);
-  return true;
+  const modules = state.moduleBundleQueue.splice(0);
+  return modules.map(modulePath => {
+    context.logger.debug('module', `bundle ${modulePath}`);
+    return watchModule(state, modulePath, context)
+      .then(() => wrapModule(modulePath, state, context, plugins));
+  });
 }
 
-function watchModule(state: State, modulePath: string, context: IPaeckchenContext): void {
-  if (context.config.watchMode) {
-    if (!state.moduleWatchCallbackAdded) {
-      state.moduleWatchCallbackAdded = true;
-      if (context.watcher) {
-        context.watcher.start((event) => {
-          let rebundle = false;
-          if (event === 'update') {
-            updateModule(modulePath, false, state);
-            enqueueModule(modulePath, state);
-            rebundle = true;
-          } else if (event === 'remove') {
-            updateModule(modulePath, true, state);
-            enqueueModule(modulePath, state);
-            rebundle = true;
+function watchModule(state: State, modulePath: string, context: IPaeckchenContext): Promise<void> {
+  return Promise.resolve()
+    .then(() => {
+      context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
+    })
+    .then(() => {
+      if (context.config.watchMode) {
+        if (!state.moduleWatchCallbackAdded) {
+          state.moduleWatchCallbackAdded = true;
+          if (context.watcher) {
+            context.watcher.start((event) => {
+              let rebundle = false;
+              if (event === 'update') {
+                updateModule(modulePath, false, state);
+                enqueueModule(modulePath, state, context);
+                rebundle = true;
+              } else if (event === 'remove') {
+                updateModule(modulePath, true, state);
+                enqueueModule(modulePath, state, context);
+                rebundle = true;
+              }
+              if (rebundle && context.rebundle) {
+                context.rebundle();
+              }
+            });
           }
-          if (rebundle && context.rebundle) {
-            context.rebundle();
-          }
-        });
+        }
+        if (context.watcher) {
+          context.watcher.watchFile(modulePath);
+        }
       }
-    }
-    if (context.watcher) {
-      context.watcher.watchFile(modulePath);
-    }
-  }
+    });
 }
 
-function wrapModule(modulePath: string, state: State, context: IPaeckchenContext, plugins: any): void {
-  // Prefill module indices
-  const moduleIndex = getModuleIndex(modulePath, state);
-  if (state.wrappedModules[modulePath].ast !== undefined) {
-    // Module is already up to date
-    return;
-  }
-
-  try {
-    let moduleAst: ESTree.Program|undefined = undefined;
-    if (!state.wrappedModules[modulePath].remove) {
-      if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
-        moduleAst = wrapExternalModule(modulePath, context);
-      } else if (!context.host.fileExists(modulePath)) {
-        moduleAst = b.program([
-          b.throwStatement(
-            b.newExpression(
-              b.identifier('Error'),
-              [
-                b.literal(`Module '${modulePath}' not found`)
-              ]
-            )
-          )
-        ]);
-      } else if (modulePath.match(/\.json$/)) {
-        moduleAst = wrapJsonFile(modulePath, context);
-      } else {
-        moduleAst = processModule(modulePath, context, state, plugins);
+function wrapModule(modulePath: string, state: State, context: IPaeckchenContext, plugins: any): Promise<void> {
+  return Promise.resolve()
+    .then(() => {
+      context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
+    })
+    .then(() => {
+      // Prefill index
+      getModuleIndex(modulePath, state);
+      return state.wrappedModules[modulePath].ast !== undefined;
+    })
+    .then(upToDate => {
+      if (!upToDate) {
+        return Promise.resolve()
+          .then(() => {
+            if (!state.wrappedModules[modulePath].remove) {
+              let promisedModuleAst: Promise<ESTree.Program>;
+              if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+                promisedModuleAst = wrapExternalModule(modulePath, context);
+              } else if (!context.host.fileExists(modulePath)) {
+                promisedModuleAst = wrapMissingModule(modulePath);
+              } else if (modulePath.match(/\.json$/)) {
+                promisedModuleAst = wrapJsonFile(modulePath, context);
+              } else {
+                promisedModuleAst = processModule(modulePath, context, state, plugins);
+              }
+              return promisedModuleAst
+                .then(moduleAst => {
+                  state.wrappedModules[modulePath] = createModuleWrapper(context, modulePath, moduleAst, state);
+                  return state.wrappedModules[modulePath].ast;
+                });
+            } else {
+              return wrapThrowOnRemovedModule(modulePath);
+            }
+          })
+          .then(moduleAst => {
+            const moduleIndex = getModuleIndex(modulePath, state);
+            state.modules[moduleIndex] = moduleAst as ESTree.Statement;
+          })
+          .catch(e => {
+            context.logger.error('module', e, `Failed to process module '${modulePath}'`);
+            throw e;
+          });
       }
-      state.wrappedModules[modulePath] = createModuleWrapper(modulePath, moduleAst, state);
-      state.modules[moduleIndex] = state.wrappedModules[modulePath].ast as ESTree.Statement;
-    } else {
-      state.modules[moduleIndex] = b.throwStatement(
-        b.newExpression(
-          b.identifier('Error'),
-          [
-            b.literal(`Module '${modulePath}' was removed`)
-          ]
-        )
-      );
-    }
-  } catch (e) {
-    context.logger.error('modules', e, `Failed to process module '${modulePath}'`);
-    throw e;
-  }
+      return undefined;
+    });
+
 }
 
-function wrapExternalModule(modulePath: string, context: IPaeckchenContext): ESTree.Program {
+function wrapMissingModule(modulePath: string): Promise<ESTree.Program> {
+  return Promise.resolve(b.program([
+    b.throwStatement(
+      b.newExpression(
+        b.identifier('Error'),
+        [
+          b.literal(`Module '${modulePath}' not found`)
+        ]
+      )
+    )
+  ]));
+}
+
+function wrapThrowOnRemovedModule(modulePath: string): Promise<ESTree.Statement> {
+  return Promise.resolve(b.throwStatement(
+    b.newExpression(
+      b.identifier('Error'),
+      [
+        b.literal(`Module '${modulePath}' was removed`)
+      ]
+    )
+  ));
+}
+
+function wrapExternalModule(modulePath: string, context: IPaeckchenContext): Promise<ESTree.Program> {
   const external = context.config.externals[modulePath] === false
     ? b.objectExpression([])
     : b.identifier(context.config.externals[modulePath] as string);
-  return b.program([
+  return Promise.resolve(b.program([
     b.expressionStatement(
       b.assignmentExpression(
         '=',
@@ -153,28 +191,33 @@ function wrapExternalModule(modulePath: string, context: IPaeckchenContext): EST
         external
       )
     )
-  ]);
+  ]));
 }
 
 function processModule(modulePath: string, context: IPaeckchenContext, state: State,
-    plugins: any): ESTree.Program {
-  // parse...
-  const moduleAst = parse(context.host.readFile(modulePath).toString(), {
-    ecmaVersion: 7,
-    sourceType: 'module',
-    locations: true,
-    ranges: true,
-    sourceFile: modulePath,
-    allowHashBang: true
-  });
+    plugins: Plugins): Promise<ESTree.Program> {
+  context.logger.trace('module', `processModule [modulePath=${modulePath}]`);
+  return context.host.readFile(modulePath)
+    .then(code => {
+      // parse...
+      const moduleAst = parse(code, {
+        ecmaVersion: 7,
+        sourceType: 'module',
+        locations: true,
+        ranges: true,
+        sourceFile: modulePath,
+        allowHashBang: true
+      });
 
-  // ... check for global features...
-  checkGlobals(state, moduleAst);
+      // ... check for global features...
+      checkGlobals(state, moduleAst);
 
-  // ... and rewrite ast
-  Object.keys(plugins).forEach(plugin => {
-    plugins[plugin](moduleAst, modulePath, context, state);
-  });
+      // ... and rewrite ast
+      return Promise
+        .all(Object.keys(plugins).map(plugin => {
+          return plugins[plugin](moduleAst, modulePath, context, state);
+        }))
+        .then(() => moduleAst);
 
-  return moduleAst;
+    });
 }

@@ -1,12 +1,11 @@
 import test from 'ava';
-import { resolve } from 'path';
-import { HostMock, virtualModule } from './helper';
+import { errorLogger, HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
 import { DefaultHost } from '../src/host';
 
 import { bundle, rebundleFactory, IPaeckchenContext, IBundleOptions } from '../src/bundle';
 
-test('bundle should bundle the given entry-point and its dependencies', t => {
+test.cb('bundle should bundle the given entry-point and its dependencies', t => {
   const host = new HostMock({
     'entry-point.js': `
       import fn from './dependency';
@@ -18,20 +17,28 @@ test('bundle should bundle the given entry-point and its dependencies', t => {
       }
     `
   });
+  const options = {
+    entryPoint: 'entry-point.js',
+    logger: errorLogger
+  };
 
-  let bundled = '';
-  bundle({entryPoint: 'entry-point.js'}, host, result => bundled = result);
-
-  let called = false;
-  virtualModule(bundled, {
-    callme: function(): void {
-      called = true;
-    }
-  });
-  t.true(called);
+  bundle(options, host, code => {
+      let called = false;
+      virtualModule(code, {
+        callme: function(): void {
+          called = true;
+        }
+      });
+      t.true(called);
+      t.end();
+    })
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
 });
 
-test('bundle should bundle global dependencies', t => {
+test.cb('bundle should bundle global dependencies', t => {
   const host = new HostMock({
     '/entry-point.js': `
       Buffer.isBuffer();
@@ -49,19 +56,23 @@ test('bundle should bundle global dependencies', t => {
     alias: 'buffer=/BUFFER'
   };
 
-  let bundled = '';
-  bundle(config, host, result => bundled = result);
-
-  let called = false;
-  virtualModule(bundled, {
-    callme: function(): void {
-      called = true;
-    }
-  });
-  t.true(called);
+  bundle(config, host, code => {
+      let called = false;
+      virtualModule(code, {
+        callme: function(): void {
+          called = true;
+        }
+      });
+      t.true(called);
+      t.end();
+    })
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
 });
 
-test('bundle should check for a config-file', t => {
+test.cb('bundle should check for a config-file', t => {
   const host = new HostMock({
     '/entry-point.js': `
       callback();
@@ -73,16 +84,20 @@ test('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  let bundled = '';
-  bundle({}, host, result => bundled = result);
-
-  let called = false;
-  virtualModule(bundled, {
-    callback: function(): void {
-      called = true;
-    }
-  });
-  t.true(called);
+  bundle({}, host, code => {
+      let called = false;
+      virtualModule(code, {
+        callback: function(): void {
+          called = true;
+        }
+      });
+      t.true(called);
+      t.end();
+    })
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
 });
 
 test('bundle should throw if no entry-point configured', t => {
@@ -90,25 +105,11 @@ test('bundle should throw if no entry-point configured', t => {
     '/paeckchen.json': '{}'
   }, '/');
 
-  t.throws(() => bundle({}, host), 'Missing entry-point');
-});
-
-test('bundle should write result to disk if output file given', t => {
-  const host = new HostMock({
-    '/paeckchen.json': JSON.stringify({
-      input: {
-        entry: './entry-point'
-      },
-      output: {
-        file: 'result.js'
-      }
-    }),
-    '/entry-point': `console.log("foo");`
-  }, '/');
-
-  bundle({}, host);
-
-  t.true(resolve('/result.js') in host.files);
+  return bundle({}, host, () => undefined)
+    .then(() => t.fail('Expected error'))
+    .catch(e => {
+      t.is(e.message, 'Missing entry-point');
+    });
 });
 
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
@@ -153,25 +154,65 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
     watchMode: true
   };
 
-  bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction);
-
-  t.is(bundleFunctionCalled, 1);
+  return bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction)
+    .then(() => {
+      t.is(bundleFunctionCalled, 1);
+    });
 });
 
-test('bundle with source maps should add mappings via sorcery', t => {
+test.cb('bundle with source maps should add mappings via sorcery', t => {
   const config: IBundleOptions = {
     entryPoint: './fixtures/main.js',
     sourceMap: true
   };
 
-  let code: string|undefined;
-  let sourceMap: any;
-  bundle(config, new DefaultHost(), (_code: string, _sourceMap: string) => {
-    code = _code;
-    sourceMap = JSON.parse(_sourceMap);
-  });
+  bundle(config, new DefaultHost(), (code: string, _sourceMap: string) => {
+      const sourceMap = JSON.parse(_sourceMap);
 
-  t.not(code, undefined);
-  t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
-  t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
+      t.not(code, undefined);
+      t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
+      t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
+      t.end();
+    })
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
+});
+
+test.cb('bundle should log on chunk error', t => {
+  let errorLogged = false;
+
+  const host = new HostMock({
+    '/entry': 'function(){}'
+  }, '/');
+  const config: IBundleOptions = {
+    entryPoint: '/entry',
+    logger: {
+      trace(): void {
+        //
+      },
+      debug(): void {
+        //
+      },
+      info(): void {
+        //
+      },
+      error(section, error, message): void {
+        if (!errorLogged) {
+          errorLogged = true;
+          t.end();
+        }
+      },
+      progress(): void {
+        //
+      }
+    }
+  };
+
+  bundle(config, host, () => undefined)
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
 });

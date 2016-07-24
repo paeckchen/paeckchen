@@ -13,7 +13,7 @@ declare module 'resolve' {
    * @param error
    * @param isFile If the given file exists
    */
-  type isFileCallback = (err: Error, isFile: boolean) => void;
+  type isFileCallback = (err: Error|undefined|null, isFile: boolean|undefined|null) => void;
 
   /**
    * Callback invoked when reading a file
@@ -21,7 +21,7 @@ declare module 'resolve' {
    * @param error
    * @param isFile If the given file exists
    */
-  type readFileCallback = (err: Error, file: Buffer) => void;
+  type readFileCallback = (err: Error|undefined|null, file: Buffer|undefined|null) => void;
 
   /**
    * Asynchronously resolve the module path string id into cb(err, res [, pkg]), where pkg (if defined) is the data from package.json
@@ -72,7 +72,7 @@ declare module 'resolve' {
       // directory (or directories) in which to recursively look for modules. (default to 'node_modules')
       moduleDirectory?: string|string[]
     }
-    
+
     export interface AsyncOpts extends Opts {
       // how to read files asynchronously (defaults to fs.readFile)
       readFile?: (file: string, cb: readFileCallback) => void;
@@ -90,6 +90,6 @@ declare module 'resolve' {
     export var sync: typeof resolveSync;
     export var isCore: typeof resolveIsCore;
   }
-  
+
   export = resolve;
 }

@@ -1,12 +1,11 @@
 import test from 'ava';
-import { visit } from 'ast-types';
 import { runInNewContext } from 'vm';
 import { State } from '../src/state';
 import { NoopLogger } from '../src/logger';
 import { IPaeckchenContext } from '../src/bundle';
 import { HostMock, generate } from './helper';
 
-import { getModuleIndex, updateModule, enqueueModule, bundleNextModule } from '../src/modules';
+import { getModuleIndex, updateModule, enqueueModule, bundleNextModules } from '../src/modules';
 
 test('getModuleIndex should return a new index per requested file', t => {
   const state = new State([]);
@@ -22,7 +21,7 @@ test('getModuleIndex should return the same index if duplicate request', t => {
   t.deepEqual(getModuleIndex('a/b/c', state), 0);
 });
 
-test('bundleNextModule with empty queue return false', t => {
+test('bundleNextModules with empty queue return false', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -34,10 +33,10 @@ test('bundleNextModule with empty queue return false', t => {
     logger: new NoopLogger()
   };
 
-  t.false(bundleNextModule(state, context, plugins));
+  t.deepEqual(bundleNextModules(state, context, plugins), []);
 });
 
-test('bundleNextModule should wrap a module', t => {
+test('bundleNextModules should wrap a module', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -51,13 +50,14 @@ test('bundleNextModule should wrap a module', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-
-  t.deepEqual(Object.keys(state.modules).length, 1);
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      t.deepEqual(Object.keys(state.modules).length, 1);
+    });
 });
 
-test('bundleNextModule should call all given plugins', t => {
+test('bundleNextModules should call all given plugins', t => {
   const state = new State([]);
   let pluginCalls = 0;
   const plugins = {
@@ -75,13 +75,14 @@ test('bundleNextModule should call all given plugins', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-
-  t.deepEqual(pluginCalls, 2);
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      t.deepEqual(pluginCalls, 2);
+    });
 });
 
-test('bundleNextModule should not rebundle modules if already up to date', t => {
+test('bundleNextModules should not rebundle modules if already up to date', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -95,17 +96,22 @@ test('bundleNextModule should not rebundle modules if already up to date', t => 
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-  const firstBundled = state.modules[0];
-
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-
-  t.is(state.modules[0], firstBundled);
+  let firstBundled: any;
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      firstBundled = state.modules[0];
+    })
+    .then(() => {
+      enqueueModule('/some/mod.js', state, context);
+      return Promise.all(bundleNextModules(state, context, plugins));
+    })
+    .then(() => {
+      t.is(state.modules[0], firstBundled);
+    });
 });
 
-test('bundleNextModule should rebundle modules if updated', t => {
+test('bundleNextModules should rebundle modules if updated', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -119,20 +125,24 @@ test('bundleNextModule should rebundle modules if updated', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-  const firstBundled = state.modules[0];
-
-  updateModule('/some/mod.js', false, state);
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-
-  t.not(state.modules[0], firstBundled);
+  let firstBundled: any;
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      firstBundled = state.modules[0];
+    })
+    .then(() => {
+      updateModule('/some/mod.js', false, state);
+      enqueueModule('/some/mod.js', state, context);
+      return Promise.all(bundleNextModules(state, context, plugins));
+    })
+    .then(() => {
+      t.not(state.modules[0], firstBundled);
+    });
 });
 
 test('enqueueModule should not accept duplicate entries', t => {
   const state = new State([]);
-  const plugins = {};
   const host = new HostMock({
     'some/mod.js': 'console.log("test");'
   }, '/');
@@ -144,13 +154,13 @@ test('enqueueModule should not accept duplicate entries', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-  t.false(bundleNextModule(state, context, plugins));
+  enqueueModule('/some/mod.js', state, context);
+  enqueueModule('/some/mod.js', state, context);
+
+  t.is(state.moduleBundleQueue.length, 1);
 });
 
-test('bundleNextModule should throw if an error occurred', t => {
+test('bundleNextModules should throw if an error occurred', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -164,13 +174,17 @@ test('bundleNextModule should throw if an error occurred', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('/some/mod.js', state);
-  t.throws(() => {
-    bundleNextModule(state, context, plugins);
-  });
+  enqueueModule('/some/mod.js', state, context);
+  Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      t.fail('Expected an error');
+    })
+    .catch(e => {
+      t.is(e.message, 'Unterminated regular expression (1:1)');
+    });
 });
 
-test('bundleNextModule should bundle a virtual module per external configuration', t => {
+test('bundleNextModules should bundle a virtual module per external configuration', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -184,21 +198,24 @@ test('bundleNextModule should bundle a virtual module per external configuration
     logger: new NoopLogger()
   };
 
-  enqueueModule('fs', state);
-  bundleNextModule(state, context, plugins);
-
-  const sandbox = {
-    fsShim: {},
-    module: {
-      exports: {
-      }
-    }
-  };
-  runInNewContext(generate(state.modules[0] as any) + '_0(module, module.exports);', sandbox);
-  t.is(sandbox.module.exports, sandbox.fsShim);
+  enqueueModule('fs', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => generate(state.modules[0] as any))
+    .then(code => code + '_0(module, module.exports);')
+    .then(code => {
+      const sandbox = {
+        fsShim: {},
+        module: {
+          exports: {
+          }
+        }
+      };
+      runInNewContext(code, sandbox);
+      t.is(sandbox.module.exports, sandbox.fsShim);
+    });
 });
 
-test('bundleNextModule should bundle a virtual empty module per external falsy configuration', t => {
+test('bundleNextModules should bundle a virtual empty module per external falsy configuration', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -212,20 +229,23 @@ test('bundleNextModule should bundle a virtual empty module per external falsy c
     logger: new NoopLogger()
   };
 
-  enqueueModule('fs', state);
-  bundleNextModule(state, context, plugins);
-
-  const sandbox = {
-    module: {
-      exports: {
-      }
-    }
-  };
-  runInNewContext(generate(state.modules[0] as any) + '_0(module, module.exports);', sandbox);
-  t.deepEqual(sandbox.module.exports, {});
+  enqueueModule('fs', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => generate(state.modules[0] as any))
+    .then(code => code + '_0(module, module.exports);')
+    .then(code => {
+      const sandbox = {
+        module: {
+          exports: {
+          }
+        }
+      };
+      runInNewContext(code, sandbox);
+      t.deepEqual(sandbox.module.exports, {});
+    });
 });
 
-test('bundleNextModule should bundle an error for removed modules', t => {
+test('bundleNextModules should bundle an error for removed modules', t => {
   const state = new State([]);
   const plugins = {};
   let callMeOnChangesFunction: Function = () => t.fail();
@@ -247,23 +267,30 @@ test('bundleNextModule should bundle an error for removed modules', t => {
     rebundle: () => { /* */ }
   };
 
-  enqueueModule('/test', state);
-  bundleNextModule(state, context, plugins);
-  callMeOnChangesFunction('remove', '/test');
-  bundleNextModule(state, context, plugins);
-
-  const sandbox = {
-    module: {
-      exports: {
-      }
-    }
-  };
-  t.throws(() => {
-    runInNewContext(generate(state.modules[0] as any) + '_0(module, module.exports);', sandbox);
-  }, "Module '/test' was removed");
+  enqueueModule('/test', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => {
+      callMeOnChangesFunction('remove', '/test');
+      // call bundleNextModules here, because rebundle is a stub (see above) and
+      // we need a bit more control here
+      return Promise.all(bundleNextModules(state, context, plugins));
+    })
+    .then(() => generate(state.modules[0] as any))
+    .then(code => code + '_0(module, module.exports);')
+    .then(code => {
+      const sandbox = {
+        module: {
+          exports: {
+          }
+        }
+      };
+      t.throws(() => {
+        runInNewContext(code, sandbox);
+      }, "Module '/test' was removed");
+    });
 });
 
-test('bundleNextModule should bundle an error for unavailable modules', t => {
+test('bundleNextModules should bundle an error for unavailable modules', t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -275,43 +302,24 @@ test('bundleNextModule should bundle an error for unavailable modules', t => {
     logger: new NoopLogger()
   };
 
-  enqueueModule('fs', state);
-  bundleNextModule(state, context, plugins);
-
-  let throws = false;
-  visit(state.modules[0], {
-    visitThrowStatement: function(): boolean {
-      throws = true;
-      return false;
-    }
-  });
-  t.true(throws);
+  enqueueModule('fs', state, context);
+  return Promise.all(bundleNextModules(state, context, plugins))
+    .then(() => generate(state.modules[0] as any))
+    .then(code => code + '_0(module, module.exports);')
+    .then(code => {
+      const sandbox = {
+        module: {
+          exports: {
+          }
+        }
+      };
+      t.throws(() => {
+        runInNewContext(code, sandbox);
+      }, "Module 'fs' not found");
+    });
 });
 
-test('bundleNextModule should remove sourceMapping comments', t => {
-  const state = new State([]);
-  const plugins = {};
-  const host = new HostMock({
-    '/some/mod.js': `
-      var a = 0;
-      //# sourceMappingURL=foobar.js.map
-    `
-  });
-  const context = {
-    config: {
-      externals: {}
-    } as any,
-    host,
-    logger: new NoopLogger()
-  };
-
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, plugins);
-
-  t.is(generate(state.modules[0] as any).indexOf('# sourceMappingURL='), -1);
-});
-
-test('bundleNextModule should add modules to the watch list if enabled', t => {
+test('bundleNextModules should add modules to the watch list if enabled', t => {
   let watchedFile: string|undefined;
   const state = new State([]);
   const host = new HostMock({
@@ -332,13 +340,14 @@ test('bundleNextModule should add modules to the watch list if enabled', t => {
     } as any
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, {});
-
-  t.is(watchedFile, '/some/mod.js');
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, {}))
+    .then(() => {
+      t.is(watchedFile, '/some/mod.js');
+    });
 });
 
-test('bundleNextModule should trigger rebundle on watched file update', t => {
+test('bundleNextModules should trigger rebundle on watched file update', t => {
   const state = new State([]);
   let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
@@ -361,14 +370,16 @@ test('bundleNextModule should trigger rebundle on watched file update', t => {
     rebundle: () => calledRebundle = true
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, {});
-  callMeOnChangesFunction('update', '/some/mod.js');
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, {}))
+    .then(() => {
+      callMeOnChangesFunction('update', '/some/mod.js');
 
-  t.true(calledRebundle);
+      t.true(calledRebundle);
+    });
 });
 
-test('bundleNextModule should trigger rebundle on watched file removal', t => {
+test('bundleNextModules should trigger rebundle on watched file removal', t => {
   const state = new State([]);
   let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
@@ -391,14 +402,16 @@ test('bundleNextModule should trigger rebundle on watched file removal', t => {
     rebundle: () => calledRebundle = true
   };
 
-  enqueueModule('/some/mod.js', state);
-  bundleNextModule(state, context, {});
-  callMeOnChangesFunction('remove', '/some/mod.js');
+  enqueueModule('/some/mod.js', state, context);
+  return Promise.all(bundleNextModules(state, context, {}))
+    .then(() => {
+      callMeOnChangesFunction('remove', '/some/mod.js');
 
-  t.true(calledRebundle);
+      t.true(calledRebundle);
+    });
 });
 
-test('bundleNextModule should bundle json file', t => {
+test('bundleNextModules should bundle json file', t => {
   const state = new State([]);
   const host = new HostMock({
     '/some.json': '{"a": true}'
@@ -416,15 +429,18 @@ test('bundleNextModule should bundle json file', t => {
     } as any
   };
 
-  enqueueModule('/some.json', state);
-  bundleNextModule(state, context, {});
-
-  const sandbox = {
-    module: {
-      exports: {
-      }
-    }
-  };
-  runInNewContext(generate(state.modules[0] as any) + '_0(module, module.exports);', sandbox);
-  t.deepEqual(sandbox.module.exports, {a: true} as any);
+  enqueueModule('/some.json', state, context);
+  return Promise.all(bundleNextModules(state, context, {}))
+    .then(() => generate(state.modules[0] as any))
+    .then(code => code + '_0(module, module.exports);')
+    .then(code => {
+      const sandbox = {
+        module: {
+          exports: {
+          }
+        }
+      };
+      runInNewContext(code, sandbox);
+      t.deepEqual(sandbox.module.exports, {a: true} as any);
+    });
 });

@@ -1,10 +1,10 @@
 import test from 'ava';
 import { NoopLogger } from '../../src/logger';
-import { HostMock, virtualModule, virtualModuleResult, parseAndProcess } from '../helper';
+import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 
 import { rewriteGlobalLocals } from '../../src/plugins/global-locals';
 
-function rewriteExports(input: string, files: any = {}): string {
+function rewriteExports(input: string, files: any = {}): Promise<string> {
   const host = new HostMock(files, '/cwd');
   const context = {
     config: {} as any,
@@ -12,15 +12,16 @@ function rewriteExports(input: string, files: any = {}): string {
     logger: new NoopLogger()
   };
 
-  return parseAndProcess(input, ast => {
-    return rewriteGlobalLocals(ast, '/cwd/path/to/name', context);
-  });
+  return parse(input)
+    .then(ast =>
+      rewriteGlobalLocals(ast, '/cwd/path/to/name', context).then(() =>
+        generate(ast)));
 }
 
 function executeExports(input: string, files: any = {}, settings: any = {},
-    requireResults: any[] = []): virtualModuleResult {
-  const processed = rewriteExports(input, files);
-  return virtualModule(processed, settings, requireResults);
+    requireResults: any[] = []): Promise<virtualModuleResult> {
+  return rewriteExports(input, files).then(processed =>
+    virtualModule(processed, settings, requireResults));
 }
 
 test('rewriteGlobalLocals plugin should wrap module in closure with __filename and __dirname', t => {
@@ -28,18 +29,20 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     filename(__filename);
     dirname(__dirname);
   `;
-
   let calledFilename: string|undefined;
   let calledDirname: string|undefined;
-  executeExports(input, {}, {
+  const settings = {
     filename(name: string): void {
       calledFilename = name;
     },
     dirname(name: string): void {
       calledDirname = name;
     }
-  });
+  };
 
-  t.is(calledFilename, '/cwd/path/to/name');
-  t.is(calledDirname, '/cwd/path/to');
+  return executeExports(input, {}, settings)
+    .then(() => {
+      t.is(calledFilename, '/cwd/path/to/name');
+      t.is(calledDirname, '/cwd/path/to');
+    });
 });

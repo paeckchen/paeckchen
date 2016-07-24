@@ -8,37 +8,58 @@ import { buildArray, buildObject, buildValue, wrapJsonFile } from '../src/bundle
 
 test('buildArray should create a valid array expression', t => {
   const input = [0, 1, 2];
-  t.deepEqual(JSON.parse(generate(buildArray(input) as any)), input);
+  return generate(buildArray(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildObject should create a valid object expression', t => {
   const input = {a: 0, b: 1, c: 2};
-  t.deepEqual(JSON.parse(generate(buildObject(input) as any)), input);
+  return generate(buildObject(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue given null should return a null literal', t => {
   const input: any = null;
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue given a number should return a number literal', t => {
   const input = 0;
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue given a boolean should return a boolean literal', t => {
   const input = true;
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue given an array should return an array literal', t => {
   const input = ['a', 'b', 'c'];
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue given an object should return an object literal', t => {
   const input = {key: 'value'};
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('buildValue should allow nesting', t => {
@@ -50,7 +71,10 @@ test('buildValue should allow nesting', t => {
       }
     ]
   };
-  t.deepEqual(JSON.parse(generate(buildValue(input) as any)), input);
+  return generate(buildValue(input) as any)
+    .then(code => {
+      t.deepEqual(JSON.parse(code), input);
+    });
 });
 
 test('wrapJsonFile should return a requested json file as ast program exporting the json data', t => {
@@ -76,7 +100,9 @@ test('wrapJsonFile should return a requested json file as ast program exporting 
     logger: new NoopLogger()
   };
 
-  const code = generate(wrapJsonFile('/file.json', context));
-
-  t.deepEqual(virtualModule(code), {key: 'value'});
+  return wrapJsonFile('/file.json', context)
+    .then(program => generate(program)
+    .then(code => {
+      t.deepEqual(virtualModule(code), {key: 'value'});
+    }));
 });

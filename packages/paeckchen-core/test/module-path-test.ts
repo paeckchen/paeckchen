@@ -13,7 +13,13 @@ test('getModulePath should throw on non existing module', t => {
     host,
     logger: new NoopLogger()
   };
-  t.throws(() => getModulePath('some/where', './else', context));
+  return getModulePath('some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.truthy(e);
+    });
 });
 
 test('getModulePath should resolve an existing relative file', t => {
@@ -27,8 +33,10 @@ test('getModulePath should resolve an existing relative file', t => {
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './else', context),
-    path.resolve(process.cwd(), 'some/else'));
+  return getModulePath('some/where', './else', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/else'));
+    });
 });
 
 test('getModulePath should resolve a relative file while adding .js', t => {
@@ -42,8 +50,10 @@ test('getModulePath should resolve a relative file while adding .js', t => {
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './else', context),
-    path.resolve(process.cwd(), 'some/else.js'));
+  return getModulePath('some/where', './else', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/else.js'));
+    });
 });
 
 test('getModulePath should resolve a relative directory with package.json and main', t => {
@@ -59,8 +69,10 @@ test('getModulePath should resolve a relative directory with package.json and ma
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './dir', context),
-    path.resolve(process.cwd(), 'some/dir/main.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
+    });
 });
 
 test('getModulePath should resolve browser field correctly', t => {
@@ -77,8 +89,10 @@ test('getModulePath should resolve browser field correctly', t => {
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './dir', context), path.resolve(process.cwd(),
-    'some/dir/browser.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
+    });
 });
 
 test('getModulePath should resolve jsnext:main field correctly', t => {
@@ -95,8 +109,10 @@ test('getModulePath should resolve jsnext:main field correctly', t => {
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './dir', context),
-    path.resolve(process.cwd(), 'some/dir/jsnext.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/dir/jsnext.js'));
+    });
 });
 
 test('getModulePath should not resolve jsnext:main field if source-config is set to es5', t => {
@@ -115,7 +131,10 @@ test('getModulePath should not resolve jsnext:main field if source-config is set
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './dir', context), path.resolve(process.cwd(), 'some/dir/main.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
+    });
 });
 
 test('getModulePath should resolve browser, jsnext:main and main in correct precedence', t => {
@@ -134,7 +153,10 @@ test('getModulePath should resolve browser, jsnext:main and main in correct prec
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('some/where', './dir', context), path.resolve(process.cwd(), 'some/dir/browser.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
+    });
 });
 
 test('getModulePath should resolve a relative directory without package.json but index.js', t => {
@@ -150,8 +172,10 @@ test('getModulePath should resolve a relative directory without package.json but
     host,
     logger: new NoopLogger()
   };
-  t.deepEqual(getModulePath('some/where', './dir', context),
-    path.resolve(process.cwd(), 'some/dir/index.js'));
+  return getModulePath('some/where', './dir', context)
+    .then(resolved => {
+      t.deepEqual(resolved, path.resolve(process.cwd(), 'some/dir/index.js'));
+    });
 });
 
 test('getModulePath should resolve from node_modules', t => {
@@ -167,8 +191,10 @@ test('getModulePath should resolve from node_modules', t => {
     host,
     logger: new NoopLogger()
   };
-  t.deepEqual(getModulePath('dir/some/where', 'mod', context),
-    path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
+  return getModulePath('dir/some/where', 'mod', context)
+    .then(resolved => {
+      t.deepEqual(resolved, path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
+    });
 });
 
 test('getModulePath should return the core-modules name where no shim is available', t => {
@@ -182,7 +208,10 @@ test('getModulePath should return the core-modules name where no shim is availab
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('/some/module.js', 'fs', context), 'fs');
+  return getModulePath('/some/module.js', 'fs', context)
+    .then(resolved => {
+      t.is(resolved, 'fs');
+    });
 });
 
 test('getModulePath should use the alias name if possible', t => {
@@ -200,5 +229,104 @@ test('getModulePath should use the alias name if possible', t => {
     host,
     logger: new NoopLogger()
   };
-  t.is(getModulePath('/some/module.js', 'alias-module', context), path.resolve('/alias.js'));
+  return getModulePath('/some/module.js', 'alias-module', context)
+    .then(resolved => {
+      t.is(resolved, path.resolve('/alias.js'));
+    });
+});
+
+test('getModulePath should throw if an error occurs during file reading', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      return true;
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.resolve(true);
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.truthy(e);
+    });
+});
+
+test('getModulePath should throw if file existance check throws', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      throw new Error('failed');
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.resolve(true);
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.regex(e.message, /Cannot find module/);
+    });
+});
+
+test('getModulePath should throw if file check throws', t => {
+  const host = new HostMock({}, '/');
+  const origFileExists = host.fileExists;
+  host.fileExists = name => {
+    if (name === '/some/package.json') {
+      return true;
+    }
+    return origFileExists(name);
+  };
+  const origIsFile = host.isFile;
+  host.isFile = name => {
+    if (name === '/some/package.json') {
+      return Promise.reject(new Error('failed'));
+    }
+    return origIsFile(name);
+  };
+  const context = {
+    config: {
+      aliases: {}
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/where', './else', context)
+    .then(() => {
+      t.fail('Expected to throw');
+    })
+    .catch(e => {
+      t.regex(e.message, /Cannot find module/);
+    });
 });
