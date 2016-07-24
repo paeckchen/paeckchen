@@ -263,7 +263,7 @@ test('getModulePath should throw if an error occurs during file reading', t => {
       t.fail('Expected to throw');
     })
     .catch(e => {
-      t.truthy(e.toString().match(/TypeError/));
+      t.truthy(e.message.match(/must start with/));
     });
 });
 
