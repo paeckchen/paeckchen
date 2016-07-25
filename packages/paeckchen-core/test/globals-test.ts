@@ -84,3 +84,36 @@ test('injectGlobals should define global if not already in scope', t => {
       t.is(typeof sandbox.bufferCheck, 'function');
     });
 });
+
+test('injectGlobals should do nothing if process or Buffer was detected but is not required anymore', t => {
+  const state = new State([]);
+  state.detectedGlobals.process = true;
+  state.detectedGlobals.buffer = true;
+  const host = new HostMock({});
+  return parse(`
+      var cache = [];
+      function req() {}
+      var modules = [
+        function() {
+        }
+      ];
+      var process = {};
+      var Buffer = {};
+      modules[0]();
+    `)
+    .then(ast => {
+      const context = {
+        config: {
+          aliases: {}
+        } as any,
+        host,
+        logger: new NoopLogger()
+      };
+      return injectGlobals(state, ast, context)
+        .then(() => generate(ast));
+    })
+    .then(code => {
+      t.regex(code, /var process = {};/);
+      t.regex(code, /var Buffer = {};/);
+    });
+});
