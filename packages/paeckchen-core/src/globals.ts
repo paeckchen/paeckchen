@@ -58,7 +58,7 @@ function injectGlobal(ast: ESTree.Program): Promise<void> {
 function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
   return Promise.resolve()
     .then(() => {
-      let processPath: Path<ESTree.Program>;
+      let processPath: Path<ESTree.Program>|undefined = undefined;
 
       visit(ast, {
         visitProgram: function(path: Path<ESTree.Program>): boolean {
@@ -69,32 +69,37 @@ function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: St
         }
       });
 
+      if (processPath === undefined) {
+        return Promise.resolve();
+      }
       return getModulePath('.', 'process', context)
         .then(processModulePath => {
           const processIndex = getModuleIndex(processModulePath, state);
 
-          const body = processPath.get<ESTree.Statement[]>('body');
-          body.get(body.value.length - 1).insertBefore(
-            b.variableDeclaration(
-              'var',
-              [
-                b.variableDeclarator(
-                  b.identifier('process'),
-                  b.memberExpression(
-                    b.callExpression(
-                      b.identifier('__paeckchen_require__'),
-                      [
-                        b.literal(processIndex)
-                      ]
-                    ),
-                    b.identifier('exports'),
-                    false
+          if (processPath !== undefined) {
+            const body = processPath.get<ESTree.Statement[]>('body');
+            body.get(body.value.length - 1).insertBefore(
+              b.variableDeclaration(
+                'var',
+                [
+                  b.variableDeclarator(
+                    b.identifier('process'),
+                    b.memberExpression(
+                      b.callExpression(
+                        b.identifier('__paeckchen_require__'),
+                        [
+                          b.literal(processIndex)
+                        ]
+                      ),
+                      b.identifier('exports'),
+                      false
+                    )
                   )
-                )
-              ]
-            )
-          );
-          enqueueModule(processModulePath, state, context);
+                ]
+              )
+            );
+            enqueueModule(processModulePath, state, context);
+          }
         });
     });
 }
@@ -102,7 +107,7 @@ function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: St
 function injectBuffer(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
   return Promise.resolve()
     .then(() => {
-      let bufferPath: Path<ESTree.Program>;
+      let bufferPath: Path<ESTree.Program>|undefined = undefined;
 
       visit(ast, {
         visitProgram: function(path: Path<ESTree.Program>): boolean {
@@ -113,36 +118,41 @@ function injectBuffer(ast: ESTree.Program, context: PaeckchenContext, state: Sta
         }
       });
 
+      if (bufferPath === undefined) {
+        return Promise.resolve();
+      }
       return getModulePath('.', 'buffer', context)
         .then(bufferModulePath => {
           const bufferIndex = getModuleIndex(bufferModulePath, state);
 
-          const body = bufferPath.get<ESTree.Statement[]>('body');
-          body.get(body.value.length - 1).insertBefore(
-            b.variableDeclaration(
-              'var',
-              [
-                b.variableDeclarator(
-                  b.identifier('Buffer'),
-                  b.memberExpression(
-                    b.memberExpression(
-                      b.callExpression(
-                        b.identifier('__paeckchen_require__'),
-                        [
-                          b.literal(bufferIndex)
-                        ]
-                      ),
-                      b.identifier('exports'),
-                      false
-                    ),
+          if (bufferPath !== undefined) {
+            const body = bufferPath.get<ESTree.Statement[]>('body');
+            body.get(body.value.length - 1).insertBefore(
+              b.variableDeclaration(
+                'var',
+                [
+                  b.variableDeclarator(
                     b.identifier('Buffer'),
-                    false
+                    b.memberExpression(
+                      b.memberExpression(
+                        b.callExpression(
+                          b.identifier('__paeckchen_require__'),
+                          [
+                            b.literal(bufferIndex)
+                          ]
+                        ),
+                        b.identifier('exports'),
+                        false
+                      ),
+                      b.identifier('Buffer'),
+                      false
+                    )
                   )
-                )
-              ]
-            )
-          );
-          enqueueModule(bufferModulePath, state, context);
+                ]
+              )
+            );
+            enqueueModule(bufferModulePath, state, context);
+          }
         });
     });
 }
