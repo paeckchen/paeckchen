@@ -24,8 +24,8 @@ test('cli-logger should output error message', t => {
 
   logger.error('test', new Error('message'), 'error');
 
-  t.regex(t.context.stderrOutput as string, /error/);
-  t.regex(t.context.stderrOutput as string, /message/);
+  t.regex(t.context.stderrOutput, /error/);
+  t.regex(t.context.stderrOutput, /message/);
 });
 
 test('cli-logger should output info message', t => {
@@ -33,7 +33,7 @@ test('cli-logger should output info message', t => {
 
   logger.info('test', 'info');
 
-  t.regex(t.context.stderrOutput as string, /info/);
+  t.regex(t.context.stderrOutput, /info/);
 });
 
 test('cli-logger should output debug message', t => {
@@ -44,7 +44,7 @@ test('cli-logger should output debug message', t => {
 
   logger.debug('test', 'debug');
 
-  t.regex(t.context.stderrOutput as string, /debug/);
+  t.regex(t.context.stderrOutput, /debug/);
 });
 
 test('cli-logger should not output debug message if only default loglevel is set', t => {
@@ -55,7 +55,7 @@ test('cli-logger should not output debug message if only default loglevel is set
 
   logger.debug('test', 'debug');
 
-  t.is(t.context.stderrOutput as string, '');
+  t.is(t.context.stderrOutput, '');
 });
 
 test('cli-logger should not output debug message if trace loglevel is set', t => {
@@ -66,7 +66,7 @@ test('cli-logger should not output debug message if trace loglevel is set', t =>
 
   logger.debug('test', 'debug');
 
-  t.regex(t.context.stderrOutput as string, /debug/);
+  t.regex(t.context.stderrOutput, /debug/);
 });
 
 test('cli-logger should output trace message', t => {
@@ -77,7 +77,7 @@ test('cli-logger should output trace message', t => {
 
   logger.trace('test', 'trace');
 
-  t.regex(t.context.stderrOutput as string, /trace/);
+  t.regex(t.context.stderrOutput, /trace/);
 });
 
 test('cli-logger should update progress after logging', t => {
@@ -86,5 +86,29 @@ test('cli-logger should update progress after logging', t => {
   logger.progress(ProgressStep.bundleModules, 50, 50);
   logger.info('test', 'info');
 
-  t.regex(t.context.stderrOutput as string, /info.*50% \[50|100\]/);
+  t.regex(t.context.stderrOutput, /info.*50% \[50|100\]/);
+});
+
+test('cli-logger should output all progress step names', t => {
+  const logger = new CliLogger();
+
+  logger.progress(ProgressStep.init, 50, 50);
+  t.regex(t.context.stderrOutput, /initializing/);
+  t.context.stderrOutput = '';
+
+  logger.progress(ProgressStep.bundleModules, 50, 50);
+  t.regex(t.context.stderrOutput, /bundle modules/);
+  t.context.stderrOutput = '';
+
+  logger.progress(ProgressStep.bundleGlobals, 50, 50);
+  t.regex(t.context.stderrOutput, /bundle globals/);
+  t.context.stderrOutput = '';
+
+  logger.progress(ProgressStep.generateBundle, 50, 50);
+  t.regex(t.context.stderrOutput, /create paeckchen/);
+  t.context.stderrOutput = '';
+
+  logger.progress(ProgressStep.generateSourceMap, 50, 50);
+  t.regex(t.context.stderrOutput, /create source-map/);
+  t.context.stderrOutput = '';
 });
