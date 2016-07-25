@@ -6,7 +6,6 @@ import { bundle, DefaultHost, PaeckchenContext } from 'paeckchen-core';
 
 const sourceMappingURL = '\n//# sourceMappingURL=';
 
-const startTime = new Date().getTime();
 const options = createOptions(process.argv);
 bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, context: PaeckchenContext) => {
   if (code) {
@@ -30,10 +29,6 @@ bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, c
       }
       process.stdout.write(output);
     }
-  }
-  const endTime = new Date().getTime();
-  if (options.logger) {
-    options.logger.info('cli', `Bundeling took ${(endTime - startTime) / 1000}s`);
   }
 })
 .catch(e => {

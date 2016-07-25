@@ -2,6 +2,14 @@ import * as debug from 'debug';
 import { terminal } from 'terminal-kit';
 import { ProgressStep, Logger, Config, LogLevel } from 'paeckchen-core';
 
+const progressStepNames: {[step: number]: string} = {
+  [ProgressStep.init]: 'initializing',
+  [ProgressStep.bundleModules]: 'bundle modules',
+  [ProgressStep.bundleGlobals]: 'bundle globals',
+  [ProgressStep.generateBundle]: 'create paeckchen',
+  [ProgressStep.generateSourceMap]: 'create source-map',
+};
+
 export class CliLogger implements Logger {
 
   private loggers: {[section: string]: debug.IDebugger} = {};
@@ -9,9 +17,12 @@ export class CliLogger implements Logger {
   private enabledTrace: boolean = false;
   private enabledDebug: boolean = false;
 
-  private progressStep: ProgressStep;
+  private progressStep: ProgressStep | undefined;
   private progressCurrent: number;
   private progressTotal: number;
+
+  private startTime: number;
+  private endTime: number;
 
   public configure(config: Config): void {
     this.enabledTrace = config.logLevel === LogLevel.trace;
@@ -46,7 +57,7 @@ export class CliLogger implements Logger {
   }
 
   public error(section: string, error: Error, message: string): void {
-    this.getLogger(section)(`${terminal.str.bold.red('ERROR')} ${message}\n${error.message}`);
+    this.getLogger(section)(`${terminal.str.bold.red('ERROR')} ${message}\n${error.stack}`);
     this.updateProgress(false);
   }
 
@@ -61,28 +72,41 @@ export class CliLogger implements Logger {
     const percent = Math.min(100, Math.ceil(this.progressTotal * 100 / (this.progressCurrent + this.progressTotal)));
     switch (this.progressStep) {
       case ProgressStep.init:
+        this.startTime = new Date().getTime();
         terminal
-          .error.hideCursor(true);
+          .error.hideCursor(true)
+          .error.nextLine(1);
+        this.outputProgress(percent);
         break;
       case ProgressStep.bundleModules:
       case ProgressStep.bundleGlobals:
       case ProgressStep.generateBundle:
+      case ProgressStep.generateSourceMap:
         if (!fromProgress) {
           terminal
             .error.nextLine(1);
         }
-        terminal
-          .error.eraseLineAfter()
-          .error.brightGreen(`${percent}% `)
-          .error.brightBlack(`[${this.progressCurrent}|${this.progressCurrent + this.progressTotal}]`)
-          .error.column(1);
+        this.outputProgress(percent);
         break;
       case ProgressStep.end:
+        // reset progressStep to get around loops
+        this.progressStep = undefined;
+        this.endTime = new Date().getTime();
+        this.info('cli', `Bundeling took ${(this.endTime - this.startTime) / 1000}s`);
         terminal
           .error.nextLine(1)
           .error.hideCursor(false);
         break;
     }
+  }
+
+  private outputProgress(percent: number): void {
+    terminal
+      .error.eraseLineAfter()
+      .error.brightGreen(`${percent}% `)
+      .error.brightBlack(`[${this.progressCurrent}|${this.progressCurrent + this.progressTotal}]`)
+      .error.brightBlack(` ${progressStepNames[this.progressStep as number]}`)
+      .error.column(1);
   }
 
 }
