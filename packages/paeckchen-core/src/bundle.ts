@@ -11,6 +11,7 @@ import { createConfig, Config } from './config';
 import { State } from './state';
 import { Watcher } from './watcher';
 import { ProgressStep, Logger, NoopLogger } from './logger';
+import { updateCache, readCache } from './cache';
 
 export type SourceOptions =
     'es5'
@@ -122,6 +123,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
           context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
           outputFunction(bundleResult.code, chain.apply().toString(), context);
         }
+        updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
       context.logger.error('bundling', error, 'Failed to bundle');
@@ -168,17 +170,23 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
   return createConfig(options, host)
     .then(config => {
       const context = createContext(config, host, options);
-      const paeckchenAst = parse(paeckchenSource);
-      const state = new State(getModules(paeckchenAst).elements);
-      const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
+      return readCache(context)
+        .then(cache => {
+          const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
+          const state = cache.state
+            ? new State(cache.state, getModules(paeckchenAst).elements)
+            : new State(getModules(paeckchenAst).elements);
+          const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-      return getModulePath('.', absoluteEntryPath, context)
-        .then(modulePath => {
-          enqueueModule(modulePath, state, context);
-          if (context.config.watchMode) {
-            context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction, outputFunction);
-          }
-          bundleFunction(state, paeckchenAst, context, outputFunction);
+          return getModulePath('.', absoluteEntryPath, context)
+            .then(modulePath => {
+              enqueueModule(modulePath, state, context);
+              if (context.config.watchMode) {
+                context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction,
+                  outputFunction);
+              }
+              bundleFunction(state, paeckchenAst, context, outputFunction);
+            });
         });
     });
 }
