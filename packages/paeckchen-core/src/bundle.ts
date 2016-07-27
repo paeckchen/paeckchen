@@ -173,9 +173,14 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
       return readCache(context)
         .then(cache => {
           const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
-          const state = cache.state
-            ? new State(cache.state, getModules(paeckchenAst).elements)
-            : new State(getModules(paeckchenAst).elements);
+          const state = new State(getModules(paeckchenAst).elements);
+          if (cache.state) {
+            return state.load(context, cache.state)
+              .then(() => ({ paeckchenAst, state }));
+          }
+          return { paeckchenAst, state };
+        })
+        .then(({paeckchenAst, state}) => {
           const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
           return getModulePath('.', absoluteEntryPath, context)

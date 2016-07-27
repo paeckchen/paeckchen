@@ -22,7 +22,7 @@ export function readCache(context: PaeckchenContext): Promise<Cache> {
 export function updateCache(context: PaeckchenContext, paeckchenAst: ESTree.Program, state: State): void {
   const cache: Cache = {
     paeckchenAst,
-    state: state.serialize()
+    state: state.save()
   };
   context.host.writeFile(getCachePath(context), JSON.stringify(cache));
 }

@@ -1,15 +1,18 @@
 import { DetectedGlobals } from './globals';
+import { PaeckchenContext } from './bundle';
+import { updateModule, enqueueModule } from './modules';
 
 export interface WrappedModule {
   index: number;
   name: string;
   ast?: ESTree.Statement;
   remove: boolean;
+  mtime: number;
 }
 
 export class State {
 
-  public readonly detectedGlobals: DetectedGlobals = {
+  private _detectedGlobals: DetectedGlobals = {
     global: false,
     process: false,
     buffer: false
@@ -17,7 +20,7 @@ export class State {
 
   public readonly modules: (ESTree.Expression | ESTree.SpreadElement)[];
 
-  public readonly wrappedModules: { [name: string]: WrappedModule } = {};
+  private _wrappedModules: { [name: string]: WrappedModule } = {};
 
   private _nextModuleIndex: number = 0;
 
@@ -25,46 +28,78 @@ export class State {
 
   public readonly moduleBundleQueue: string[] = [];
 
-  constructor(data: (ESTree.Expression | ESTree.SpreadElement)[] | any,
-      modules?: (ESTree.Expression | ESTree.SpreadElement)[]) {
-    if (Array.isArray(data)) {
-      this.modules = data;
-    } else if (modules !== undefined) {
-      // Recreate from cache
-      this.modules = modules;
-      this.detectedGlobals = data.detectedGlobals;
-      this.wrappedModules = data.wrappedModules
-        .reduce((wrappedModules: { [name: string]: WrappedModule }, entry: any) => {
-          const wrapped = {
-            index: entry.index,
-            name: entry.name,
-            remove: entry.remove
-          } as WrappedModule;
-          if (modules !== undefined) {
-            wrapped.ast = modules[entry.index];
-          }
-          wrappedModules[entry.name] = wrapped;
-          return wrappedModules;
-        }, {}) as any;
-      this._nextModuleIndex = data.nextModuleIndex;
-    }
+  constructor(modules: (ESTree.Expression | ESTree.SpreadElement)[]) {
+    this.modules = modules;
+  }
+
+  get detectedGlobals(): DetectedGlobals {
+    return this._detectedGlobals;
+  }
+
+  get wrappedModules(): { [name: string]: WrappedModule } {
+    return this._wrappedModules;
   }
 
   public getAndIncrementModuleIndex(): number {
     return this._nextModuleIndex++;
   }
 
-  public serialize(): any {
+  public save(): any {
     return {
-      detectedGlobals: this.detectedGlobals,
-      wrappedModules: Object.keys(this.wrappedModules).map(name => {
+      detectedGlobals: this._detectedGlobals,
+      wrappedModules: Object.keys(this._wrappedModules).map(name => {
+          const wrappedModule = this._wrappedModules[name];
           return {
-            index: this.wrappedModules[name].index,
-            name: this.wrappedModules[name].name,
-            remove: this.wrappedModules[name].remove
+            index: wrappedModule.index,
+            name: wrappedModule.name,
+            remove: wrappedModule.remove,
+            mtime: wrappedModule.mtime
           };
         }),
       nextModuleIndex: this._nextModuleIndex
     };
   }
+
+  public load(context: PaeckchenContext, data: any): Promise<void> {
+    return Promise.resolve()
+      .then(() => {
+        this._detectedGlobals = data.detectedGlobals;
+        this._wrappedModules = data.wrappedModules
+          .reduce((wrappedModules: { [name: string]: WrappedModule }, entry: any) => {
+            const wrapped = {
+              index: entry.index,
+              name: entry.name,
+              remove: entry.remove,
+              mtime: entry.mtime || -1
+            } as WrappedModule;
+            wrapped.ast = this.modules[entry.index];
+            wrappedModules[entry.name] = wrapped;
+            return wrappedModules;
+          }, {}) as any;
+        this._nextModuleIndex = data.nextModuleIndex;
+      })
+      .then(() => this.revalidate(context));
+  }
+
+  private revalidate(context: PaeckchenContext): Promise<void> {
+    return Promise.resolve()
+      .then(() => {
+        const files = Object.keys(this._wrappedModules);
+        const exists = files.map(file => context.host.fileExists(file));
+        return Promise.all(files.map((file, index) => exists[index] ? context.host.getModificationTime(file) : -1))
+          .then(mtimes => {
+            files.forEach((file, index) => {
+              const wrappedModule = this._wrappedModules[file];
+              if (!exists[index]) {
+                updateModule(wrappedModule.name, true, this);
+                enqueueModule(wrappedModule.name, this, context);
+              } else if (wrappedModule.mtime < mtimes[index]) {
+                updateModule(wrappedModule.name, false, this);
+                enqueueModule(wrappedModule.name, this, context);
+              }
+            });
+          });
+      });
+  }
+
 }

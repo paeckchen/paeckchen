@@ -6,6 +6,7 @@ export interface Host {
   isFile(path: string): Promise<boolean>;
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): void;
+  getModificationTime(path: string): Promise<number>;
 }
 
 export class DefaultHost implements Host {
@@ -41,6 +42,17 @@ export class DefaultHost implements Host {
 
   public writeFile(path: string, content: string): void {
     writeFileSync(path, content);
+  }
+
+  public getModificationTime(path: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      stat(path, (err, stats) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(stats.mtime.getTime());
+      });
+    });
   }
 
 }

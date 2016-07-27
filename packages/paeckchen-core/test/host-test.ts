@@ -1,6 +1,6 @@
 import test from 'ava';
 import { resolve } from 'path';
-import { readFileSync, existsSync, unlinkSync } from 'fs';
+import { writeFile, readFileSync, existsSync, unlinkSync, unlink } from 'fs';
 
 import { DefaultHost } from '../src/host';
 
@@ -73,4 +73,48 @@ test('DefaultHost#writeFile should dump the content to disk', t => {
       unlinkSync(file);
     }
   }
+});
+
+test.cb('DefaultHost#getModificationTime should return the mtime of the given file', t => {
+  function write(file: string, content: string, cb: () => void) {
+    writeFile(file, content, err => {
+      if (err) {
+        t.fail('failed to write to file');
+        console.error(err);
+        t.end();
+      } else {
+        cb();
+      }
+    });
+  }
+  function unlinkFile(file: string): void {
+    unlink(file, () => {
+      t.end();
+    });
+  };
+
+  const file = resolve(process.cwd(), 'mtime-test.txt');
+  write(file, '0', () => {
+    (t.context.host as DefaultHost).getModificationTime(file)
+      .then(mtime1 => {
+        setTimeout(() => {
+          write(file, '1', () => {
+            (t.context.host as DefaultHost).getModificationTime(file)
+              .then(mtime2 => {
+                unlinkFile(file);
+                t.true(mtime2 > mtime1);
+                t.end();
+              })
+              .catch(err => {
+                t.fail('Failed to get mtime1');
+                unlinkFile(file);
+              });
+          });
+        }, 10);
+      })
+      .catch(err => {
+        t.fail('Failed to get mtime1');
+        unlinkFile(file);
+      });
+  });
 });
