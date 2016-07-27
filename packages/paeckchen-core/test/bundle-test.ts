@@ -219,3 +219,57 @@ test.cb('bundle should log on chunk error', t => {
       t.end();
     });
 });
+
+test.cb('bundle should restart from cache if available', t => {
+  const detectedGlobals = {
+    global: true,
+    buffer: true,
+    process: true
+  };
+  const host = new HostMock({
+    'paeckchen.cache.json': `{
+      "paeckchenAst": {
+        "body": [
+          {},
+          {},
+          {
+            "declarations": [
+              {
+                "init": {
+                  "elements": [
+                    1, 2, 3
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "state": {
+        "detectedGlobals": ${JSON.stringify(detectedGlobals)},
+        "wrappedModules": [],
+        "nextModuleIndex": 0
+      }
+    }`,
+    'main.js': ''
+  });
+  const config: BundleOptions = {
+    entryPoint: './main.js'
+  };
+  const outputFunction = () => undefined;
+  const bundleFunction = (state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext) => {
+    t.truthy(paeckchenAst);
+    t.deepEqual(state.modules as any, [1, 2, 3]);
+    t.deepEqual(state.detectedGlobals, detectedGlobals);
+    t.deepEqual(state.wrappedModules, {});
+    t.is(state.getAndIncrementModuleIndex(), 0);
+
+    t.end();
+  };
+
+  bundle(config, host, outputFunction, bundleFunction)
+    .catch(e => {
+      t.fail(e.message);
+      t.end();
+    });
+});

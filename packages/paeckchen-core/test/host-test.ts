@@ -118,3 +118,15 @@ test.cb('DefaultHost#getModificationTime should return the mtime of the given fi
       });
   });
 });
+
+test.cb('DefaultHost#getModificationTime should error if file does not exist', t => {
+  (t.context.host as DefaultHost).getModificationTime('does-not-exist')
+    .then(() => {
+      t.fail('Expected error');
+      t.end();
+    })
+    .catch(e => {
+      t.truthy(e);
+      t.end();
+    });
+});

@@ -47,41 +47,48 @@ export class State {
   public save(): any {
     return {
       detectedGlobals: this._detectedGlobals,
-      wrappedModules: Object.keys(this._wrappedModules).map(name => {
-          const wrappedModule = this._wrappedModules[name];
-          return {
-            index: wrappedModule.index,
-            name: wrappedModule.name,
-            remove: wrappedModule.remove,
-            mtime: wrappedModule.mtime
-          };
-        }),
+      wrappedModules: Object.keys(this._wrappedModules).map(name => this.saveWrappedModule(this._wrappedModules[name])),
       nextModuleIndex: this._nextModuleIndex
     };
   }
 
-  public load(context: PaeckchenContext, data: any): Promise<void> {
+  private saveWrappedModule(wrappedModule: WrappedModule): any {
+    return {
+      index: wrappedModule.index,
+      name: wrappedModule.name,
+      remove: wrappedModule.remove,
+      mtime: wrappedModule.mtime
+    };
+  }
+
+  public load(context: PaeckchenContext, data: any, updateModuleFn = updateModule,
+      enqueueModuleFn = enqueueModule): Promise<void> {
     return Promise.resolve()
       .then(() => {
         this._detectedGlobals = data.detectedGlobals;
         this._wrappedModules = data.wrappedModules
           .reduce((wrappedModules: { [name: string]: WrappedModule }, entry: any) => {
-            const wrapped = {
-              index: entry.index,
-              name: entry.name,
-              remove: entry.remove,
-              mtime: entry.mtime || -1
-            } as WrappedModule;
+            const wrapped = this.loadWrappedModule(entry);
             wrapped.ast = this.modules[entry.index];
             wrappedModules[entry.name] = wrapped;
             return wrappedModules;
           }, {}) as any;
         this._nextModuleIndex = data.nextModuleIndex;
       })
-      .then(() => this.revalidate(context));
+      .then(() => this.revalidate(context, updateModuleFn, enqueueModuleFn));
   }
 
-  private revalidate(context: PaeckchenContext): Promise<void> {
+  private loadWrappedModule(data: any): WrappedModule {
+    return {
+      index: data.index,
+      name: data.name,
+      remove: data.remove,
+      mtime: data.mtime || -1
+    };
+  }
+
+  private revalidate(context: PaeckchenContext, updateModuleFn: typeof updateModule,
+      enqueueModuleFn: typeof enqueueModule): Promise<void> {
     return Promise.resolve()
       .then(() => {
         const files = Object.keys(this._wrappedModules);
@@ -91,11 +98,11 @@ export class State {
             files.forEach((file, index) => {
               const wrappedModule = this._wrappedModules[file];
               if (!exists[index]) {
-                updateModule(wrappedModule.name, true, this);
-                enqueueModule(wrappedModule.name, this, context);
+                updateModuleFn(wrappedModule.name, true, this);
+                enqueueModuleFn(wrappedModule.name, this, context);
               } else if (wrappedModule.mtime < mtimes[index]) {
-                updateModule(wrappedModule.name, false, this);
-                enqueueModule(wrappedModule.name, this, context);
+                updateModuleFn(wrappedModule.name, false, this);
+                enqueueModuleFn(wrappedModule.name, this, context);
               }
             });
           });
