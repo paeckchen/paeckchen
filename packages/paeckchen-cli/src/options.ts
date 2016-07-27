@@ -58,8 +58,12 @@ export function createOptions(argv: string[]): BundleOptions {
               enables generation of source-map
 
         --loglevel <level>, -v
-              sets the log output level. Can be 'default', 'debug' or 'trace'.
+              sets the log output level. Can be 'default', 'debug' or 'trace'
               '-v' means debug
+
+        --debug, -d
+              starts paeckchen in debug mode which enables caching
+
     `
   }, {
       string: [
@@ -74,7 +78,7 @@ export function createOptions(argv: string[]): BundleOptions {
         'loglevel',
         'source-map'
       ],
-      boolean: ['watch', 'v'],
+      boolean: ['watch', 'v', 'debug'],
       alias: {
         h: 'help',
         c: 'config',
@@ -84,7 +88,8 @@ export function createOptions(argv: string[]): BundleOptions {
         o: 'out-dir',
         f: 'out-file',
         a: 'alias',
-        w: 'watch'
+        w: 'watch',
+        d: 'debug'
       }
     });
 
@@ -100,6 +105,7 @@ export function createOptions(argv: string[]): BundleOptions {
     watchMode: cli.flags['watch'],
     logger: new CliLogger(),
     sourceMap: cli.flags['sourceMap'] || false,
-    logLevel: cli.flags['loglevel'] || (cli.flags['v'] ? 'debug' : undefined)
+    logLevel: cli.flags['loglevel'] || (cli.flags['v'] ? 'debug' : undefined),
+    debug: cli.flags['debug'] || false
   };
 }
