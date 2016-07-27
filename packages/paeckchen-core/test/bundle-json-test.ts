@@ -93,7 +93,8 @@ test('wrapJsonFile should return a requested json file as ast program exporting 
       aliases: {},
       externals: {},
       watchMode: false,
-      logLevel: LogLevel.default
+      logLevel: LogLevel.default,
+      debug: false
     },
     host: new HostMock({
       '/file.json': `{"key": "value"}`

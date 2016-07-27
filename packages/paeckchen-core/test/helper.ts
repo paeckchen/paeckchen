@@ -67,6 +67,10 @@ export class HostMock implements Host {
     this.files[resolve(filePath)] = content;
   }
 
+  public getModificationTime(path: string): Promise<number> {
+    return Promise.resolve(0);
+  }
+
 }
 
 export function parse(input: string): Promise<ESTree.Program> {

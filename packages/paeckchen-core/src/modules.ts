@@ -16,7 +16,8 @@ export function getModuleIndex(moduleName: string, state: State): number {
   state.wrappedModules[moduleName] = {
     index,
     name: moduleName,
-    remove: false
+    remove: false,
+    mtime: -1
   };
   return index;
 }
@@ -29,24 +30,28 @@ export function updateModule(moduleName: string, remove: boolean, state: State):
 }
 
 function createModuleWrapper(context: PaeckchenContext, name: string, moduleAst: ESTree.Program,
-    state: State): WrappedModule {
+    state: State): Promise<WrappedModule> {
   context.logger.trace('module', `createModuleWrapper [name=${name}]`);
   const index = getModuleIndex(name, state);
-  return {
-    index,
-    name,
-    ast: b.functionExpression(
-      b.identifier(`_${index}`),
-      [
-        b.identifier('module'),
-        b.identifier('exports')
-      ],
-      b.blockStatement(
-        moduleAst.body
-      )
-    ),
-    remove: false
-  };
+  return context.host.getModificationTime(name)
+    .then(mtime => {
+      return {
+        index,
+        name,
+        ast: b.functionExpression(
+          b.identifier(`_${index}`),
+          [
+            b.identifier('module'),
+            b.identifier('exports')
+          ],
+          b.blockStatement(
+            moduleAst.body
+          )
+        ),
+        remove: false,
+        mtime
+      };
+    });
 }
 
 export function enqueueModule(modulePath: string, state: State, context: PaeckchenContext): void {
@@ -129,8 +134,9 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
                 promisedModuleAst = processModule(modulePath, context, state, plugins);
               }
               return promisedModuleAst
-                .then(moduleAst => {
-                  state.wrappedModules[modulePath] = createModuleWrapper(context, modulePath, moduleAst, state);
+                .then(moduleAst => createModuleWrapper(context, modulePath, moduleAst, state))
+                .then(wrappedModule => {
+                  state.wrappedModules[modulePath] = wrappedModule;
                   return state.wrappedModules[modulePath].ast;
                 });
             } else {

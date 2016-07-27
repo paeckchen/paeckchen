@@ -24,7 +24,8 @@ test('createConfig should return the config defaults', t => {
         aliases: {},
         externals: {},
         watchMode: false,
-        logLevel: LogLevel.default
+        logLevel: LogLevel.default,
+        debug: false
       } as Config);
     });
 });
@@ -356,5 +357,27 @@ test('createConfig should fail on invalid loglevel', t => {
     })
     .catch(e => {
       t.regex(e.message, /Invalid logLevel/);
+    });
+});
+
+test('createConfig should read debug from config file', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"debug": true}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.true(config.debug);
+    });
+});
+
+test('createConfig should prefer debug from options', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"debug": "false"}'
+  }, '/');
+
+  return createConfig({debug: true}, host)
+    .then(config => {
+      t.true(config.debug);
     });
 });

@@ -33,6 +33,7 @@ export interface Config {
   externals: {[name: string]: string|boolean};
   watchMode: boolean;
   logLevel: LogLevel;
+  debug: boolean;
 }
 
 function getSource(input: SourceOptions): SourceSpec {
@@ -133,7 +134,8 @@ export function createConfig(options: BundleOptions, host: Host): Promise<Config
         aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
         externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
         watchMode: options.watchMode || configFile.watchMode || false,
-        logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default')
+        logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default'),
+        debug: options.debug || configFile.debug || false
       };
     });
 }
