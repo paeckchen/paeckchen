@@ -30,6 +30,7 @@ export interface BundleOptions {
   logger?: Logger;
   sourceMap?: boolean|'inline';
   logLevel?: 'default' | 'debug' | 'trace';
+  debug?: boolean;
 }
 
 export interface PaeckchenContext {

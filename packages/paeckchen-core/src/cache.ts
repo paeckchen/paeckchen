@@ -12,7 +12,7 @@ function getCachePath(context: PaeckchenContext): string {
 }
 
 export function readCache(context: PaeckchenContext): Promise<Cache> {
-  if (!context.host.fileExists(getCachePath(context))) {
+  if (!context.config.debug || !context.host.fileExists(getCachePath(context))) {
     return Promise.resolve({});
   }
   return context.host.readFile(getCachePath(context))

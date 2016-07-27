@@ -254,7 +254,8 @@ test.cb('bundle should restart from cache if available', t => {
     'main.js': ''
   });
   const config: BundleOptions = {
-    entryPoint: './main.js'
+    entryPoint: './main.js',
+    debug: true
   };
   const outputFunction = () => undefined;
   const bundleFunction = (state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext) => {
