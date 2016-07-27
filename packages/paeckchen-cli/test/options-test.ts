@@ -17,7 +17,8 @@ test.beforeEach(t => {
     watchMode: false,
     logger: new CliLogger(),
     sourceMap: false,
-    logLevel: undefined
+    logLevel: undefined,
+    debug: false
   } as BundleOptions;
 });
 
@@ -149,5 +150,17 @@ test('createOptions --loglevel', t => {
 test('createOptions -v', t => {
   t.context.opts.logLevel = 'debug';
   const options = createOptions(['-v']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions --debug', t => {
+  t.context.opts.debug = true;
+  const options = createOptions(['--debug']);
+  t.deepEqual(options, t.context.opts);
+});
+
+test('createOptions -d', t => {
+  t.context.opts.debug = true;
+  const options = createOptions(['-d']);
   t.deepEqual(options, t.context.opts);
 });
