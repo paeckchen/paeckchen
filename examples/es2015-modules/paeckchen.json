@@ -1,0 +1,10 @@
+{
+  "input": {
+    "entry": "./main",
+    "source": "es2015"
+  },
+  "output": {
+    "file": "bundle.js",
+    "sourceMap": true
+  }
+}
