@@ -18,7 +18,8 @@ module.exports = {
   scopes: [
     {name: 'paeckchen'},
     {name: 'paeckchen-core'},
-    {name: 'paeckchen-cli'}
+    {name: 'paeckchen-cli'},
+    {name: 'gulp-paeckchen'}
   ],
 
   allowCustomScopes: false,
