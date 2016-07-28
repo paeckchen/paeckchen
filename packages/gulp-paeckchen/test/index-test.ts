@@ -1,4 +1,5 @@
 import test from 'ava';
+import { runInNewContext } from 'vm';
 import * as gulp from 'gulp';
 import { File, PluginError } from 'gulp-util';
 
@@ -38,42 +39,24 @@ test.cb('paeckchen-gulp should throw error on stream input', t => {
     });
 });
 
-test.cb('paeckchen-gulp should add each file input to its host', t => {
-  const opts = {
-    bundle: () => Promise.resolve()
-  } as any;
-
-  gulp.src('fixtures/*.js')
-    .pipe(paeckchen('entry-point', opts))
-    .on('data', () => {
-      // noop
-    })
-    .on('end', () => {
-      t.is(Object.keys(opts.host.files).length, 2);
-      t.end();
-    })
-    .on('error', (err: PluginError) => {
-      t.fail(`Unexpected error: ${err}`);
-      t.end();
-    });
-});
-
 test.cb('paeckchen-gulp bundles on end of stream', t => {
-  let bundleCalled = 0;
-  const opts = {
-    bundle: () => {
-      bundleCalled++;
-      return Promise.resolve();
-    }
-  };
+  let msg: string;
 
+  const opts = {};
   gulp.src('fixtures/*.js')
     .pipe(paeckchen('fixtures/test.js', opts))
-    .on('data', () => {
-      // noop
+    .on('data', (data: File) => {
+      const code = data.contents.toString();
+      runInNewContext(code, {
+        console: {
+          log: function(_msg: string) {
+            msg = _msg;
+          }
+        }
+      });
     })
     .on('end', () => {
-      t.is(bundleCalled, 1);
+      t.is(msg, 'Hello World!');
       t.end();
     })
     .on('error', (err: PluginError) => {

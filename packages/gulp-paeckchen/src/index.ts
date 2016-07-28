@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError, log } from 'gulp-util';
 import * as through from 'through2';
-import { Host, bundle as paeckchenBundle, BundleOptions, PaeckchenContext } from 'paeckchen-core';
+import { Host, bundle, BundleOptions, PaeckchenContext } from 'paeckchen-core';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
 
@@ -53,13 +53,9 @@ export class GulpHost implements Host {
 
 }
 
-export interface GulpPaeckchenOpts {
-  // @internal
-  host?: GulpHost;
-  bundle?: typeof paeckchenBundle;
-}
+export function paeckchen(entryPoint: string, opts: BundleOptions = {}): NodeJS.ReadWriteStream {
 
-export function paeckchen(entryPoint: string, opts: GulpPaeckchenOpts = {}): NodeJS.ReadWriteStream {
+  let host: GulpHost;
 
   function createHost(this: Transform, file: File, enc: string,
       callback: (err?: any, data?: any) => void): void {
@@ -73,36 +69,26 @@ export function paeckchen(entryPoint: string, opts: GulpPaeckchenOpts = {}): Nod
       return callback();
     }
 
-    if (!opts.host) {
-      opts.host = new GulpHost();
+    if (!host) {
+      host = new GulpHost();
     }
-    if (!opts.bundle) {
-      opts.bundle = paeckchenBundle;
-    }
-
-    if (opts.host) {
-      opts.host.files[file.path] = file;
-    }
+    host.files[file.path] = file;
 
     callback();
   }
 
-  function bundle(this: Transform, callback: () => void): void {
-    if (opts.bundle && opts.host) {
+  function flush(this: Transform, callback: () => void): void {
+    if (host) {
       const bundleOptions: BundleOptions = {
         entryPoint
       };
 
-      opts
-        .bundle(bundleOptions, opts.host, (code: string, sourceMap: string, context: PaeckchenContext) => {
+      bundle(bundleOptions, host, (code: string, sourceMap: string, context: PaeckchenContext) => {
           try {
             const path = join(context.config.output.folder, context.config.output.file || entryPoint);
-            const file = new File({
-              path,
-              contents: new Buffer(code)
-            });
+            context.host.writeFile(path, code);
 
-            this.push(file);
+            this.push(host.files[path]);
             callback();
           } catch (err) {
             // TODO: Error handling in flush function
@@ -124,5 +110,5 @@ export function paeckchen(entryPoint: string, opts: GulpPaeckchenOpts = {}): Nod
     }
   }
 
-  return through.obj(createHost, bundle);
+  return through.obj(createHost, flush);
 }
