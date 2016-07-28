@@ -49,7 +49,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
       const code = data.contents.toString();
       runInNewContext(code, {
         console: {
-          log: function(_msg: string) {
+          log: function(_msg: string): void {
             msg = _msg;
           }
         }
