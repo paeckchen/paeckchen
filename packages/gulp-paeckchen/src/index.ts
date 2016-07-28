@@ -15,27 +15,40 @@ export class GulpHost implements Host {
   }
 
   public cwd(): string {
-    throw new Error('TODO');
+    return process.cwd();
   }
 
   public fileExists(path: string): boolean {
-    throw new Error('TODO');
+    return path in this._files;
   }
 
   public isFile(path: string): Promise<boolean> {
-    throw new Error('TODO');
+    return Promise.resolve()
+      .then(() => {
+        return !this._files[path].isDirectory();
+      });
   }
 
   public readFile(path: string): Promise<string> {
-    throw new Error('TODO');
+    return Promise.resolve()
+      .then(() => {
+        return this._files[path].contents.toString();
+      });
   }
 
   public writeFile(path: string, content: string): void {
-    throw new Error('TODO');
+    this._files[path] = new File({
+      path,
+      contents: new Buffer(content)
+    });
   }
 
   public getModificationTime(path: string): Promise<number> {
-    throw new Error('TODO');
+    return Promise.resolve()
+      .then(() => {
+        const file = this._files[path];
+        return file.stat && file.stat.mtime ? file.stat.mtime.getTime() : -1;
+      });
   }
 
 }
@@ -82,23 +95,33 @@ export function paeckchen(entryPoint: string, opts: GulpPaeckchenOpts = {}): Nod
 
       opts
         .bundle(bundleOptions, opts.host, (code: string, sourceMap: string, context: PaeckchenContext) => {
-          const path = join(context.config.output.folder, context.config.output.file);
-          const file = new File({
-            path,
-            contents: new Buffer(code)
-          });
+          try {
+            const path = join(context.config.output.folder, context.config.output.file || entryPoint);
+            const file = new File({
+              path,
+              contents: new Buffer(code)
+            });
 
-          this.push(file);
-          callback();
+            this.push(file);
+            callback();
+          } catch (err) {
+            // TODO: Error handling in flush function
+            log(err.message);
+            log(err.stack);
+            this.emit('error', new PluginError(PLUGIN_NAME, err));
+            callback();
+          }
         })
         .catch(err => {
+          // TODO: Error handling in flush function
           log(err.message);
           log(err.stack);
           this.emit('error', new PluginError(PLUGIN_NAME, err));
           callback();
         });
+    } else {
+      return callback();
     }
-    return callback();
   }
 
   return through.obj(createHost, bundle);
