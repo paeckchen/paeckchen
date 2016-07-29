@@ -66,7 +66,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
 
 test.cb('paeckchen-gulp throws in error during bundling', t => {
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js'}))
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false}))
     .on('data', (data: File) => {
       t.fail(`Expected error`);
     })
@@ -74,6 +74,25 @@ test.cb('paeckchen-gulp throws in error during bundling', t => {
       t.regex(err.message, /Cannot find module/);
     })
     .on('end', () => {
+      t.end();
+    });
+});
+
+test.cb.skip('paeckchen-gulp will stop on error by default', t => {
+  const origProcessExit = process.exit;
+  function resetProcess(): void {
+    process.exit = origProcessExit;
+  }
+  process.exit = function(code): void {
+    resetProcess();
+    t.is(code, 1);
+    t.end();
+  };
+
+  gulp.src('fixtures/*.js')
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js'}))
+    .on('data', (data: File) => {
+      t.fail(`Expected error`);
       t.end();
     });
 });

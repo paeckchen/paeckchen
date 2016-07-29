@@ -1,13 +1,60 @@
 import { join, relative } from 'path';
 import { Transform } from 'stream';
-import { File, PluginError, log } from 'gulp-util';
+import { File, PluginError, log, colors } from 'gulp-util';
 import * as through from 'through2';
-import { bundle, BundleOptions } from 'paeckchen-core';
+import { bundle, BundleOptions, LogLevel, Logger, Config, ProgressStep } from 'paeckchen-core';
 import { GulpHost } from './host';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
 
-export function paeckchen(opts: BundleOptions = {}): NodeJS.ReadWriteStream {
+class GulpLogger implements Logger {
+
+  private enabledTrace: boolean = false;
+  private enabledDebug: boolean = false;
+
+  public configure(config: Config): void {
+    this.enabledTrace = config.logLevel === LogLevel.trace;
+    this.enabledDebug = config.logLevel === LogLevel.debug || this.enabledTrace;
+  }
+
+  public trace(section: string, message: string, ...params: any[]): void {
+    if (this.enabledTrace) {
+      log(`${section} ${colors.grey('TRACE')} ${message}`);
+    }
+  }
+
+  public debug(section: string, message: string, ...params: any[]): void {
+    if (this.enabledDebug) {
+      log(`${section} ${colors.yellow('DEBUG')} ${message}`);
+    }
+  }
+
+  public info(section: string, message: string, ...params: any[]): void {
+    log(`${section} ${colors.white('INFO')} ${message}`);
+  }
+
+  public error(section: string, error: Error, message: string, ...params: any[]): void {
+    log(`${section} ${colors.red('ERROR')} ${message}: ${error}`);
+  }
+
+  public progress(step: ProgressStep, current: number, total: number): void {
+    // TODO
+  }
+
+}
+
+export interface GulpOptions extends BundleOptions {
+  exitOnError?: boolean;
+}
+
+export function paeckchen(opts: GulpOptions|string = {}): NodeJS.ReadWriteStream {
+  if (typeof opts === 'string') {
+    opts = {
+      entryPoint: opts
+    };
+  }
+  const logger = opts.logger = opts.logger || new GulpLogger();
+  opts.exitOnError = typeof opts.exitOnError === 'boolean' ? opts.exitOnError : true;
 
   let firstFile: File;
   let host: GulpHost;
@@ -36,8 +83,12 @@ export function paeckchen(opts: BundleOptions = {}): NodeJS.ReadWriteStream {
     if (host) {
       bundle(opts, host, (error, context, code, sourceMap) => {
         if (error) {
-          flushError.call(this, error);
-          callback();
+          logger.error(PLUGIN_NAME, error, 'Bundling failed');
+          if ((opts as GulpOptions).exitOnError) {
+            process.exit(1);
+          } else {
+            this.emit('end');
+          }
         } else if (context && code) {
           const path = join(context.config.output.folder,
             context.config.output.file || relative(firstFile.cwd, firstFile.path));
@@ -49,13 +100,6 @@ export function paeckchen(opts: BundleOptions = {}): NodeJS.ReadWriteStream {
     } else {
       return callback();
     }
-  }
-
-  function flushError(this: Transform, error: Error): void {
-    // TODO: Error handling in flush function
-    log(error.message);
-    log(error.stack);
-    this.emit('error', new PluginError(PLUGIN_NAME, error));
   }
 
   return through.obj(createHost, flush);
