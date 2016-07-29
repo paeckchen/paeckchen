@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, relative } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError, log } from 'gulp-util';
 import * as through from 'through2';
@@ -7,22 +7,23 @@ import { GulpHost } from './host';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
 
-export function paeckchen(entryPoint: string, opts: BundleOptions = {}): NodeJS.ReadWriteStream {
+export function paeckchen(opts: BundleOptions = {}): NodeJS.ReadWriteStream {
 
+  let firstFile: File;
   let host: GulpHost;
 
   function createHost(this: Transform, file: File, enc: string,
       callback: (err?: any, data?: any) => void): void {
-
     if (file.isNull()) {
       return callback(null, file);
-    }
-
-    if (file.isStream()) {
+    } else if (file.isStream()) {
       this.emit('error', new PluginError(PLUGIN_NAME, 'Streaming not supported'));
       return callback();
     }
 
+    if (!firstFile) {
+      firstFile = file;
+    }
     if (!host) {
       host = new GulpHost();
     }
@@ -33,24 +34,16 @@ export function paeckchen(entryPoint: string, opts: BundleOptions = {}): NodeJS.
 
   function flush(this: Transform, callback: () => void): void {
     if (host) {
-      const bundleOptions: BundleOptions = {
-        entryPoint
-      };
-
-      bundle(bundleOptions, host, (error, context, code, sourceMap) => {
+      bundle(opts, host, (error, context, code, sourceMap) => {
         if (error) {
           flushError.call(this, error);
           callback();
         } else if (context && code) {
-          try {
-            const path = join(context.config.output.folder, context.config.output.file || entryPoint);
-            context.host.writeFile(path, code);
-            this.push(host.getFile(path));
-            callback();
-          } catch (err) {
-            flushError.call(this, error);
-            callback();
-          }
+          const path = join(context.config.output.folder,
+            context.config.output.file || relative(firstFile.cwd, firstFile.path));
+          context.host.writeFile(path, code);
+          this.push(host.getFile(path));
+          callback();
         }
       });
     } else {
