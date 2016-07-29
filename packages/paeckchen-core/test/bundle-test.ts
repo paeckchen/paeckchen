@@ -274,3 +274,27 @@ test.cb('bundle should restart from cache if available', t => {
 
   bundle(config, host, outputFunction, bundleFunction);
 });
+
+test.cb('bundle should throw if error during setup', t => {
+  const host = new HostMock({
+    'main.js': ''
+  });
+  const config: BundleOptions = {
+    entryPoint: './main.js',
+    debug: true,
+    watchMode: true
+  };
+  const outputFunction = (error: Error|null) => {
+    if (error) {
+      t.regex(error.message, /Failure/);
+    } else {
+      t.fail('expected error');
+    }
+    t.end();
+  };
+  const bundleFunction = (state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext) => undefined;
+
+  bundle(config, host, outputFunction, bundleFunction, () => {
+    throw new Error('Failure');
+  });
+});

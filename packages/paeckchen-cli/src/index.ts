@@ -22,24 +22,22 @@ bundle(options, new DefaultHost(), (error, context, code, sourceMap) => {
     if (context && !context.config.watchMode) {
       process.exit(1);
     }
-    return;
-  }
-  if (code) {
+  } else {
     if (context && context.config.output.file) {
       const bundleName = join(context.config.output.folder, context.config.output.file);
       const mapName = bundleName + '.map';
       if (sourceMap) {
         if (context.config.output.sourceMap === 'inline') {
-          context.host.writeFile(bundleName, appendSourceMap(code, sourceMap));
+          context.host.writeFile(bundleName, appendSourceMap(code as string, sourceMap));
         } else {
           context.host.writeFile(bundleName, code + sourceMappingURL + basename(mapName));
           context.host.writeFile(mapName, sourceMap);
         }
       } else {
-        context.host.writeFile(bundleName, code);
+        context.host.writeFile(bundleName, code as string);
       }
     } else {
-      let output = code;
+      let output = code as string;
       if (sourceMap) {
         output = appendSourceMap(output, sourceMap);
       }
