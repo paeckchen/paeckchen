@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError, log } from 'gulp-util';
 import * as through from 'through2';
-import { bundle, BundleOptions, PaeckchenContext } from 'paeckchen-core';
+import { bundle, BundleOptions } from 'paeckchen-core';
 import { GulpHost } from './host';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
@@ -37,30 +37,32 @@ export function paeckchen(entryPoint: string, opts: BundleOptions = {}): NodeJS.
         entryPoint
       };
 
-      bundle(bundleOptions, host, (code: string, sourceMap: string, context: PaeckchenContext) => {
+      bundle(bundleOptions, host, (error, context, code, sourceMap) => {
+        if (error) {
+          flushError.call(this, error);
+          callback();
+        } else if (context && code) {
           try {
             const path = join(context.config.output.folder, context.config.output.file || entryPoint);
             context.host.writeFile(path, code);
             this.push(host.getFile(path));
             callback();
           } catch (err) {
-            // TODO: Error handling in flush function
-            log(err.message);
-            log(err.stack);
-            this.emit('error', new PluginError(PLUGIN_NAME, err));
+            flushError.call(this, error);
             callback();
           }
-        })
-        .catch(err => {
-          // TODO: Error handling in flush function
-          log(err.message);
-          log(err.stack);
-          this.emit('error', new PluginError(PLUGIN_NAME, err));
-          callback();
-        });
+        }
+      });
     } else {
       return callback();
     }
+  }
+
+  function flushError(this: Transform, error: Error): void {
+    // TODO: Error handling in flush function
+    log(error.message);
+    log(error.stack);
+    this.emit('error', new PluginError(PLUGIN_NAME, error));
   }
 
   return through.obj(createHost, flush);

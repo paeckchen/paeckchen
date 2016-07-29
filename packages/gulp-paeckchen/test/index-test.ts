@@ -42,9 +42,8 @@ test.cb('paeckchen-gulp should throw error on stream input', t => {
 test.cb('paeckchen-gulp bundles on end of stream', t => {
   let msg: string;
 
-  const opts = {};
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen('fixtures/test.js', opts))
+    .pipe(paeckchen('fixtures/test.js'))
     .on('data', (data: File) => {
       const code = data.contents.toString();
       runInNewContext(code, {
@@ -61,6 +60,20 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
     })
     .on('error', (err: PluginError) => {
       t.fail(`Unexpected error: ${err}`);
+      t.end();
+    });
+});
+
+test.cb('paeckchen-gulp throws in error during bundling', t => {
+  gulp.src('fixtures/*.js')
+    .pipe(paeckchen('fixtures/not-found.js'))
+    .on('data', (data: File) => {
+      t.fail(`Expected error`);
+    })
+    .on('error', (err: PluginError) => {
+      t.regex(err.message, /Cannot find module/);
+    })
+    .on('end', () => {
       t.end();
     });
 });
