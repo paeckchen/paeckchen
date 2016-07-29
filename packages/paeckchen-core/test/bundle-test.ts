@@ -22,20 +22,20 @@ test.cb('bundle should bundle the given entry-point and its dependencies', t => 
     logger: errorLogger
   };
 
-  bundle(options, host, code => {
-      let called = false;
-      virtualModule(code, {
-        callme: function(): void {
-          called = true;
-        }
-      });
-      t.true(called);
-      t.end();
-    })
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
+  bundle(options, host, (error, context, code) => {
+    if (error) {
+      t.fail(error.message);
+      return t.end();
+    }
+    let called = false;
+    virtualModule(code as string, {
+      callme: function(): void {
+        called = true;
+      }
     });
+    t.true(called);
+    t.end();
+  });
 });
 
 test.cb('bundle should bundle global dependencies', t => {
@@ -56,20 +56,20 @@ test.cb('bundle should bundle global dependencies', t => {
     alias: 'buffer=/BUFFER'
   };
 
-  bundle(config, host, code => {
-      let called = false;
-      virtualModule(code, {
-        callme: function(): void {
-          called = true;
-        }
-      });
-      t.true(called);
-      t.end();
-    })
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
+  bundle(config, host, (error, context, code) => {
+    if (error) {
+      t.fail(error.message);
+      return t.end();
+    }
+    let called = false;
+    virtualModule(code as string, {
+      callme: function(): void {
+        called = true;
+      }
     });
+    t.true(called);
+    t.end();
+  });
 });
 
 test.cb('bundle should check for a config-file', t => {
@@ -84,32 +84,35 @@ test.cb('bundle should check for a config-file', t => {
       })
   }, '/');
 
-  bundle({}, host, code => {
-      let called = false;
-      virtualModule(code, {
-        callback: function(): void {
-          called = true;
-        }
-      });
-      t.true(called);
-      t.end();
-    })
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
+  bundle({}, host, (error, context, code) => {
+    if (error) {
+      t.fail(error.message);
+      return t.end();
+    }
+    let called = false;
+    virtualModule(code as string, {
+      callback: function(): void {
+        called = true;
+      }
     });
+    t.true(called);
+    t.end();
+  });
 });
 
-test('bundle should throw if no entry-point configured', t => {
+test.cb('bundle should throw if no entry-point configured', t => {
   const host = new HostMock({
     '/paeckchen.json': '{}'
   }, '/');
 
-  return bundle({}, host, () => undefined)
-    .then(() => t.fail('Expected error'))
-    .catch(e => {
-      t.is(e.message, 'Missing entry-point');
-    });
+  return bundle({}, host, error => {
+    if (error) {
+      t.is(error.message, 'Missing entry-point');
+      return t.end();
+    }
+    t.fail('Expected error');
+    t.end();
+  });
 });
 
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
@@ -133,18 +136,17 @@ test.cb('rebundleFactory should return a function which calls a bundle function 
   }, 25);
 });
 
-test('bundle should create a watch and a rebundle function when in watch mode', t => {
+test.cb('bundle should create a watch and a rebundle function when in watch mode', t => {
   const host = new HostMock({
     '/entry': ''
   }, '/');
-  let bundleFunctionCalled = 0;
   const rebundle = () => {
     //
   };
   const bundleFunction: any = (ast: any, modules: any, context: PaeckchenContext) => {
     t.truthy(context.watcher);
     t.is(context.rebundle, rebundle);
-    bundleFunctionCalled++;
+    t.end();
   };
   const rebundleFactoryFunction: any = () => {
     return rebundle;
@@ -154,10 +156,11 @@ test('bundle should create a watch and a rebundle function when in watch mode', 
     watchMode: true
   };
 
-  return bundle(config, host, () => undefined, bundleFunction, rebundleFactoryFunction)
-    .then(() => {
-      t.is(bundleFunctionCalled, 1);
-    });
+  const outputFunction = () => {
+    t.fail('unexpected call');
+    t.end();
+  };
+  bundle(config, host, outputFunction, bundleFunction, rebundleFactoryFunction);
 });
 
 test.cb('bundle with source maps should add mappings via sorcery', t => {
@@ -166,18 +169,18 @@ test.cb('bundle with source maps should add mappings via sorcery', t => {
     sourceMap: true
   };
 
-  bundle(config, new DefaultHost(), (code: string, _sourceMap: string) => {
-      const sourceMap = JSON.parse(_sourceMap);
+  bundle(config, new DefaultHost(), (error, context, code, _sourceMap) => {
+    if (error) {
+      t.fail(error.message);
+      return t.end();
+    }
+    const sourceMap = JSON.parse(_sourceMap as string);
 
-      t.not(code, undefined);
-      t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
-      t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
-      t.end();
-    })
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
-    });
+    t.not(code, undefined);
+    t.deepEqual(sourceMap.sources, ['../../test/fixtures/main.ts']);
+    t.truthy((sourceMap.sourcesContent[0] as string).match(/: string/));
+    t.end();
+  });
 });
 
 test.cb('bundle should log on chunk error', t => {
@@ -213,11 +216,7 @@ test.cb('bundle should log on chunk error', t => {
     }
   };
 
-  bundle(config, host, () => undefined)
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
-    });
+  bundle(config, host, () => undefined);
 });
 
 test.cb('bundle should restart from cache if available', t => {
@@ -257,7 +256,12 @@ test.cb('bundle should restart from cache if available', t => {
     entryPoint: './main.js',
     debug: true
   };
-  const outputFunction = () => undefined;
+  const outputFunction = (error: Error|null) => {
+    if (error) {
+      t.fail(error.message);
+      t.end();
+    }
+  };
   const bundleFunction = (state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext) => {
     t.truthy(paeckchenAst);
     t.deepEqual(state.modules as any, [1, 2, 3]);
@@ -268,9 +272,5 @@ test.cb('bundle should restart from cache if available', t => {
     t.end();
   };
 
-  bundle(config, host, outputFunction, bundleFunction)
-    .catch(e => {
-      t.fail(e.message);
-      t.end();
-    });
+  bundle(config, host, outputFunction, bundleFunction);
 });

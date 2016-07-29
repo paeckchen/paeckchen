@@ -109,7 +109,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
 
         if (typeof bundleResult === 'string') {
           context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-          outputFunction(bundleResult, undefined, context);
+          outputFunction(null, context, bundleResult, undefined);
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
           const chain = sorceryLoadSync('paeckchen.js', {
@@ -122,12 +122,13 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
           });
 
           context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-          outputFunction(bundleResult.code, chain.apply().toString(), context);
+          outputFunction(null, context, bundleResult.code, chain.apply().toString());
         }
         updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
       context.logger.error('bundling', error, 'Failed to bundle');
+      outputFunction(error, context);
     });
 }
 
@@ -146,7 +147,7 @@ export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, cont
 }
 
 export interface OutputFunction {
-  (code: string, sourceMap: string|undefined, context: PaeckchenContext): void;
+  (error: Error|null, context: PaeckchenContext|undefined, code?: string, sourceMap?: string|undefined): void;
 }
 
 function createContext(config: Config, host: Host, options: BundleOptions): PaeckchenContext {
@@ -167,8 +168,8 @@ function createContext(config: Config, host: Host, options: BundleOptions): Paec
 
 export function bundle(options: BundleOptions, host: Host = new DefaultHost(), outputFunction: OutputFunction,
     bundleFunction: BundlingFunction = executeBundling,
-      rebundleFactoryFunction: RebundleFactory = rebundleFactory): Promise<void> {
-  return createConfig(options, host)
+      rebundleFactoryFunction: RebundleFactory = rebundleFactory): void {
+  createConfig(options, host)
     .then(config => {
       const context = createContext(config, host, options);
       return readCache(context)
@@ -193,6 +194,12 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
               }
               bundleFunction(state, paeckchenAst, context, outputFunction);
             });
+        })
+        .catch(error => {
+          outputFunction(error, context);
         });
+    })
+    .catch(error => {
+      outputFunction(error, undefined);
     });
 }

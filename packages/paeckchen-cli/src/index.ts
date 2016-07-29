@@ -2,14 +2,30 @@
 
 import { join, basename } from 'path';
 import { createOptions } from './options';
-import { bundle, DefaultHost, PaeckchenContext } from 'paeckchen-core';
+import { bundle, DefaultHost } from 'paeckchen-core';
 
 const sourceMappingURL = '\n//# sourceMappingURL=';
 
 const options = createOptions(process.argv);
-bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, context: PaeckchenContext) => {
+bundle(options, new DefaultHost(), (error, context, code, sourceMap) => {
+  if (error) {
+    if (!context) {
+      context = {
+        config: {
+          watchMode: false
+        }
+      } as any;
+    }
+    if (options.logger) {
+      options.logger.error('cli', error, 'Bundeling failed');
+    }
+    if (context && !context.config.watchMode) {
+      process.exit(1);
+    }
+    return;
+  }
   if (code) {
-    if (context.config.output.file) {
+    if (context && context.config.output.file) {
       const bundleName = join(context.config.output.folder, context.config.output.file);
       const mapName = bundleName + '.map';
       if (sourceMap) {
@@ -30,12 +46,6 @@ bundle(options, new DefaultHost(), (code: string, sourceMap: string|undefined, c
       process.stdout.write(output);
     }
   }
-})
-.catch(e => {
-  if (options.logger) {
-    options.logger.error('cli', e, 'Bundeling failed');
-  }
-  process.exit(1);
 });
 
 function appendSourceMap(code: string, sourceMap: string): string {
