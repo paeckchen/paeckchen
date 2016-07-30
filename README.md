@@ -27,6 +27,7 @@ paeckchen is developed as a monorepository, this means all packages belonging to
 |---------|---------|
 | paeckchen-core | [![npm](https://img.shields.io/npm/v/paeckchen-core.svg)](https://www.npmjs.com/package/paeckchen-core) |
 | paeckchen-cli | [![npm](https://img.shields.io/npm/v/paeckchen-cli.svg)](https://www.npmjs.com/package/paeckchen-cli) |
+| gulp-paeckchen | [![npm](https://img.shields.io/npm/v/gulp-paeckchen.svg)](https://www.npmjs.com/package/gulp-paeckchen) |
 
 ## Installation
 

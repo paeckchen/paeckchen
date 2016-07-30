@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "gulp",
+    "watch": "gulp watch"
+  },
+  "dependencies": {
+    "gulp-paeckchen": "../../packages/gulp-paeckchen"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}

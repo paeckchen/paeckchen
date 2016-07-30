@@ -127,7 +127,6 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
-      context.logger.error('bundling', error, 'Failed to bundle');
       outputFunction(error, context);
     });
 }
