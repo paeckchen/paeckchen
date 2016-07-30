@@ -83,15 +83,17 @@ function watchModule(state: State, modulePath: string, context: PaeckchenContext
         if (!state.moduleWatchCallbackAdded) {
           state.moduleWatchCallbackAdded = true;
           if (context.watcher) {
-            context.watcher.start((event) => {
+            context.watcher.start((event, fileName) => {
               let rebundle = false;
               if (event === 'update') {
-                updateModule(modulePath, false, state);
-                enqueueModule(modulePath, state, context);
+                context.logger.trace('watch', `update [modulePath=${fileName}]`);
+                updateModule(fileName, false, state);
+                enqueueModule(fileName, state, context);
                 rebundle = true;
               } else if (event === 'remove') {
-                updateModule(modulePath, true, state);
-                enqueueModule(modulePath, state, context);
+                context.logger.trace('watch', `remove [modulePath=${fileName}]`);
+                updateModule(fileName, true, state);
+                enqueueModule(fileName, state, context);
                 rebundle = true;
               }
               if (rebundle && context.rebundle) {
