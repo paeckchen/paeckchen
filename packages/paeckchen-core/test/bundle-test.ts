@@ -236,7 +236,7 @@ test.cb('bundle should log on chunk error', t => {
   bundle(config, host, () => undefined);
 });
 
-test.cb.only('bundle should write state to cache if debug enabled', t => {
+test.cb('bundle should write state to cache if debug enabled', t => {
   const host = new HostMock({
     'main.js': ''
   });
