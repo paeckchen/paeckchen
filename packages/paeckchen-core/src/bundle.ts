@@ -96,6 +96,14 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
     outputFunction: OutputFunction, bundleChunkFunction: BundleChunkFunction = bundleChunks): void {
   context.logger.progress(ProgressStep.init, state.moduleBundleQueue.length, state.modules.length);
 
+  function outputAndCache(code: string, sourceMap?: string): void {
+    context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
+    outputFunction(null, context, code, sourceMap);
+    if (context.config.debug) {
+      updateCache(context, paeckchenAst, state);
+    }
+  }
+
   bundleChunks(ProgressStep.bundleModules, state, context)
     .then(() => injectGlobals(state, paeckchenAst, context))
     .then(() => bundleChunks(ProgressStep.bundleGlobals, state, context))
@@ -108,10 +116,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         });
 
         if (typeof bundleResult === 'string') {
-          context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-          outputFunction(null, context, bundleResult, undefined);
-          updateCache(context, paeckchenAst, state);
-          return Promise.resolve();
+          return outputAndCache(bundleResult, undefined);
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
           const sorceryOptions = {
@@ -123,11 +128,7 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
             }
           };
           return sorceryLoad('paeckchen.js', sorceryOptions)
-            .then(chain => {
-              context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-              outputFunction(null, context, bundleResult.code, chain.apply().toString());
-              updateCache(context, paeckchenAst, state);
-            });
+            .then(chain => outputAndCache(bundleResult.code, chain.apply().toString()));
         }
       })
     .catch(error => {

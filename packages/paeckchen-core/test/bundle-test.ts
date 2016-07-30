@@ -1,4 +1,5 @@
 import test from 'ava';
+import { join } from 'path';
 import { errorLogger, HostMock, virtualModule } from './helper';
 import { State } from '../src/state';
 import { DefaultHost } from '../src/host';
@@ -233,6 +234,27 @@ test.cb('bundle should log on chunk error', t => {
   };
 
   bundle(config, host, () => undefined);
+});
+
+test.cb.only('bundle should write state to cache if debug enabled', t => {
+  const host = new HostMock({
+    'main.js': ''
+  });
+  const config: BundleOptions = {
+    entryPoint: './main.js',
+    debug: true
+  };
+  const outputFunction = (error: Error|null) => {
+    if (error) {
+      t.fail(error.message);
+    }
+    setTimeout(() => {
+      t.true(join(host.cwd(), 'paeckchen.cache.json') in host.files);
+      t.end();
+    }, 0);
+  };
+
+  bundle(config, host, outputFunction);
 });
 
 test.cb('bundle should restart from cache if available', t => {
