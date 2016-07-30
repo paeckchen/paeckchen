@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
-import { load as sorceryLoad } from 'sorcery';
+import { loadSync as sorceryLoadSync } from 'sorcery';
 
 import { Host, DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -116,20 +116,20 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         });
 
         if (typeof bundleResult === 'string') {
-          return outputAndCache(bundleResult, undefined);
+          outputAndCache(bundleResult, undefined);
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
-          const sorceryOptions = {
+          const chain = sorceryLoadSync('paeckchen.js', {
             content: {
               'paeckchen.js': bundleResult.code
             },
             sourcemaps: {
               'paeckchen.js': JSON.parse(bundleResult.map.toString())
             }
-          };
-          return sorceryLoad('paeckchen.js', sorceryOptions)
-            .then(chain => outputAndCache(bundleResult.code, chain.apply().toString()));
+          });
+          outputAndCache(bundleResult.code, chain.apply().toString());
         }
+        updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
       outputFunction(error, context);
