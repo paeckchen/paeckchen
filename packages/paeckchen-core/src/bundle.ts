@@ -139,12 +139,17 @@ export type RebundleFactory = typeof rebundleFactory;
 export function rebundleFactory(state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext,
     bundleFunction: BundlingFunction, outputFunction: OutputFunction): () => void {
   let timer: NodeJS.Timer;
-  return () => {
+  return function rebundle(): void {
     if (timer) {
       clearTimeout(timer);
     }
     timer = setTimeout(() => {
-      bundleFunction(state, paeckchenAst, context, outputFunction);
+      try {
+        context.logger.trace('bundle', `rebundle`);
+        bundleFunction(state, paeckchenAst, context, outputFunction);
+      } catch (e) {
+        outputFunction(e, context);
+      }
     }, 0);
   };
 }
