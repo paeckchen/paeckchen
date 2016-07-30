@@ -375,8 +375,10 @@ function runCommandRelease(packageDir) {
           .then(() => git('..', `status --porcelain`))
           .then(stdout => {
             if (stdout !== '') {
+              const commitMsg = `chore(${packageDir}): releases ${data.nextVersion}\n\n` +
+                getCommitList('* ', '\n', data);
               return git('..', `add .`)
-                .then(() => git('..', `commit -m "chore(${packageDir}): releases ${data.nextVersion}"`))
+                .then(() => git('..', `commit -m "${commitMsg}"`))
                 .then(() => false);
             }
           });
@@ -395,9 +397,13 @@ function outputReleaseSummary(packageDir, data) {
 
       Commits:
   `);
-  console.log('    ' + data.commits
-    .map(commit => `${commit.header}${isBreakingChange(commit) ? ' (BREAKING)' : ''}`)
-    .join('\n    '));
+  console.log(getCommitList('    ', '\n', data));
+}
+
+function getCommitList(prepend, append, data) {
+  return data.commits
+    .map(commit => `${prepend}${commit.header}${isBreakingChange(commit) ? ' (BREAKING)' : ''}${append}`)
+    .join('');
 }
 
 function runCommandTestRelease(packageDir) {
