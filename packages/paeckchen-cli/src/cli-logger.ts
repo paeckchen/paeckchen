@@ -93,9 +93,7 @@ export class CliLogger implements Logger {
         this.progressStep = undefined;
         this.endTime = new Date().getTime();
         this.info('cli', `Bundeling took ${(this.endTime - this.startTime) / 1000}s`);
-        terminal
-          .error.nextLine(1)
-          .error.hideCursor(false);
+        this.reset();
         break;
     }
   }
@@ -107,6 +105,12 @@ export class CliLogger implements Logger {
       .error.brightBlack(`[${this.progressCurrent}|${this.progressCurrent + this.progressTotal}]`)
       .error.brightBlack(` ${progressStepNames[this.progressStep as number]}`)
       .error.column(1);
+  }
+
+  public reset(): void {
+    terminal
+      .error.nextLine(1)
+      .error.hideCursor(false);
   }
 
 }

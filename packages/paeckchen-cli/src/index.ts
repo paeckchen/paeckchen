@@ -2,6 +2,7 @@
 
 import { join, basename } from 'path';
 import { createOptions } from './options';
+import { CliLogger } from './cli-logger';
 import { bundle, DefaultHost } from 'paeckchen-core';
 
 const sourceMappingURL = '\n//# sourceMappingURL=';
@@ -20,6 +21,7 @@ bundle(options, new DefaultHost(), (error, context, code, sourceMap) => {
       options.logger.error('cli', error, 'Bundeling failed');
     }
     if (context && !context.config.watchMode) {
+      (context.logger as CliLogger).reset();
       process.exit(1);
     }
   } else {
