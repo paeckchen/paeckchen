@@ -11,7 +11,8 @@ function rewriteImports(input: string, files: any = {}): Promise<string> {
   const host = new HostMock(files);
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()

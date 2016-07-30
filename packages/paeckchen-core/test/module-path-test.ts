@@ -28,7 +28,8 @@ test('getModulePath should resolve an existing relative file', t => {
   });
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -45,7 +46,8 @@ test('getModulePath should resolve a relative file while adding .js', t => {
   });
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -64,7 +66,8 @@ test('getModulePath should resolve a relative directory with package.json and ma
   const context = {
     config: {
       input: {},
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -84,7 +87,8 @@ test('getModulePath should resolve browser field correctly', t => {
   const context = {
     config: {
       input: {},
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -104,7 +108,8 @@ test('getModulePath should resolve jsnext:main field correctly', t => {
   const context = {
     config: {
       input: {},
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -126,7 +131,8 @@ test('getModulePath should not resolve jsnext:main field if source-config is set
       input: {
         source: SourceSpec.ES5
       },
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -148,7 +154,8 @@ test('getModulePath should resolve browser, jsnext:main and main in correct prec
     config: {
       input: {
       },
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -167,7 +174,8 @@ test('getModulePath should resolve a relative directory without package.json but
     config: {
       input: {
       },
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -186,7 +194,8 @@ test('getModulePath should resolve from node_modules', t => {
     config: {
       input: {
       },
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -203,7 +212,8 @@ test('getModulePath should return the core-modules name where no shim is availab
     config: {
       input: {
       },
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -224,7 +234,8 @@ test('getModulePath should use the alias name if possible', t => {
       },
       aliases: {
         'alias-module': '/alias.js'
-      }
+      },
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -232,6 +243,25 @@ test('getModulePath should use the alias name if possible', t => {
   return getModulePath('/some/module.js', 'alias-module', context)
     .then(resolved => {
       t.is(resolved, path.resolve('/alias.js'));
+    });
+});
+
+test('getModulePath should keep external module names as is', t => {
+  const host = new HostMock({});
+  const context = {
+    config: {
+      input: {
+      },
+      externals: {
+        'jQuery': '$'
+      }
+    } as any,
+    host,
+    logger: new NoopLogger()
+  };
+  return getModulePath('/some/module.js', 'jQuery', context)
+    .then(resolved => {
+      t.is(resolved, 'jQuery');
     });
 });
 
@@ -253,7 +283,8 @@ test('getModulePath should throw if an error occurs during file reading', t => {
   };
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -285,7 +316,8 @@ test('getModulePath should throw if file existance check throws', t => {
   };
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -317,7 +349,8 @@ test('getModulePath should throw if file check throws', t => {
   };
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
