@@ -1,6 +1,6 @@
 {
   "name": "paeckchen-core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "paeckchen core library",
   "main": "dist/src/index.js",
   "files": [
