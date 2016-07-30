@@ -16,7 +16,8 @@ test('commonjs should rewrite require statements', t => {
   });
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()
@@ -43,7 +44,8 @@ test('commonjs should rewrite require statements which are nested inside call ch
   });
   const context = {
     config: {
-      aliases: {}
+      aliases: {},
+      externals: {}
     } as any,
     host,
     logger: new NoopLogger()

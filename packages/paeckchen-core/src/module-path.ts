@@ -62,6 +62,9 @@ export function getModulePath(filename: string, importIdentifier: string, contex
   return new Promise((resolve, reject) => {
     context.logger.trace('module-path', `getModulePath [filename=${filename}, importIdentifier=${importIdentifier}]`);
 
+    if (importIdentifier in context.config.externals) {
+      resolve(importIdentifier);
+    }
     let importOrAliasIdentifier = importIdentifier;
     if (importIdentifier in context.config.aliases) {
       importOrAliasIdentifier = context.config.aliases[importIdentifier];

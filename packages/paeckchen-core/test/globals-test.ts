@@ -47,7 +47,8 @@ test('injectGlobals should define global if not already in scope', t => {
     .then(ast => {
       const context = {
         config: {
-          aliases: {}
+          aliases: {},
+          externals: {}
         } as any,
         host,
         logger: new NoopLogger()
