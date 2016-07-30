@@ -2,11 +2,21 @@ import test from 'ava';
 import { runInNewContext } from 'vm';
 import * as gulp from 'gulp';
 import { File, PluginError } from 'gulp-util';
+import { Logger } from 'paeckchen-core';
 
 import { paeckchen } from '../src/index';
 
+class TestLogger implements Logger {
+  public configure(): void { /* */ }
+  public trace(): void { /* */ }
+  public debug(): void { /* */ }
+  public info(): void { /* */ }
+  public error(): void { /* */ }
+  public progress(): void { /* */ }
+}
+
 test.cb('paeckchen-gulp should let through null files', t => {
-  const stream = paeckchen();
+  const stream = paeckchen('entry-point');
   stream
     .on('data', () => {
       // noop
@@ -43,7 +53,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
   let msg: string;
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/test.js'}))
+    .pipe(paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()}))
     .on('data', (data: File) => {
       const code = data.contents.toString();
       runInNewContext(code, {
@@ -66,7 +76,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
 
 test.cb('paeckchen-gulp throws in error during bundling', t => {
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false}))
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false, logger: new TestLogger()}))
     .on('data', (data: File) => {
       t.fail(`Expected error`);
     })
@@ -78,7 +88,7 @@ test.cb('paeckchen-gulp throws in error during bundling', t => {
     });
 });
 
-test.cb.skip('paeckchen-gulp will stop on error by default', t => {
+test.cb('paeckchen-gulp will stop on error by default', t => {
   const origProcessExit = process.exit;
   function resetProcess(): void {
     process.exit = origProcessExit;
@@ -90,7 +100,7 @@ test.cb.skip('paeckchen-gulp will stop on error by default', t => {
   };
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js'}))
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', logger: new TestLogger()}))
     .on('data', (data: File) => {
       t.fail(`Expected error`);
       t.end();

@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "start": "gulp",
-    "watch": "gulp  watch"
+    "watch": "gulp watch"
   },
   "dependencies": {
     "gulp-paeckchen": "../../packages/gulp-paeckchen"

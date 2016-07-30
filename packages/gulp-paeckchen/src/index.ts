@@ -1,47 +1,12 @@
 import { join, relative } from 'path';
 import { Transform } from 'stream';
-import { File, PluginError, log, colors } from 'gulp-util';
+import { File, PluginError } from 'gulp-util';
 import * as through from 'through2';
-import { bundle, BundleOptions, LogLevel, Logger, Config, ProgressStep } from 'paeckchen-core';
+import { bundle, BundleOptions } from 'paeckchen-core';
 import { GulpHost } from './host';
+import { GulpLogger } from './logger';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
-
-class GulpLogger implements Logger {
-
-  private enabledTrace: boolean = false;
-  private enabledDebug: boolean = false;
-
-  public configure(config: Config): void {
-    this.enabledTrace = config.logLevel === LogLevel.trace;
-    this.enabledDebug = config.logLevel === LogLevel.debug || this.enabledTrace;
-  }
-
-  public trace(section: string, message: string, ...params: any[]): void {
-    if (this.enabledTrace) {
-      log(`${section} ${colors.grey('TRACE')} ${message}`);
-    }
-  }
-
-  public debug(section: string, message: string, ...params: any[]): void {
-    if (this.enabledDebug) {
-      log(`${section} ${colors.yellow('DEBUG')} ${message}`);
-    }
-  }
-
-  public info(section: string, message: string, ...params: any[]): void {
-    log(`${section} ${colors.white('INFO')} ${message}`);
-  }
-
-  public error(section: string, error: Error, message: string, ...params: any[]): void {
-    log(`${section} ${colors.red('ERROR')} ${message}: ${error}`);
-  }
-
-  public progress(step: ProgressStep, current: number, total: number): void {
-    // TODO
-  }
-
-}
 
 export interface GulpOptions extends BundleOptions {
   exitOnError?: boolean;
