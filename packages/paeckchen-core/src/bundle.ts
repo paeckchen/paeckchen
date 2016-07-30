@@ -181,7 +181,15 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
           const state = new State(getModules(paeckchenAst).elements);
           if (cache.state) {
             return state.load(context, cache.state)
-              .then(() => ({ paeckchenAst, state }));
+              .then(() => ({ paeckchenAst, state }))
+              .then(() => {
+                if (context.config.watchMode) {
+                  Object.keys(state.wrappedModules).forEach(file => {
+                    (context.watcher as Watcher).watchFile(file);
+                  });
+                }
+                return { paeckchenAst, state };
+              });
           }
           return { paeckchenAst, state };
         })
