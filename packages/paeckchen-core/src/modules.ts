@@ -77,10 +77,9 @@ export function bundleNextModules(state: State, context: PaeckchenContext,
 function watchModule(state: State, modulePath: string, context: PaeckchenContext): Promise<void> {
   return Promise.resolve()
     .then(() => {
-      context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
-    })
-    .then(() => {
       if (context.config.watchMode) {
+        context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
+
         if (!state.moduleWatchCallbackAdded) {
           state.moduleWatchCallbackAdded = true;
           if (context.watcher) {
@@ -109,6 +108,7 @@ function watchModule(state: State, modulePath: string, context: PaeckchenContext
 }
 
 function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
+  context.logger.trace('module', `wrapModule abc [modulePath=${modulePath}]`);
   return Promise.resolve()
     .then(() => {
       context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);

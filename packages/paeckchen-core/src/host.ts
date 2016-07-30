@@ -48,7 +48,7 @@ export class DefaultHost implements Host {
     return new Promise((resolve, reject) => {
       stat(path, (err, stats) => {
         if (err) {
-          return reject(err);
+          return resolve(-1);
         }
         resolve(stats.mtime.getTime());
       });
