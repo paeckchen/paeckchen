@@ -1,6 +1,6 @@
 {
   "name": "paeckchen-cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "paeckchen command line interface",
   "main": "./dist/src/index.js",
   "bin": {
@@ -62,7 +62,7 @@
   "dependencies": {
     "debug": "2.2.0",
     "meow": "3.7.0",
-    "paeckchen-core": "0.3.0",
+    "paeckchen-core": "0.4.0",
     "terminal-kit": "0.24.14"
   },
   "publishConfig": {
