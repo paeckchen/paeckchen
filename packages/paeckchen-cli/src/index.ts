@@ -19,9 +19,9 @@ bundle(options, new DefaultHost(), (error, context, code, sourceMap) => {
     }
     if (options.logger) {
       options.logger.error('cli', error, 'Bundeling failed');
+      (options.logger as CliLogger).reset();
     }
     if (context && !context.config.watchMode) {
-      (context.logger as CliLogger).reset();
       process.exit(1);
     }
   } else {
