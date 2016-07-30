@@ -118,7 +118,11 @@ test.cb('bundle should throw if no entry-point configured', t => {
 test.cb('rebundleFactory should return a function which calls a bundle function on the end of the event loop', t => {
   const state = new State([]);
   const ast: any = {};
-  const context: any = {};
+  const context: any = {
+    logger: {
+      trace(): void { /* */ }
+    }
+  };
   let bundleFunctionCalled = 0;
   const bundleFunction: any = (_state: any, _ast: any, _context: any) => {
     t.is(_state, state);
@@ -134,6 +138,18 @@ test.cb('rebundleFactory should return a function which calls a bundle function 
     t.is(bundleFunctionCalled, 1);
     t.end();
   }, 25);
+});
+
+test.cb('rebundleFactory should throw on error', t => {
+  const state = new State([]);
+  const ast: any = {};
+  const context: any = {};
+  const outputFunction = (error: Error) => {
+    t.regex(error.message, /Cannot read property 'trace' of undefined/);
+    t.end();
+  };
+  const rebundle = rebundleFactory(state, ast, context, () => undefined, outputFunction);
+  rebundle();
 });
 
 test.cb('bundle should create a watch and a rebundle function when in watch mode', t => {
