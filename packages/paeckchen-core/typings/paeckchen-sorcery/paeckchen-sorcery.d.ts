@@ -1,4 +1,4 @@
-declare module 'sorcery' {
+declare module 'paeckchen-sorcery' {
 
   export interface SorceryOptions {
     content: {[file: string]: string};

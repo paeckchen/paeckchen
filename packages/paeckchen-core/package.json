@@ -61,7 +61,7 @@
     "chokidar": "1.6.0",
     "escodegen": "1.8.0",
     "node-libs-browser": "1.0.0",
-    "sorcery": "KnisterPeter/sorcery#b3a35bf482ebba62ac7251d681979eed1c378adf"
+    "paeckchen-sorcery": "0.1.0"
   },
   "publishConfig": {
     "tag": "next"

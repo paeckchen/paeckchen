@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
-import { loadSync as sorceryLoadSync } from 'sorcery';
+import { loadSync as sorceryLoadSync } from 'paeckchen-sorcery';
 
 import { Host, DefaultHost } from './host';
 import { getModulePath } from './module-path';
