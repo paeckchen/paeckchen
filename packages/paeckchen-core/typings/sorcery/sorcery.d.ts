@@ -6,6 +6,7 @@ declare module 'sorcery' {
   }
 
   export function loadSync(file: string, options?: SorceryOptions): SorceryChain;
+  export function load(file: string, options?: SorceryOptions): Promise<SorceryChain>;
 
   export interface SorceryChain {
     apply(): SorceryMap;

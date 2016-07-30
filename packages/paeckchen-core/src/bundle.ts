@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
-import { loadSync as sorceryLoadSync } from 'sorcery';
+import { load as sorceryLoad } from 'sorcery';
 
 import { Host, DefaultHost } from './host';
 import { getModulePath } from './module-path';
@@ -110,21 +110,25 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         if (typeof bundleResult === 'string') {
           context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
           outputFunction(null, context, bundleResult, undefined);
+          updateCache(context, paeckchenAst, state);
+          return Promise.resolve();
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
-          const chain = sorceryLoadSync('paeckchen.js', {
+          const sorceryOptions = {
             content: {
               'paeckchen.js': bundleResult.code
             },
             sourcemaps: {
               'paeckchen.js': JSON.parse(bundleResult.map.toString())
             }
-          });
-
-          context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
-          outputFunction(null, context, bundleResult.code, chain.apply().toString());
+          };
+          return sorceryLoad('paeckchen.js', sorceryOptions)
+            .then(chain => {
+              context.logger.progress(ProgressStep.end, state.moduleBundleQueue.length, state.modules.length);
+              outputFunction(null, context, bundleResult.code, chain.apply().toString());
+              updateCache(context, paeckchenAst, state);
+            });
         }
-        updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
       outputFunction(error, context);
