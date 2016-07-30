@@ -275,7 +275,18 @@ test('createConfig should read externals from config file', t => {
 
   return createConfig({}, host)
     .then(config => {
-      t.deepEqual(config.externals, {'module': 'Global'} as {[name: string]: string});
+      t.deepEqual(config.externals, {'module': 'Global'});
+    });
+});
+
+test('createConfig should convert externals "false" to false', t => {
+  const host = new HostMock({
+    '/paeckchen.json': '{"externals": {"module": "false"}}'
+  }, '/');
+
+  return createConfig({}, host)
+    .then(config => {
+      t.deepEqual(config.externals, {'module': false});
     });
 });
 

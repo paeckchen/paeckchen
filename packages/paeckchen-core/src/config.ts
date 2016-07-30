@@ -104,6 +104,17 @@ function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key
   return map;
 }
 
+function falseStringToBoolean<V>(input: {[key: string]: V}): {[key: string]: V} {
+  return Object.keys(input).reduce((result, key) => {
+    let value = input[key];
+    if (typeof value === 'string' && ((value as any) as string).toLowerCase() === 'false') {
+      value = false as any;
+    }
+    result[key] = value;
+    return result;
+  }, {});
+}
+
 export function createConfig(options: BundleOptions, host: Host): Promise<Config> {
   return Promise.resolve()
     .then(() => {
@@ -132,7 +143,7 @@ export function createConfig(options: BundleOptions, host: Host): Promise<Config
           sourceMap: getSourceMap(options.sourceMap || configFile.output && configFile.output.sourceMap || false)
         },
         aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
-        externals: processKeyValueOption<string|boolean>(options.external, configFile.externals),
+        externals: falseStringToBoolean(processKeyValueOption<string|boolean>(options.external, configFile.externals)),
         watchMode: options.watchMode || configFile.watchMode || false,
         logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default'),
         debug: options.debug || configFile.debug || false
