@@ -298,3 +298,49 @@ test.cb('bundle should throw if error during setup', t => {
     throw new Error('Failure');
   });
 });
+
+test.cb('bundle should add all files from cache to watcher if enabled', t => {
+  const host = new HostMock({
+    'main.js': '',
+    'paeckchen.cache.json': `{
+      "paeckchenAst": {
+        "body": [
+          {},
+          {},
+          {
+            "declarations": [
+              {
+                "init": {
+                  "elements": []
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "state": {
+        "wrappedModules": [
+          {
+            "index": 0,
+            "name": "main.js"
+          }
+        ]
+      }
+    }`
+  });
+  const config: BundleOptions = {
+    entryPoint: './main.js',
+    debug: true,
+    watchMode: true
+  };
+  const outputFunction = (error: Error) => {
+    t.fail('Unexpected error ' + error.message);
+    t.end();
+  };
+  const bundleFunction = (state: State, paeckchenAst: ESTree.Program, context: PaeckchenContext) => {
+    t.true('main.js' in (context.watcher as any).files);
+    t.end();
+  };
+
+  bundle(config, host, outputFunction, bundleFunction);
+});
