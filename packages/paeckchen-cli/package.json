@@ -63,7 +63,7 @@
     "debug": "2.2.0",
     "meow": "3.7.0",
     "paeckchen-core": "0.4.0",
-    "terminal-kit": "0.24.14"
+    "terminal-kit": "0.24.20"
   },
   "publishConfig": {
     "tag": "next"

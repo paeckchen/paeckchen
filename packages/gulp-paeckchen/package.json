@@ -50,15 +50,15 @@
     "@types/gulp-util": "3.0.28",
     "@types/through2": "0.0.28",
     "ava": "0.15.2",
-    "coveralls": "2.11.11",
+    "coveralls": "2.11.12",
     "glogg": "1.0.0",
     "gulp": "3.9.1",
     "gulplog": "1.0.0",
     "in-publish": "2.0.0",
-    "nyc": "7.0.0",
+    "nyc": "7.1.0",
     "rimraf": "2.5.4",
     "source-map-support": "0.4.2",
-    "tslint": "3.13.0",
+    "tslint": "3.14.0",
     "typescript": "2.0.0"
   },
   "dependencies": {
