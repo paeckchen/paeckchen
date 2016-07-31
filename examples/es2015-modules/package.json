@@ -1,9 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "start": "node ../../packages/paeckchen-cli/dist/src/index.js"
+    "start": "paeckchen"
   },
   "dependencies": {
-    "lodash": "4.14.0"
+    "lodash": "^4.14.0"
+  },
+  "devDependencies": {
+    "paeckchen-cli": "^0.4.0"
   }
 }
