@@ -104,7 +104,7 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [daviddm-dev-paeckchen-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg
 [daviddm-dev-paeckchen-url]: https://david-dm.org/paeckchen/paeckchen
 
-[travis-image]: https://img.shields.io/travis/paeckchen/paeckchen.svg
+[travis-image]: https://travis-ci.org/paeckchen/paeckchen.svg?branch=master
 [travis-url]: https://travis-ci.org/paeckchen/paeckchen
 
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/orjc50h3g8sh7x08/branch/master?svg=true
