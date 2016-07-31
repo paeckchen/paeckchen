@@ -40,7 +40,6 @@
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
     "@types/acorn": "1.0.28",
-    "@types/estree": "0.0.29",
     "@types/lodash": "0.0.28",
     "@types/node": "4.0.30",
     "ava": "0.15.2",
@@ -55,6 +54,7 @@
     "typescript": "2.0.0"
   },
   "dependencies": {
+    "@types/estree": "0.0.29",
     "acorn": "3.2.0",
     "ast-types": "0.8.18",
     "browser-resolve": "1.11.2",
