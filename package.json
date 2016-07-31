@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "prebootstrap": "npm install",
     "bootstrap": "node task bootstrap",
     "reset": "node task reset",
     "#packages": "Script to run generic commands per package (e.g. npm run packages -- outdated)",
