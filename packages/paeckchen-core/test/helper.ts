@@ -5,6 +5,8 @@ import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
 import { Host } from '../src/host';
+import { Watcher } from '../src/watcher';
+import { ChokidarMock } from './watcher-test';
 
 export const errorLogger = {
   configure: () => undefined,
@@ -69,6 +71,10 @@ export class HostMock implements Host {
 
   public getModificationTime(path: string): Promise<number> {
     return Promise.resolve(0);
+  }
+
+  public createWatcher(): Watcher {
+    return new Watcher(new ChokidarMock());
   }
 
 }
