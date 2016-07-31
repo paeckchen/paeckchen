@@ -1,4 +1,5 @@
 import { existsSync, readFile, writeFileSync, stat } from 'fs';
+import { Watcher } from './watcher';
 
 export interface Host {
   cwd(): string;
@@ -7,6 +8,7 @@ export interface Host {
   readFile(path: string): Promise<string>;
   writeFile(path: string, content: string): void;
   getModificationTime(path: string): Promise<number>;
+  createWatcher?(): Watcher;
 }
 
 export class DefaultHost implements Host {
@@ -53,6 +55,10 @@ export class DefaultHost implements Host {
         resolve(stats.mtime.getTime());
       });
     });
+  }
+
+  public createWatcher(): Watcher {
+    return new Watcher();
   }
 
 }

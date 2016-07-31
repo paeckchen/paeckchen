@@ -169,7 +169,7 @@ function createContext(config: Config, host: Host, options: BundleOptions): Paec
     throw new Error('Missing entry-point');
   }
   if (context.config.watchMode) {
-    context.watcher = new Watcher();
+    context.watcher = host.createWatcher && host.createWatcher() || new Watcher();
   }
   return context;
 }
