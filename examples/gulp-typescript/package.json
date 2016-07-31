@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "gulp",
+    "watch": "gulp watch"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-paeckchen": "^0.1.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.13.6",
+    "gulp-uglify": "^1.5.4"
+  }
+}
