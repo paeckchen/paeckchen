@@ -129,7 +129,6 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
           });
           outputAndCache(bundleResult.code, chain.apply().toString());
         }
-        updateCache(context, paeckchenAst, state);
       })
     .catch(error => {
       outputFunction(error, context);
