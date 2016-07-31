@@ -48,7 +48,6 @@
   "devDependencies": {
     "@types/gulp": "3.8.28",
     "@types/gulp-util": "3.0.28",
-    "@types/node": "4.0.30",
     "@types/through2": "0.0.28",
     "ava": "0.15.2",
     "coveralls": "2.11.11",
@@ -63,6 +62,7 @@
     "typescript": "2.0.0"
   },
   "dependencies": {
+    "@types/node": "4.0.30",
     "gulp-util": "3.0.7",
     "paeckchen-core": "0.4.0",
     "through2": "2.0.1"
