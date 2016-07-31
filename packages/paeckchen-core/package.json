@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@types/estree": "0.0.29",
-    "acorn": "3.2.0",
+    "acorn": "3.3.0",
     "ast-types": "0.8.18",
     "browser-resolve": "1.11.2",
     "chokidar": "1.6.0",
