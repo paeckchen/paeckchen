@@ -384,7 +384,7 @@ function runCommandRelease(packageDir) {
           });
       }
       console.log(`No release for ${packageDir} required`);
-      return data;
+      return true;
     });
 }
 
@@ -434,32 +434,33 @@ function runCommandPublish(packageDir) {
     .then(data => {
       if (data.lastVersion === data.pkg.version) {
         console.log(`No publish for ${packageDir} requried; Already published to npm`);
-      } else {
-        const tag = `${data.pkg.name}-${data.pkg.version}`;
-        return git(packageDir, 'tag')
-          .then(stdout => {
-            if (stdout.match(new RegExp(`^${tag}$`, 'm'))) {
-              return git(packageDir, `rev-list --abbrev-commit -n 1 ${tag}`)
-                .then(hash => console.log(`No git tag for ${packageDir} requried; Already tagged commit ${hash}`));
-            }
-            return getReleaseCommits(packageDir, data)
-              .then(() => data.commits.find(commit => commit.updatesPackageJson))
-              .then(commit => git('..', `tag ${tag} ${commit.hash}`));
-          })
-          .then(() => git('..', 'push --tags'))
-          .then(() => git('..', 'remote -v'))
-          .then(stdout => stdout.match(/^\w+\s+([^ ]+)\s+\(\w+\)$/m)[1])
-          .then(url => git('..', `clone ${url} publish-temp`))
-          .then(() => git(path.join('..', 'publish-temp'), `checkout ${tag}`))
-          .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'install'))
-          .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'publish'))
-          .then(() => fsRemove(path.join(process.cwd(), 'publish-temp')))
-          .catch(err => {
-            return fsRemove(path.join(process.cwd(), 'publish-temp')).then(() => {
-              throw err;
-            });
-          });
+        return true;
       }
+      const tag = `${data.pkg.name}-${data.pkg.version}`;
+      return git(packageDir, 'tag')
+        .then(stdout => {
+          if (stdout.match(new RegExp(`^${tag}$`, 'm'))) {
+            return git(packageDir, `rev-list --abbrev-commit -n 1 ${tag}`)
+              .then(hash => console.log(`No git tag for ${packageDir} requried; Already tagged commit ${hash}`));
+          }
+          return getReleaseCommits(packageDir, data)
+            .then(() => data.commits.find(commit => commit.updatesPackageJson))
+            .then(commit => git('..', `tag ${tag} ${commit.hash}`));
+        })
+        .then(() => git('..', 'push --tags'))
+        .then(() => git('..', 'remote -v'))
+        .then(stdout => stdout.match(/^\w+\s+([^ ]+)\s+\(\w+\)$/m)[1])
+        .then(url => git('..', `clone ${url} publish-temp`))
+        .then(() => git(path.join('..', 'publish-temp'), `checkout ${tag}`))
+        .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'install'))
+        .then(() => npm(path.join('..', 'publish-temp', 'packages', packageDir), 'publish'))
+        .then(() => fsRemove(path.join(process.cwd(), 'publish-temp')))
+        .catch(err => {
+          return fsRemove(path.join(process.cwd(), 'publish-temp')).then(() => {
+            throw err;
+          });
+        })
+        .then(() => false);
     });
 }
 
