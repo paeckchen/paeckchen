@@ -9,7 +9,7 @@ import { enqueueModule, bundleNextModules } from './modules';
 import { injectGlobals } from './globals';
 import { createConfig, Config } from './config';
 import { State } from './state';
-import { Watcher } from './watcher';
+import { Watcher, FSWatcher } from './watcher';
 import { ProgressStep, Logger, NoopLogger } from './logger';
 import { updateCache, readCache } from './cache';
 
@@ -169,7 +169,7 @@ function createContext(config: Config, host: Host, options: BundleOptions): Paec
     throw new Error('Missing entry-point');
   }
   if (context.config.watchMode) {
-    context.watcher = host.createWatcher && host.createWatcher() || new Watcher();
+    context.watcher = host.createWatcher && host.createWatcher() || new FSWatcher();
   }
   return context;
 }
@@ -186,7 +186,6 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
           const state = new State(getModules(paeckchenAst).elements);
           if (cache.state) {
             return state.load(context, cache.state)
-              .then(() => ({ paeckchenAst, state }))
               .then(() => {
                 if (context.config.watchMode) {
                   Object.keys(state.wrappedModules).forEach(file => {

@@ -1,5 +1,5 @@
 import { existsSync, readFile, writeFileSync, stat } from 'fs';
-import { Watcher } from './watcher';
+import { Watcher, FSWatcher } from './watcher';
 
 export interface Host {
   cwd(): string;
@@ -58,7 +58,7 @@ export class DefaultHost implements Host {
   }
 
   public createWatcher(): Watcher {
-    return new Watcher();
+    return new FSWatcher();
   }
 
 }

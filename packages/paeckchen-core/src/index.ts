@@ -19,3 +19,6 @@ export {
   Config,
   LogLevel
 } from './config';
+export {
+  Watcher
+} from './watcher';

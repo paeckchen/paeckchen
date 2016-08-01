@@ -5,7 +5,7 @@ import { generate as escodegenGenerate } from 'escodegen';
 import { merge } from 'lodash';
 import { oneLine } from 'common-tags';
 import { Host } from '../src/host';
-import { Watcher } from '../src/watcher';
+import { FSWatcher } from '../src/watcher';
 import { ChokidarMock } from './watcher-test';
 
 export const errorLogger = {
@@ -73,8 +73,8 @@ export class HostMock implements Host {
     return Promise.resolve(0);
   }
 
-  public createWatcher(): Watcher {
-    return new Watcher(new ChokidarMock());
+  public createWatcher(): FSWatcher {
+    return new FSWatcher(new ChokidarMock());
   }
 
 }
