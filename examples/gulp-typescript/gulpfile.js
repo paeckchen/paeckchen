@@ -18,7 +18,7 @@ const bundler = paeckchen({
 gulp.task('build', () => {
   return tsProject.src()
     .pipe(ts(tsProject))
-    .pipe(bundler.bundle())
+    .pipe(bundler())
     .pipe(sourcemaps.init())
     .pipe(uglify())
     .pipe(sourcemaps.write())

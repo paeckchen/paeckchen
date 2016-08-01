@@ -13,7 +13,7 @@ export interface GulpOptions extends BundleOptions {
 }
 
 export interface GulpPaeckchen {
-  bundle(): NodeJS.ReadWriteStream;
+  (): NodeJS.ReadWriteStream;
 }
 
 export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
@@ -88,9 +88,7 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
     }
   }
 
-  return {
-    bundle(): NodeJS.ReadWriteStream {
-      return through.obj(createHost, flush);
-    }
+  return function bundler(): NodeJS.ReadWriteStream {
+    return through.obj(createHost, flush);
   };
 }

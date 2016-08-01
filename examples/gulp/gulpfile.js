@@ -8,7 +8,7 @@ const bundler = paeckchen({
 
 gulp.task('build', () => {
   return gulp.src('./src/**/*.js')
-    .pipe(bundler.bundle())
+    .pipe(bundler())
     .pipe(gulp.dest('./dist'));
 });
 
