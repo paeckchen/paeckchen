@@ -1,9 +1,14 @@
 const gulp = require('gulp');
 const paeckchen = require('gulp-paeckchen').paeckchen;
 
+const bundler = paeckchen({
+  entryPoint: './src/main.js',
+  logLevel: 'trace'
+});
+
 gulp.task('build', () => {
   return gulp.src('./src/**/*.js')
-    .pipe(paeckchen('./src/main.js'))
+    .pipe(bundler.bundle())
     .pipe(gulp.dest('./dist'));
 });
 

@@ -6,17 +6,19 @@ const sourcemaps = require('gulp-sourcemaps');
 
 const tsProject = ts.createProject('tsconfig.json');
 
-const paeckchenConfig = {
-  entryPoint: './src/main',
+const bundler = paeckchen({
+  // This is already transpiled by typescript, therefore its main.js
+  entryPoint: './src/main.js',
+  // We should specifiy this, otherwise the first (maybe random) file give to gulp will name it
   outputFile: './src/main.js',
   sourceMap: 'inline',
   logLevel: 'debug'
-};
+});
 
 gulp.task('build', () => {
   return tsProject.src()
     .pipe(ts(tsProject))
-    .pipe(paeckchen(paeckchenConfig))
+    .pipe(bundler.bundle())
     .pipe(sourcemaps.init())
     .pipe(uglify())
     .pipe(sourcemaps.write())
