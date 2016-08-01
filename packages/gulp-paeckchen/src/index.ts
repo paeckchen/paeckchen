@@ -12,7 +12,12 @@ export interface GulpOptions extends BundleOptions {
   exitOnError?: boolean;
 }
 
-export function paeckchen(opts: GulpOptions|string = {}): NodeJS.ReadWriteStream {
+export interface GulpPaeckchen {
+  bundle(): NodeJS.ReadWriteStream;
+}
+
+export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
+
   if (typeof opts === 'string') {
     opts = {
       entryPoint: opts
@@ -20,9 +25,16 @@ export function paeckchen(opts: GulpOptions|string = {}): NodeJS.ReadWriteStream
   }
   const logger = opts.logger = opts.logger || new GulpLogger();
   opts.exitOnError = typeof opts.exitOnError === 'boolean' ? opts.exitOnError : true;
+  // Always enable, because it does not keep node running when not in watch mode
+  opts.watchMode = true;
 
   let firstFile: File;
   let host: GulpHost;
+  let firstFlush = true;
+  // Remember stream and callback in paeckchen scope, not in stream scope
+  // otherwise we would probably write to a closed stream
+  let stream: Transform;
+  let flushCallback: () => void;
 
   function createHost(this: Transform, file: File, enc: string,
       callback: (err?: any, data?: any) => void): void {
@@ -45,27 +57,40 @@ export function paeckchen(opts: GulpOptions|string = {}): NodeJS.ReadWriteStream
   }
 
   function flush(this: Transform, callback: () => void): void {
+    // Remember these out of current scope
+    stream = this;
+    flushCallback = callback;
     if (host) {
-      bundle(opts, host, (error, context, code, sourceMap) => {
-        if (error) {
-          logger.error(PLUGIN_NAME, error, 'Bundling failed');
-          if ((opts as GulpOptions).exitOnError) {
-            process.exit(1);
-          } else {
-            this.emit('end');
+      if (firstFlush) {
+        firstFlush = false;
+        bundle(opts, host, (error, context, code, sourceMap) => {
+          if (error) {
+            logger.error(PLUGIN_NAME, error, 'Bundling failed');
+            if ((opts as GulpOptions).exitOnError) {
+              process.exit(1);
+            } else {
+              stream.emit('end');
+            }
+          } else if (context && code) {
+            const path = join(context.config.output.folder,
+              context.config.output.file || relative(firstFile.cwd, firstFile.path));
+            context.host.writeFile(path, code);
+            stream.push(host.getFile(path));
+            flushCallback();
           }
-        } else if (context && code) {
-          const path = join(context.config.output.folder,
-            context.config.output.file || relative(firstFile.cwd, firstFile.path));
-          context.host.writeFile(path, code);
-          this.push(host.getFile(path));
-          callback();
-        }
-      });
+        });
+      } else {
+        // trigger watch updates
+        host.emitWatcherEvents();
+      }
     } else {
-      return callback();
+      return flushCallback();
     }
   }
 
-  return through.obj(createHost, flush);
+  return {
+    bundle(): NodeJS.ReadWriteStream {
+      return through.obj(createHost, flush);
+    }
+  };
 }

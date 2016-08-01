@@ -16,7 +16,7 @@ class TestLogger implements Logger {
 }
 
 test.cb('paeckchen-gulp should let through null files', t => {
-  const stream = paeckchen('entry-point');
+  const stream = paeckchen('entry-point').bundle();
   stream
     .on('data', () => {
       // noop
@@ -35,7 +35,7 @@ test.cb('paeckchen-gulp should let through null files', t => {
 
 test.cb('paeckchen-gulp should throw error on stream input', t => {
   gulp.src('fixtures/test.js', { buffer: false })
-    .pipe(paeckchen())
+    .pipe(paeckchen().bundle())
     .on('data', () => {
       // noop
     })
@@ -53,7 +53,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
   let msg: string;
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()}))
+    .pipe(paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()}).bundle())
     .on('data', (data: File) => {
       const code = data.contents.toString();
       runInNewContext(code, {
@@ -76,7 +76,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
 
 test.cb('paeckchen-gulp throws in error during bundling', t => {
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false, logger: new TestLogger()}))
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false, logger: new TestLogger()}).bundle())
     .on('data', (data: File) => {
       t.fail(`Expected error`);
     })
@@ -100,9 +100,28 @@ test.cb('paeckchen-gulp will stop on error by default', t => {
   };
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', logger: new TestLogger()}))
+    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', logger: new TestLogger()}).bundle())
     .on('data', (data: File) => {
       t.fail(`Expected error`);
       t.end();
+    });
+});
+
+test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
+  const bundler = paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()});
+
+  gulp.src('fixtures/*.js')
+    .pipe(bundler.bundle())
+    .on('data', (data: File) => {
+      t.is(data.basename, 'test.js');
+
+      // Simulate watch update
+      gulp.src('fixtures/*.js')
+        .pipe(bundler.bundle())
+        .on('data', (dataUpdate: File) => {
+          t.is(dataUpdate.basename, 'test.js');
+          t.deepEqual(data.contents.toString(), dataUpdate.contents.toString());
+          t.end();
+        });
     });
 });
