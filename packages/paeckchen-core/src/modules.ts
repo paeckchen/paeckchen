@@ -110,11 +110,8 @@ function watchModule(state: State, modulePath: string, context: PaeckchenContext
 }
 
 function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
-  context.logger.trace('module', `wrapModule abc [modulePath=${modulePath}]`);
+  context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
   return Promise.resolve()
-    .then(() => {
-      context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
-    })
     .then(() => {
       // Prefill index
       getModuleIndex(modulePath, state);
@@ -153,6 +150,8 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
             context.logger.error('module', e, `Failed to process module '${modulePath}'`);
             throw e;
           });
+      } else {
+        context.logger.trace('module', `wrapModule; upToDate [modulePath=${modulePath}]`);
       }
       return undefined;
     });

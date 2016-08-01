@@ -1,7 +1,7 @@
 import test from 'ava';
 import { resolve } from 'path';
 import { writeFile, readFileSync, existsSync, unlinkSync, unlink } from 'fs';
-import { Watcher } from '../src/watcher';
+import { FSWatcher } from '../src/watcher';
 
 import { DefaultHost } from '../src/host';
 
@@ -129,5 +129,5 @@ test('DefaultHost#getModificationTime should return -1 if file does not exist', 
 
 test('DefaultHost#createWatcher should return a new watcher instance', t => {
   const watcher = (t.context.host as DefaultHost).createWatcher();
-  t.true(watcher instanceof Watcher);
+  t.true(watcher instanceof FSWatcher);
 });

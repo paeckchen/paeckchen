@@ -1,18 +1,56 @@
 import { dirname } from 'path';
-import { FSWatcher } from 'chokidar';
+import { FSWatcher as Chokidar } from 'chokidar';
 
 type FileMap = { [name: string]: boolean };
 type WatcherMap = { [name: string]: number };
 
-export class Watcher {
+/**
+ * Watcher interface.
+ *
+ * This is the API paeckchen uses to register watch tasks on used modules and unregisters them on deletion.
+ */
+export interface Watcher {
 
-  private watcher: FSWatcher;
+  /**
+   * This callback is being called whenever a watched file receives some sort of update.
+   *
+   * @callback Watcher.updateHandler
+   * @param {string} event - The event name (must be either 'add', 'update' or 'remove')
+   * @param {string} fileName - The absolute path to the watched file in this event
+   */
+
+  /**
+   * Called by paeckchen to start the first watch task.
+   * This is only called once per paeckchen instance.
+   *
+   * @param {Watcher.updateHandler} updateHandler
+   */
+  start(updateHandler: (event: string, fileName: string) => void): void;
+
+  /**
+   * This is called by paeckchen to register a new file to watch.
+   *
+   * @param {string} fileName - The absolute file path to watch
+   */
+  watchFile(fileName: string): void;
+
+  /**
+   * This is called by paeckchen to unregister a file currently watched.
+   *
+   * @param {string} fileName - The absolute file path to unwatch
+   */
+  unwatchFile(fileName: string): void;
+}
+
+export class FSWatcher implements Watcher {
+
+  private watcher: Chokidar;
 
   private watchers: WatcherMap = {};
 
   private files: FileMap = {};
 
-  constructor(watcher: FSWatcher = new FSWatcher()) {
+  constructor(watcher: Chokidar = new Chokidar()) {
     this.watcher = watcher;
   }
 
