@@ -106,3 +106,22 @@ test.cb('paeckchen-gulp will stop on error by default', t => {
       t.end();
     });
 });
+
+test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
+  const bundler = paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()});
+
+  gulp.src('fixtures/*.js')
+    .pipe(bundler.bundle())
+    .on('data', (data: File) => {
+      t.is(data.basename, 'test.js');
+
+      // Simulate watch update
+      gulp.src('fixtures/*.js')
+        .pipe(bundler.bundle())
+        .on('data', (dataUpdate: File) => {
+          t.is(dataUpdate.basename, 'test.js');
+          t.deepEqual(data.contents.toString(), dataUpdate.contents.toString());
+          t.end();
+        });
+    });
+});
