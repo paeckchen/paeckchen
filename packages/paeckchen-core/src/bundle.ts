@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, resolve, dirname } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
 import { loadSync as sorceryLoadSync } from 'paeckchen-sorcery';
@@ -119,15 +119,41 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
           outputAndCache(bundleResult, undefined);
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
-          const chain = sorceryLoadSync('paeckchen.js', {
-            content: {
-              'paeckchen.js': bundleResult.code
-            },
-            sourcemaps: {
-              'paeckchen.js': JSON.parse(bundleResult.map.toString())
-            }
-          });
-          outputAndCache(bundleResult.code, chain.apply().toString());
+
+          console.error('PROCESS SOUCE-MAP');
+          const files = Object.keys(state.wrappedModules);
+          Promise.all(files.map(path => context.host.readFile(path)))
+            .then(contents => {
+              Promise.all(files.map(path => context.host.readFile(path + '.map')))
+                .then(maps => {
+
+                  const contentMap = files.reduce((sources, path, index) => {
+                    sources[path] = contents[index];
+                    return sources;
+                  }, {});
+                  contentMap['paeckchen.js'] = bundleResult.code;
+
+                  const contentSourceMaps = files.reduce((sourceMaps, path, index) => {
+                    sourceMaps[path] = maps[index] ? JSON.parse(maps[index]) : undefined;
+                    if (sourceMaps[path]) {
+                      sourceMaps[path].file = resolve(dirname(path), sourceMaps[path].file);
+                      sourceMaps[path].sources = sourceMaps[path].sources.map(source => {
+                        return resolve(dirname(path), source);
+                      });
+                    }
+                    return sourceMaps;
+                  }, {});
+                  contentSourceMaps['paeckchen.js'] = JSON.parse(bundleResult.map.toString());
+
+                  console.error('INPUT-map', contentMap);
+                  console.error('input sm', contentSourceMaps);
+                  const chain = sorceryLoadSync('paeckchen.js', {
+                    content: contentMap,
+                    sourcemaps: contentSourceMaps
+                  });
+                  outputAndCache(bundleResult.code, chain.apply().toString());
+                });
+            });
         }
       })
     .catch(error => {

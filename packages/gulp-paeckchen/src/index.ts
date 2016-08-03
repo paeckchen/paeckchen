@@ -1,12 +1,17 @@
-import { join, relative } from 'path';
+import { join, relative, dirname } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError } from 'gulp-util';
 import * as through from 'through2';
+import { fromJSON, fromObject } from 'convert-source-map';
 import { bundle, BundleOptions } from 'paeckchen-core';
 import { GulpHost } from './host';
 import { GulpLogger } from './logger';
 
 const PLUGIN_NAME = 'gulp-paeckchen';
+
+interface ExtendedFile extends File {
+  sourceMap?: any;
+}
 
 export interface GulpOptions extends BundleOptions {
   exitOnError?: boolean;
@@ -28,7 +33,7 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
   // Always enable, because it does not keep node running when not in watch mode
   opts.watchMode = true;
 
-  let firstFile: File;
+  let firstFile: ExtendedFile;
   let host: GulpHost;
   let firstFlush = true;
   // Remember stream and callback in paeckchen scope, not in stream scope
@@ -36,7 +41,7 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
   let stream: Transform;
   let flushCallback: () => void;
 
-  function createHost(this: Transform, file: File, enc: string,
+  function createHost(this: Transform, file: ExtendedFile, enc: string,
       callback: (err?: any, data?: any) => void): void {
     if (file.isNull()) {
       return callback(null, file);
@@ -51,7 +56,15 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
     if (!host) {
       host = new GulpHost();
     }
+    console.error('add file', file.path, file.contents.toString());
     host.addFile(file);
+    if (file.sourceMap) {
+      console.error('SM', file.path, file.sourceMap);
+      host.addFile(new File({
+        path: `${file.path}.map`,
+        contents: new Buffer(fromObject(file.sourceMap).toJSON())
+      }));
+    }
 
     callback();
   }
@@ -75,7 +88,14 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
             const path = join(context.config.output.folder,
               context.config.output.file || relative(firstFile.cwd, firstFile.path));
             context.host.writeFile(path, code);
-            stream.push(host.getFile(path));
+            const file = host.getFile(path) as ExtendedFile;
+            if (sourceMap) {
+              const sourceMapConverter = fromJSON(sourceMap);
+              file.sourceMap = sourceMapConverter.toObject();
+              file.sourceMap.file = path;
+              console.error('result-map', file.sourceMap);
+            }
+            stream.push(file);
             flushCallback();
           }
         });

@@ -11,16 +11,16 @@ const bundler = paeckchen({
   entryPoint: './src/main.js',
   // We should specifiy this, otherwise the first (maybe random) file give to gulp will name it
   outputFile: './src/main.js',
-  sourceMap: 'inline',
+  sourceMap: true,
   logLevel: 'debug'
 });
 
 gulp.task('build', () => {
   return tsProject.src()
+    .pipe(sourcemaps.init())
     .pipe(ts(tsProject))
     .pipe(bundler())
-    .pipe(sourcemaps.init())
-    .pipe(uglify())
+    // .pipe(uglify())
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('./dist'));
 });
