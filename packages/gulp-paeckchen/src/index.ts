@@ -1,4 +1,4 @@
-import { join, relative, dirname } from 'path';
+import { join, relative } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError } from 'gulp-util';
 import * as through from 'through2';
@@ -56,10 +56,8 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
     if (!host) {
       host = new GulpHost();
     }
-    console.error('add file', file.path, file.contents.toString());
     host.addFile(file);
     if (file.sourceMap) {
-      console.error('SM', file.path, file.sourceMap);
       host.addFile(new File({
         path: `${file.path}.map`,
         contents: new Buffer(fromObject(file.sourceMap).toJSON())
@@ -93,7 +91,6 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
               const sourceMapConverter = fromJSON(sourceMap);
               file.sourceMap = sourceMapConverter.toObject();
               file.sourceMap.file = path;
-              console.error('result-map', file.sourceMap);
             }
             stream.push(file);
             flushCallback();
