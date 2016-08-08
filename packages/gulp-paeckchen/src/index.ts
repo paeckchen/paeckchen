@@ -1,4 +1,4 @@
-import { join, relative } from 'path';
+import { relative } from 'path';
 import { Transform } from 'stream';
 import { File, PluginError } from 'gulp-util';
 import * as through from 'through2';
@@ -54,7 +54,7 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
       firstFile = file;
     }
     if (!host) {
-      host = new GulpHost();
+      host = new GulpHost(firstFile.base);
     }
     host.addFile(file);
     if (file.sourceMap) {
@@ -83,15 +83,20 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
               stream.emit('end');
             }
           } else if (context && code) {
-            const path = join(context.config.output.folder,
-              context.config.output.file || relative(firstFile.cwd, firstFile.path));
-            context.host.writeFile(path, code);
-            const file = host.getFile(path) as ExtendedFile;
+            const path = context.config.output.file || relative(firstFile.base, firstFile.path);
+            const file: ExtendedFile = new File({
+              path,
+              contents: new Buffer(code)
+            });
+
             if (sourceMap) {
-              const sourceMapConverter = fromJSON(sourceMap);
-              file.sourceMap = sourceMapConverter.toObject();
-              file.sourceMap.file = path;
+              file.sourceMap = fromJSON(sourceMap).toObject();
+              // TODO: Core should write correct sourceMap name
+              file.sourceMap.file = context.config.output.file || firstFile.basename;
+              // TODO: Core should write source entries relative to hosts cwd
+              file.sourceMap.sources = file.sourceMap.sources.map((file: string) => relative(firstFile.base, file));
             }
+            host.addFile(file);
             stream.push(file);
             flushCallback();
           }

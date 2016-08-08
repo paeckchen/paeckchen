@@ -8,9 +8,9 @@ const tsProject = ts.createProject('tsconfig.json');
 
 const bundler = paeckchen({
   // This is already transpiled by typescript, therefore its main.js
-  entryPoint: './src/main.js',
+  entryPoint: 'main.js',
   // We should specifiy this, otherwise the first (maybe random) file give to gulp will name it
-  outputFile: './src/main.js',
+  outputFile: 'main.js',
   sourceMap: true,
   logLevel: 'debug'
 });
@@ -20,7 +20,7 @@ gulp.task('build', () => {
     .pipe(sourcemaps.init())
     .pipe(ts(tsProject))
     .pipe(bundler())
-    // .pipe(uglify())
+    .pipe(uglify())
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('./dist'));
 });

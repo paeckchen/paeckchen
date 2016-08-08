@@ -5,7 +5,7 @@ import { VinylWatcher } from '../src/watcher';
 import { GulpHost } from '../src/host';
 
 test('GulpHost should return previously added files', t => {
-  const host = new GulpHost();
+  const host = new GulpHost('/');
   const file = new File({
     path: '/test'
   });
@@ -15,7 +15,7 @@ test('GulpHost should return previously added files', t => {
 });
 
 test.cb('GulpHost should add new watched files to the watcher', t => {
-  const host = new GulpHost();
+  const host = new GulpHost('.');
   const watcher = host.createWatcher();
   watcher.start((event, fileName) => {
     t.is(event, 'add');
@@ -33,7 +33,7 @@ test.cb('GulpHost should add new watched files to the watcher', t => {
 });
 
 test.cb('GulpHost should update existing watched files', t => {
-  const host = new GulpHost();
+  const host = new GulpHost('.');
   const watcher = host.createWatcher();
   let secondEmit = false;
   watcher.start((event, fileName) => {
@@ -57,7 +57,7 @@ test.cb('GulpHost should update existing watched files', t => {
 });
 
 test.cb('GulpHost should update only newer files', t => {
-  const host = new GulpHost();
+  const host = new GulpHost('.');
   const watcher = host.createWatcher();
   let oneUpdate = false;
   let twoUpdate = false;
