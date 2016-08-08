@@ -14,6 +14,14 @@ test('GulpHost should return previously added files', t => {
   t.is(host.getFile(file.path), file);
 });
 
+test('GulpHost should store files written with it', t => {
+  const host = new GulpHost('/');
+
+  host.writeFile('/test', 'content');
+  t.is((host.getFile('/test') as File).path, '/test');
+  t.is((host.getFile('/test') as File).contents.toString(), 'content');
+});
+
 test.cb('GulpHost should add new watched files to the watcher', t => {
   const host = new GulpHost('.');
   const watcher = host.createWatcher();
