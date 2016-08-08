@@ -91,10 +91,8 @@ export function paeckchen(opts: GulpOptions|string = {}): GulpPaeckchen {
 
             if (sourceMap) {
               file.sourceMap = fromJSON(sourceMap).toObject();
-              // TODO: Core should write correct sourceMap name
+              // Fix sourcemap output name if one was given upfront
               file.sourceMap.file = context.config.output.file || firstFile.basename;
-              // TODO: Core should write source entries relative to hosts cwd
-              file.sourceMap.sources = file.sourceMap.sources.map((file: string) => relative(firstFile.base, file));
             }
             host.addFile(file);
             stream.push(file);

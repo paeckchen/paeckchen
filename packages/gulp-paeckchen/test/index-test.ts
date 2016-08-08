@@ -2,6 +2,8 @@ import test from 'ava';
 import { runInNewContext } from 'vm';
 import * as gulp from 'gulp';
 import { File, PluginError } from 'gulp-util';
+import { Transform } from 'stream';
+import * as through from 'through2';
 import { Logger } from 'paeckchen-core';
 
 import { paeckchen } from '../src/index';
@@ -54,7 +56,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
   let msg: string;
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()})())
+    .pipe(paeckchen({entryPoint: 'test.js', logger: new TestLogger()})())
     .on('data', (data: File) => {
       const code = data.contents.toString();
       runInNewContext(code, {
@@ -77,7 +79,7 @@ test.cb('paeckchen-gulp bundles on end of stream', t => {
 
 test.cb('paeckchen-gulp throws in error during bundling', t => {
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', exitOnError: false, logger: new TestLogger()})())
+    .pipe(paeckchen({entryPoint: 'not-found.js', exitOnError: false, logger: new TestLogger()})())
     .on('data', (data: File) => {
       t.fail(`Expected error`);
     })
@@ -101,7 +103,7 @@ test.cb('paeckchen-gulp will stop on error by default', t => {
   };
 
   gulp.src('fixtures/*.js')
-    .pipe(paeckchen({entryPoint: 'fixtures/not-found.js', logger: new TestLogger()})())
+    .pipe(paeckchen({entryPoint: 'not-found.js', logger: new TestLogger()})())
     .on('data', (data: File) => {
       t.fail(`Expected error`);
       t.end();
@@ -109,8 +111,13 @@ test.cb('paeckchen-gulp will stop on error by default', t => {
 });
 
 test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
-  const bundler = paeckchen({entryPoint: 'fixtures/test.js', logger: new TestLogger()});
+  function touchFile(this: Transform, file: File, _: any, callback: () => void): void {
+    file.stat.mtime.setTime(file.stat.mtime.getTime() + 1);
+    this.push(file);
+    callback();
+  };
 
+  const bundler = paeckchen({entryPoint: 'test.js', logger: new TestLogger()});
   gulp.src('fixtures/*.js')
     .pipe(bundler())
     .on('data', (data: File) => {
@@ -118,11 +125,20 @@ test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
 
       // Simulate watch update
       gulp.src('fixtures/*.js')
+        .pipe(through.obj(touchFile))
         .pipe(bundler())
         .on('data', (dataUpdate: File) => {
           t.is(dataUpdate.basename, 'test.js');
           t.deepEqual(data.contents.toString(), dataUpdate.contents.toString());
           t.end();
+        })
+        .on('error', (err: PluginError) => {
+          t.fail(`Unexpected error ${err}`);
+          t.end();
         });
+    })
+    .on('error', (err: PluginError) => {
+      t.fail(`Unexpected error ${err}`);
+      t.end();
     });
 });
