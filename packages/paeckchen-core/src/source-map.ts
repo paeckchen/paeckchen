@@ -1,3 +1,4 @@
+import { relative } from 'path';
 import { loadSync as sorceryLoadSync } from 'paeckchen-sorcery';
 import { State } from './state';
 import { PaeckchenContext } from './bundle';
@@ -28,11 +29,15 @@ export function generateSourceMap(state: State, context: PaeckchenContext,
   return readSourcesAndMaps(context, files)
     .then(({sources, maps}) => {
       const content = listToObject(files, index => sources[index]);
-      content['paeckchen.js'] = input.code;
+      const outputFileName = context.config.output.file || 'paeckchen.js';
+      content[outputFileName] = input.code;
       const sourcemaps = listToObject(files, index => maps[index] ? JSON.parse(maps[index]) : undefined);
-      sourcemaps['paeckchen.js'] = JSON.parse(input.map.toString());
+      sourcemaps[outputFileName] = JSON.parse(input.map.toString());
 
-      const chain = sorceryLoadSync('paeckchen.js', { content, sourcemaps });
-      return chain.apply().toString();
+      const chain = sorceryLoadSync(outputFileName, { content, sourcemaps });
+      const map = JSON.parse(chain.apply().toString());
+      // Rewrite sources relative to host.cwd
+      map.sources = map.sources.map((file: string) => relative(context.host.cwd(), file));
+      return JSON.stringify(map);
     });
 }
