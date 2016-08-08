@@ -181,7 +181,7 @@ test.cb('bundle should create a watch and a rebundle function when in watch mode
 });
 
 test.cb('bundle with source maps should add mappings via sorcery', t => {
-  const paths = (list: string[]) => list.map(entry => entry.replace('\\', '/'));
+  const paths = (list: string[]) => list.map(entry => entry.replace(/\\/g, '/'));
 
   const config: BundleOptions = {
     entryPoint: './fixtures/main.js',
