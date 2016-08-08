@@ -15,9 +15,15 @@ function isNewer(file1: File, file2: File): boolean {
 
 export class GulpHost implements Host {
 
+  private _cwd: string;
+
   private watcher: VinylWatcher;
 
   private files: {[path: string]: File} = {};
+
+  constructor(cwd: string) {
+    this._cwd = cwd;
+  }
 
   public addFile(file: File): void {
     const exists = file.path in this.files;
@@ -37,7 +43,7 @@ export class GulpHost implements Host {
   }
 
   public cwd(): string {
-    return process.cwd();
+    return this._cwd;
   }
 
   public fileExists(path: string): boolean {
@@ -59,10 +65,10 @@ export class GulpHost implements Host {
   }
 
   public writeFile(path: string, content: string): void {
-    this.files[path] = new File({
+    this.addFile(new File({
       path,
       contents: new Buffer(content)
-    });
+    }));
   }
 
   public getModificationTime(path: string): Promise<number> {

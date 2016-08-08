@@ -2,7 +2,7 @@ const gulp = require('gulp');
 const paeckchen = require('gulp-paeckchen').paeckchen;
 
 const bundler = paeckchen({
-  entryPoint: './src/main.js',
+  entryPoint: 'main.js',
   logLevel: 'trace'
 });
 
