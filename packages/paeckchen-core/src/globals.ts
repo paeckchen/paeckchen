@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { visit, builders as b, Path, Visitor } from 'ast-types';
 import { getModulePath } from './module-path';
 import { getModuleIndex, enqueueModule } from './modules';

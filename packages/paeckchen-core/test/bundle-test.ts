@@ -1,4 +1,5 @@
 import test from 'ava';
+import * as ESTree from 'estree';
 import { join } from 'path';
 import { errorLogger, HostMock, virtualModule } from './helper';
 import { State } from '../src/state';

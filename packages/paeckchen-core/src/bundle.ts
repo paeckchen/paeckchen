@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
@@ -42,7 +43,7 @@ export interface PaeckchenContext {
 }
 
 function getModules(ast: ESTree.Program): ESTree.ArrayExpression {
-  return (ast as any).body[2].declarations[0].init;
+  return (ast.body[2] as ESTree.VariableDeclaration).declarations[0].init as ESTree.ArrayExpression;
 }
 
 const paeckchenSource = `
@@ -176,7 +177,7 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
       return readCache(context)
         .then(cache => {
           const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
-          const state = new State(getModules(paeckchenAst).elements);
+          const state = new State(getModules(paeckchenAst).elements as ESTree.Expression[]);
           if (cache.state) {
             return state.load(context, cache.state)
               .then(() => {

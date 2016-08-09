@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { resolve } from 'path';
 import { runInNewContext } from 'vm';
 import * as acorn from 'acorn';

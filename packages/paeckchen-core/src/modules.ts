@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { parse } from 'acorn';
 import { builders as b } from 'ast-types';
 
@@ -45,7 +46,7 @@ function createModuleWrapper(context: PaeckchenContext, name: string, moduleAst:
             b.identifier('exports')
           ],
           b.blockStatement(
-            moduleAst.body
+            moduleAst.body as ESTree.Statement[]
           )
         ),
         remove: false,
@@ -144,7 +145,7 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
           })
           .then(moduleAst => {
             const moduleIndex = getModuleIndex(modulePath, state);
-            state.modules[moduleIndex] = moduleAst as ESTree.Statement;
+            state.modules[moduleIndex] = moduleAst as ESTree.Expression;
           })
           .catch(e => {
             context.logger.error('module', e, `Failed to process module '${modulePath}'`);

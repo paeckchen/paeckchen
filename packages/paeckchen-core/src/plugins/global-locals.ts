@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { dirname } from 'path';
 import { visit, builders as b, Path, Visitor } from 'ast-types';
 
@@ -37,7 +38,7 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
                   b.identifier('__dirname')
                 ],
                 b.blockStatement(
-                  program.body
+                  program.body as ESTree.Statement[]
                 )
               ),
               [

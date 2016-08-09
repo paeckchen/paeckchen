@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { builders as b } from 'ast-types';
 import { PaeckchenContext } from './bundle';
 
