@@ -1,4 +1,5 @@
 declare module 'ast-types' {
+  import * as ESTree from 'estree';
 
   export interface IScope {
     didScan: boolean;
@@ -74,7 +75,7 @@ declare module 'ast-types' {
     export function identifier(name: string): ESTree.Identifier;
     export function assignmentExpression(operator: ESTree.AssignmentOperator, left: ESTree.Pattern, right: ESTree.Expression): ESTree.AssignmentExpression;
     export function memberExpression(object: ESTree.Expression, property: ESTree.Identifier|ESTree.Expression, computed: boolean): ESTree.MemberExpression;
-    export function callExpression(callee: any, arguments: any[]): ESTree.CallExpression;
+    export function callExpression(callee: any, _arguments: any[]): ESTree.CallExpression;
     export function thisExpression(): ESTree.ThisExpression;
     export function functionExpression(id: ESTree.Identifier|null, params: ESTree.Pattern[], body: ESTree.BlockStatement): ESTree.FunctionExpression;
     export function expressionStatement(expression: ESTree.Expression): ESTree.ExpressionStatement;
@@ -88,6 +89,6 @@ declare module 'ast-types' {
     export function property(kind: 'init'|'get'|'set', key: ESTree.Literal|ESTree.Identifier, value: ESTree.Expression): ESTree.Property;
     export function arrayExpression(elements?: ESTree.Expression[]): ESTree.ArrayExpression;
     export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
-    export function newExpression(callee: ESTree.Expression, arguments: ESTree.Expression[]): ESTree.NewExpression;
+    export function newExpression(callee: ESTree.Expression, _arguments: ESTree.Expression[]): ESTree.NewExpression;
   }
 }

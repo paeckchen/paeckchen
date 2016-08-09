@@ -1,11 +1,11 @@
-import test from 'ava';
+import test, { ContextualTestContext } from 'ava';
 import { resolve } from 'path';
 import { writeFile, readFileSync, existsSync, unlinkSync, unlink } from 'fs';
 import { FSWatcher } from '../src/watcher';
 
 import { DefaultHost } from '../src/host';
 
-test.beforeEach(t => {
+test.beforeEach((t: ContextualTestContext) => {
   t.context.host = new DefaultHost();
 });
 

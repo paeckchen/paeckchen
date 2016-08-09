@@ -1,3 +1,4 @@
+import * as ESTree from 'estree';
 import { DetectedGlobals } from './globals';
 import { PaeckchenContext } from './bundle';
 import { updateModule, enqueueModule } from './modules';
@@ -5,7 +6,7 @@ import { updateModule, enqueueModule } from './modules';
 export interface WrappedModule {
   index: number;
   name: string;
-  ast?: ESTree.Statement;
+  ast?: ESTree.Expression;
   remove: boolean;
   mtime: number;
 }
@@ -18,7 +19,7 @@ export class State {
     buffer: false
   };
 
-  public readonly modules: (ESTree.Expression | ESTree.SpreadElement)[];
+  public readonly modules: ESTree.Expression[];
 
   private _wrappedModules: { [name: string]: WrappedModule } = {};
 
@@ -28,7 +29,7 @@ export class State {
 
   public readonly moduleBundleQueue: string[] = [];
 
-  constructor(modules: (ESTree.Expression | ESTree.SpreadElement)[]) {
+  constructor(modules: ESTree.Expression[]) {
     this.modules = modules;
   }
 
