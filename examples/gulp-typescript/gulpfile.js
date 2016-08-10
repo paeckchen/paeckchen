@@ -4,6 +4,7 @@ const paeckchen = require('gulp-paeckchen').paeckchen;
 const uglify = require('gulp-uglify');
 const sourcemaps = require('gulp-sourcemaps');
 
+const sources = 'src/**/*.ts';
 const tsProject = ts.createProject('tsconfig.json');
 
 const bundler = paeckchen({
@@ -11,12 +12,11 @@ const bundler = paeckchen({
   entryPoint: 'main.js',
   // We should specifiy this, otherwise the first (maybe random) file give to gulp will name it
   outputFile: 'main.js',
-  sourceMap: true,
   logLevel: 'debug'
 });
 
 gulp.task('build', () => {
-  return tsProject.src()
+  return gulp.src(sources)
     .pipe(sourcemaps.init())
     .pipe(ts(tsProject))
     .pipe(bundler())
@@ -26,7 +26,7 @@ gulp.task('build', () => {
 });
 
 gulp.task('watch', ['build'], () => {
-  return gulp.watch('./src/**/*.ts', ['build']);
+  return gulp.watch(sources, ['build']);
 });
 
 gulp.task('default', ['build']);
