@@ -6,6 +6,9 @@ node_js:
 - '4'
 matrix:
   fast_finish: true
+branches:
+  only:
+    - master
 cache:
   directories:
   - node_modules
