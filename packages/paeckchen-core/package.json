@@ -62,7 +62,7 @@
     "chokidar": "1.6.0",
     "escodegen": "1.8.1",
     "node-libs-browser": "1.0.0",
-    "paeckchen-sorcery": "0.1.0"
+    "paeckchen-sorcery": "0.1.1"
   },
   "publishConfig": {
     "tag": "next"
