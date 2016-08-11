@@ -8,5 +8,3 @@ Start with
 npm install
 npm start
 ```
-
-Node: SourceMap support is not finished here, since gulp-paeckchen does not read the SourceMaps from gulp.
