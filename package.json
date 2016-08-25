@@ -40,7 +40,7 @@
     "lcov-result-merger": "1.2.0",
     "npm-registry-client": "7.1.2",
     "semver": "5.3.0",
-    "tslint": "3.13.0",
+    "tslint": "3.14.0",
     "typescript": "2.0.0",
     "xo": "0.16.0"
   },
