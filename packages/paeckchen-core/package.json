@@ -47,7 +47,7 @@
     "coveralls": "2.11.12",
     "in-publish": "2.0.0",
     "lodash": "4.14.2",
-    "nyc": "7.1.0",
+    "nyc": "8.1.0",
     "rimraf": "2.5.4",
     "source-map-support": "0.4.2",
     "tslint": "3.14.0",
@@ -80,6 +80,7 @@
   },
   "nyc": {
     "exclude": [
+      "node_modules",
       "dist/src/index.js",
       "dist/test",
       "coverage",
