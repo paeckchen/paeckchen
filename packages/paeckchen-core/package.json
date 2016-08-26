@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
-    "@types/common-tags": "1.2.1",
+    "@types/common-tags": "1.2.3",
     "@types/lodash": "4.14.30",
     "@types/node": "4.0.30",
     "ava": "0.16.0",
