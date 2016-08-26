@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
-    "@types/common-tags": "1.2.1",
+    "@types/common-tags": "1.2.3",
     "@types/lodash": "4.14.30",
     "@types/node": "4.0.30",
     "ava": "0.16.0",
@@ -50,14 +50,14 @@
     "nyc": "8.1.0",
     "rimraf": "2.5.4",
     "source-map-support": "0.4.2",
-    "tslint": "3.14.0",
+    "tslint": "3.15.1",
     "typescript": "2.0.0"
   },
   "dependencies": {
     "@types/acorn": "1.0.30",
     "@types/estree": "0.0.30",
     "acorn": "3.3.0",
-    "ast-types": "0.8.18",
+    "ast-types": "0.9.0",
     "browser-resolve": "1.11.2",
     "chokidar": "1.6.0",
     "escodegen": "1.8.1",
