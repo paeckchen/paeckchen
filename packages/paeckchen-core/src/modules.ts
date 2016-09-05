@@ -67,7 +67,7 @@ export function bundleNextModules(state: State, context: PaeckchenContext,
   if (state.moduleBundleQueue.length === 0) {
     return [];
   }
-  const modules = state.moduleBundleQueue.splice(0);
+  const modules = state.moduleBundleQueue.splice(0, 4);
   return modules.map(modulePath => {
     context.logger.debug('module', `bundle ${modulePath}`);
     return watchModule(state, modulePath, context)
