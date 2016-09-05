@@ -117,10 +117,10 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
         });
 
         if (typeof bundleResult === 'string') {
-          outputAndCache(bundleResult, undefined);
+          return outputAndCache(bundleResult, undefined);
         } else {
           context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
-          generateSourceMap(state, context, bundleResult)
+          return generateSourceMap(state, context, bundleResult)
             .then(sourceMap => outputAndCache(bundleResult.code, sourceMap));
         }
       })
