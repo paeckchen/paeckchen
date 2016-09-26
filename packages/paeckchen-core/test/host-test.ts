@@ -65,7 +65,7 @@ test('DefaultHost#readFile should fail for non existing file', t => {
 });
 
 test('DefaultHost#writeFile should dump the content to disk', t => {
-  const file = resolve(process.cwd(), 'dump.txt');
+  const file = resolve(process.cwd(), 'create-me/dump.txt');
   try {
     (t.context.host as DefaultHost).writeFile(file, 'test-data');
     t.is(readFileSync(file).toString(), 'test-data');
