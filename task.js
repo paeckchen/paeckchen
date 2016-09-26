@@ -137,7 +137,7 @@ function linkDependencies(packageDir) {
                 return fsOutputFile(path.join(dependecyModulPath, 'index.js'),
                     `module.exports = require('../../../${dependency}/')`)
                   .then(() => fsOutputFile(path.join(dependecyModulPath, 'index.d.ts'),
-                    `export * from '../../../${dependency}/index.d.ts';`));
+                    `export * from '../../../${dependency}/index';`));
               });
         });
     });
