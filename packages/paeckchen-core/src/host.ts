@@ -1,5 +1,7 @@
 import { existsSync, readFile, writeFileSync, stat } from 'fs';
+import { dirname } from 'path';
 import { Watcher, FSWatcher } from './watcher';
+import * as mkdirp from 'mkdirp';
 
 export interface Host {
   cwd(): string;
@@ -43,6 +45,7 @@ export class DefaultHost implements Host {
   }
 
   public writeFile(path: string, content: string): void {
+    mkdirp.sync(dirname(path));
     writeFileSync(path, content);
   }
 
