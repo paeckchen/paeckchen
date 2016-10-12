@@ -541,7 +541,7 @@ const commands = {
 
 if (process.argv.length < 3) {
   console.error('Missing task');
-  process.exit(1); // eslint-disable-line xo/no-process-exit
+  process.exit(1); // eslint-disable-line unicorn/no-process-exit
 }
 
 const command = process.argv[2];
@@ -571,5 +571,5 @@ runOnPackages(commands, command, commandArguments)
     if (err.stack) {
       console.error(err.stack);
     }
-    process.exit(1); // eslint-disable-line xo/no-process-exit
+    process.exit(1); // eslint-disable-line unicorn/no-process-exit
   });
