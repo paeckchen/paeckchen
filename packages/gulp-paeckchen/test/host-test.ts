@@ -1,5 +1,6 @@
 import test from 'ava';
 import { File } from 'gulp-util';
+
 import { VinylWatcher } from '../src/watcher';
 
 import { GulpHost } from '../src/host';

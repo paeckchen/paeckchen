@@ -1,8 +1,9 @@
+import { fromObject } from 'convert-source-map';
 import { File, PluginError } from 'gulp-util';
 import { Transform } from 'stream';
-import { fromObject } from 'convert-source-map';
-import { GulpHost } from './host';
+
 import { GulpContext, ExtendedFile, PLUGIN_NAME } from './context';
+import { GulpHost } from './host';
 
 export interface TranformFunction {
   (file: ExtendedFile, enc: string, callback: (err?: any, data?: any) => void): void;

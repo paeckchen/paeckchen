@@ -1,7 +1,8 @@
-import { Transform } from 'stream';
 import { File } from 'gulp-util';
-import { GulpHost } from './host';
 import { BundleOptions, Logger } from 'paeckchen-core';
+import { Transform } from 'stream';
+
+import { GulpHost } from './host';
 
 export const PLUGIN_NAME = 'gulp-paeckchen';
 

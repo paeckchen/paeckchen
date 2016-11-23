@@ -1,8 +1,9 @@
 import * as through from 'through2';
-import { GulpLogger } from './logger';
+
 import { GulpContext, GulpOptions } from './context';
-import { transformFactory } from './transform-factory';
 import { flushFactory } from './flush-factory';
+import { GulpLogger } from './logger';
+import { transformFactory } from './transform-factory';
 
 export interface GulpPaeckchen {
   (): NodeJS.ReadWriteStream;

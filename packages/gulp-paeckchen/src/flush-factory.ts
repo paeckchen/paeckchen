@@ -1,20 +1,21 @@
+import { fromJSON } from 'convert-source-map';
+import { File } from 'gulp-util';
+import { bundle } from 'paeckchen-core';
 import { relative } from 'path';
 import { Transform } from 'stream';
-import { File } from 'gulp-util';
-import { fromJSON } from 'convert-source-map';
+
 import { PLUGIN_NAME, GulpContext, GulpOptions, ExtendedFile } from './context';
-import { bundle } from 'paeckchen-core';
 
 export function flushFactory(opts: GulpOptions, gulpContext: GulpContext,
     bundleFn: typeof bundle = bundle): (callback: () => void) => void {
   return function flush(this: Transform, callback: () => void): void {
-    // Remember these out of current scope
+    // remember these out of current scope
     gulpContext.stream = this;
     gulpContext.flushCallback = callback;
     if (gulpContext.host) {
       if (gulpContext.firstFlush) {
         gulpContext.firstFlush = false;
-        // Enable source-map if found in given sources
+        // enable source-map if found in given sources
         if (gulpContext.withSourceMap) {
           (opts as GulpOptions).sourceMap = true;
         }

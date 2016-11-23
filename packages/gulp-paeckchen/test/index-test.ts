@@ -1,9 +1,9 @@
 import test from 'ava';
 import * as gulp from 'gulp';
 import { File, PluginError } from 'gulp-util';
+import { Logger } from 'paeckchen-core';
 import { Transform } from 'stream';
 import * as through from 'through2';
-import { Logger } from 'paeckchen-core';
 
 import { paeckchen } from '../src/index';
 
