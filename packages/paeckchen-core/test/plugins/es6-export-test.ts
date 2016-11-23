@@ -1,8 +1,9 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
-import { State } from '../../src/state';
+
 import { NoopLogger } from '../../src/logger';
+import { State } from '../../src/state';
+import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
@@ -119,7 +120,7 @@ test('es6-export plugin should rewrite named reexports correctly', t => {
   `;
   const exported = {
     exports: {
-      foo: 'bar',
+      foo: 'bar'
     }
   };
   const files = {

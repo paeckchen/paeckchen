@@ -1,6 +1,7 @@
 import { existsSync, readFile, writeFileSync, stat } from 'fs';
 import * as mkdirp from 'mkdirp';
 import { dirname } from 'path';
+
 import { Watcher, FSWatcher } from './watcher';
 
 export interface Host {

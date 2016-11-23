@@ -1,7 +1,8 @@
 import test from 'ava';
 
-import { createConfig, Config, SourceSpec, Runtime, LogLevel } from '../src/config';
 import { HostMock } from './helper';
+
+import { createConfig, Config, SourceSpec, Runtime, LogLevel } from '../src/config';
 
 test('createConfig should return the config defaults', t => {
   const host = new HostMock({
@@ -13,7 +14,7 @@ test('createConfig should return the config defaults', t => {
       t.deepEqual(config, {
         input: {
           entryPoint: undefined,
-          source: SourceSpec.ES2015,
+          source: SourceSpec.ES2015
         },
         output: {
           folder: host.cwd(),
@@ -197,7 +198,7 @@ test('createConfig should read alias from config file', t => {
 
   return createConfig({}, host)
     .then(config => {
-      t.deepEqual(config.aliases, {'module': '/some/path'} as {[name: string]: string});
+      t.deepEqual(config.aliases, {module: '/some/path'} as {[name: string]: string});
     });
 });
 
@@ -240,7 +241,7 @@ test('createConfig should create options from aliases', t => {
   return createConfig({alias: 'name=path'}, host)
     .then(config => {
       const expected: {[name: string]: string} = {
-        name: 'path',
+        name: 'path'
       };
       t.deepEqual(config.aliases, expected);
     });
@@ -275,7 +276,7 @@ test('createConfig should read externals from config file', t => {
 
   return createConfig({}, host)
     .then(config => {
-      t.deepEqual(config.externals, {'module': 'Global'});
+      t.deepEqual(config.externals, {module: 'Global'});
     });
 });
 
@@ -286,7 +287,7 @@ test('createConfig should convert externals "false" to false', t => {
 
   return createConfig({}, host)
     .then(config => {
-      t.deepEqual(config.externals, {'module': false});
+      t.deepEqual(config.externals, {module: false});
     });
 });
 
@@ -329,7 +330,7 @@ test('createConfig should create options from externals', t => {
   return createConfig({external: 'name=var'}, host)
     .then(config => {
       const expected: {[name: string]: string} = {
-        name: 'var',
+        name: 'var'
       };
       t.deepEqual(config.externals, expected);
     });

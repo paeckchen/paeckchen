@@ -1,18 +1,18 @@
-import * as ESTree from 'estree';
-import { join } from 'path';
 import { parse } from 'acorn';
 import { generate } from 'escodegen';
+import * as ESTree from 'estree';
+import { join } from 'path';
 
+import { updateCache, readCache } from './cache';
+import { createConfig, Config } from './config';
+import { injectGlobals } from './globals';
 import { Host, DefaultHost } from './host';
+import { ProgressStep, Logger, NoopLogger } from './logger';
 import { getModulePath } from './module-path';
 import { enqueueModule, bundleNextModules } from './modules';
-import { injectGlobals } from './globals';
-import { createConfig, Config } from './config';
+import { generateSourceMap } from './source-map';
 import { State } from './state';
 import { Watcher, FSWatcher } from './watcher';
-import { ProgressStep, Logger, NoopLogger } from './logger';
-import { updateCache, readCache } from './cache';
-import { generateSourceMap } from './source-map';
 
 export type SourceOptions =
     'es5'

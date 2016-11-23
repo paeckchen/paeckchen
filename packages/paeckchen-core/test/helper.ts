@@ -1,10 +1,11 @@
+import * as acorn from 'acorn';
+import { oneLine } from 'common-tags';
+import { generate as escodegenGenerate } from 'escodegen';
 import * as ESTree from 'estree';
+import { merge } from 'lodash';
 import { resolve } from 'path';
 import { runInNewContext } from 'vm';
-import * as acorn from 'acorn';
-import { generate as escodegenGenerate } from 'escodegen';
-import { merge } from 'lodash';
-import { oneLine } from 'common-tags';
+
 import { Host } from '../src/host';
 import { FSWatcher } from '../src/watcher';
 import { ChokidarMock } from './watcher-test';

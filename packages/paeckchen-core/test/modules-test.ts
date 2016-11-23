@@ -1,8 +1,9 @@
 import test from 'ava';
 import { runInNewContext } from 'vm';
-import { State } from '../src/state';
-import { NoopLogger } from '../src/logger';
+
 import { PaeckchenContext } from '../src/bundle';
+import { NoopLogger } from '../src/logger';
+import { State } from '../src/state';
 import { HostMock, generate } from './helper';
 
 import { getModuleIndex, updateModule, enqueueModule, bundleNextModules } from '../src/modules';
@@ -61,8 +62,8 @@ test('bundleNextModules should call all given plugins', t => {
   const state = new State([]);
   let pluginCalls = 0;
   const plugins = {
-    a: function(): void { pluginCalls++; },
-    b: function(): void { pluginCalls++; }
+    a(): void { pluginCalls++; },
+    b(): void { pluginCalls++; }
   };
   const host = new HostMock({
     '/some/mod.js': 'console.log("test");'

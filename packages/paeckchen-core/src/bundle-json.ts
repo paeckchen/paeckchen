@@ -1,5 +1,5 @@
-import * as ESTree from 'estree';
 import { builders as b } from 'ast-types';
+import * as ESTree from 'estree';
 import { PaeckchenContext } from './bundle';
 
 export function buildValue(data: any): ESTree.ObjectExpression|ESTree.ArrayExpression|ESTree.Literal {

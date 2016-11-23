@@ -1,4 +1,5 @@
 import test from 'ava';
+
 import { NoopLogger } from '../../src/logger';
 import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 

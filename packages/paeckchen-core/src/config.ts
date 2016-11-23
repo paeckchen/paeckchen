@@ -91,6 +91,7 @@ function processKeyValueOption<V>(list: string|string[]|undefined, config: {[key
     const split = (alias: string) => alias.split('=');
     const assign = (object: {[key: string]: V}, input: string) => {
       const [key, value] = split(input);
+      // tslint:disable-next-line
       // TODO: There should be some kind of type cohersion here
       object[key] = value as any;
       return object;
@@ -131,6 +132,7 @@ export function createConfig(options: BundleOptions, host: Host): Promise<Config
       }
       return {};
     })
+    // tslint:disable-next-line cyclomatic-complexity
     .then((configFile: any) => {
       return {
         input: {

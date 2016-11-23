@@ -1,8 +1,9 @@
 import test from 'ava';
 import { runInNewContext } from 'vm';
-import { parse, generate, HostMock } from './helper';
-import { State } from '../src/state';
+
 import { NoopLogger } from '../src/logger';
+import { State } from '../src/state';
+import { parse, generate, HostMock } from './helper';
 
 import { checkGlobalIdentifier, injectGlobals } from '../src/globals';
 
@@ -59,7 +60,7 @@ test('injectGlobals should define global if not already in scope', t => {
     .then(code => {
       const sandbox: any = {
         console,
-        __paeckchen_require__: function(idx: number): any {
+        __paeckchen_require__(idx: number): any {
           if (idx === 0) {
             // process
             return {
@@ -68,11 +69,11 @@ test('injectGlobals should define global if not already in scope', t => {
               }
             };
           } else if (idx === 1) {
-            // Buffer
+            // buffer
             return {
               exports: {
                 Buffer: {
-                  isBuffer: function(): void { /*noop*/ }
+                  isBuffer(): void { /*noop*/ }
                 }
               }
             };

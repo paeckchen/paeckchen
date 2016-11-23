@@ -1,9 +1,9 @@
-import * as ESTree from 'estree';
 import { visit, builders as b, namedTypes as n, Path, Visitor } from 'ast-types';
+import * as ESTree from 'estree';
 
-import { getModuleIndex, enqueueModule } from '../modules';
-import { getModulePath } from '../module-path';
 import { PaeckchenContext } from '../bundle';
+import { getModulePath } from '../module-path';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
 export function rewriteRequireStatements(program: ESTree.Program, currentModule: string,
@@ -18,6 +18,7 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
       visit(program, {
         visitCallExpression(this: Visitor, path: Path<ESTree.CallExpression>): boolean|void {
           const callee = path.node.callee;
+          // tslint:disable-next-line
           // TODO: check binding here, not name
           if (n.Identifier.check(callee) && callee.name === 'require') {
             const importPath = path.node.arguments[0];

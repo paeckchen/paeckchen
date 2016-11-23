@@ -1,5 +1,6 @@
-import * as path from 'path';
 import test from 'ava';
+import * as path from 'path';
+
 import { SourceSpec } from '../src/config';
 import { NoopLogger } from '../src/logger';
 import { HostMock } from './helper';
@@ -253,7 +254,7 @@ test('getModulePath should keep external module names as is', t => {
       input: {
       },
       externals: {
-        'jQuery': '$'
+        jQuery: '$'
       }
     } as any,
     host,

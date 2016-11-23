@@ -1,13 +1,13 @@
-import * as ESTree from 'estree';
 import { parse } from 'acorn';
 import { builders as b } from 'ast-types';
+import * as ESTree from 'estree';
 
 import { PaeckchenContext } from './bundle';
+import { wrapJsonFile } from './bundle-json';
+import { checkGlobals } from './globals';
 import * as defaultPlugins from './plugins';
 import { Plugins } from './plugins';
-import { checkGlobals } from './globals';
 import { WrappedModule, State } from './state';
-import { wrapJsonFile } from './bundle-json';
 
 export function getModuleIndex(moduleName: string, state: State): number {
   if (state.wrappedModules[moduleName]) {
@@ -114,7 +114,7 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
   context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
   return Promise.resolve()
     .then(() => {
-      // Prefill index
+      // prefill index
       getModuleIndex(modulePath, state);
       return state.wrappedModules[modulePath].ast !== undefined;
     })
