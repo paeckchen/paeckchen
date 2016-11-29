@@ -2,7 +2,6 @@ sudo: false
 language: node_js
 node_js:
 - '6'
-- '5'
 - '4'
 matrix:
   fast_finish: true
@@ -19,6 +18,6 @@ notifications:
   email:
     on_success: never
 
-before_script: 'npm run bootstrap; npm run linter'
+before_script: 'npm run bootstrap'
 script: 'npm run coverage'
 after_script: "./node_modules/.bin/lcov-result-merger 'packages/*/coverage/lcov.info' | ./node_modules/.bin/coveralls"
