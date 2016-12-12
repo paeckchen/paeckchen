@@ -1,9 +1,9 @@
 import test from 'ava';
 import * as gulp from 'gulp';
 import { File, PluginError } from 'gulp-util';
+import { Logger } from 'paeckchen-core';
 import { Transform } from 'stream';
 import * as through from 'through2';
-import { Logger } from 'paeckchen-core';
 
 import { paeckchen } from '../src/index';
 
@@ -54,7 +54,7 @@ test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
     file.stat.mtime.setTime(file.stat.mtime.getTime() + 1);
     this.push(file);
     callback();
-  };
+  }
 
   const bundler = paeckchen({entryPoint: 'test.js', logger: new TestLogger()});
   gulp.src('fixtures/*.js')
@@ -62,7 +62,7 @@ test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
     .on('data', (data: File) => {
       t.is(data.basename, 'test.js');
 
-      // Simulate watch update
+      // simulate watch update
       gulp.src('fixtures/*.js')
         .pipe(through.obj(touchFile))
         .pipe(bundler())

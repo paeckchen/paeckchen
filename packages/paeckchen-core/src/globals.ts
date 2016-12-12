@@ -1,8 +1,9 @@
+import { builders as b, Path, visit, Visitor } from 'ast-types';
 import * as ESTree from 'estree';
-import { visit, builders as b, Path, Visitor } from 'ast-types';
-import { getModulePath } from './module-path';
-import { getModuleIndex, enqueueModule } from './modules';
+
 import { PaeckchenContext } from './bundle';
+import { getModulePath } from './module-path';
+import { enqueueModule, getModuleIndex } from './modules';
 import { State } from './state';
 
 export interface DetectedGlobals {
@@ -14,7 +15,7 @@ export interface DetectedGlobals {
 export function checkGlobalIdentifier(name: string, ast: ESTree.Program): boolean {
   let detectedGlobalIdentifier = false;
   visit(ast, {
-    visitIdentifier: function(this: Visitor, path: Path<ESTree.Identifier>): void {
+    visitIdentifier(this: Visitor, path: Path<ESTree.Identifier>): void {
       if (path.node.name === name && path.scope.lookup(name) === null) {
         detectedGlobalIdentifier = true;
         this.abort();
@@ -35,7 +36,7 @@ function injectGlobal(ast: ESTree.Program): Promise<void> {
   return Promise.resolve()
     .then(() => {
       visit(ast, {
-        visitProgram: function(path: Path<ESTree.Program>): boolean {
+        visitProgram(path: Path<ESTree.Program>): boolean {
           if (path.scope.lookup('global') === null) {
             const body = path.get<ESTree.Statement[]>('body');
             body.get(body.value.length - 1).insertBefore(
@@ -62,7 +63,7 @@ function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: St
       let processPath: Path<ESTree.Program>|undefined = undefined;
 
       visit(ast, {
-        visitProgram: function(path: Path<ESTree.Program>): boolean {
+        visitProgram(path: Path<ESTree.Program>): boolean {
           if (path.scope.lookup('process') === null) {
             processPath = path;
           }
@@ -111,7 +112,7 @@ function injectBuffer(ast: ESTree.Program, context: PaeckchenContext, state: Sta
       let bufferPath: Path<ESTree.Program>|undefined = undefined;
 
       visit(ast, {
-        visitProgram: function(path: Path<ESTree.Program>): boolean {
+        visitProgram(path: Path<ESTree.Program>): boolean {
           if (path.scope.lookup('Buffer') === null) {
             bufferPath = path;
           }

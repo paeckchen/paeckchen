@@ -32,7 +32,7 @@ export class GulpLogger implements Logger {
   }
 
   public progress(step: ProgressStep, current: number, total: number): void {
-    // TODO
+    // todo
   }
 
 }

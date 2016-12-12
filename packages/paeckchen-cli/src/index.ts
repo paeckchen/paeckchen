@@ -1,40 +1,50 @@
 #!/usr/bin/env node
 
+import { bundle, DefaultHost, PaeckchenContext } from 'paeckchen-core';
 import { join, basename } from 'path';
-import { createOptions } from './options';
+
 import { CliLogger } from './cli-logger';
-import { bundle, DefaultHost } from 'paeckchen-core';
+import { createOptions } from './options';
 
 const sourceMappingURL = '\n//# sourceMappingURL=';
+
+function onError(context: PaeckchenContext|undefined, error: Error): void {
+  if (!context) {
+    context = {
+      config: {
+        watchMode: false
+      }
+    } as any;
+  }
+  if (options.logger) {
+    options.logger.error('cli', error, 'Bundeling failed');
+    (options.logger as CliLogger).reset();
+  }
+  if (context && !context.config.watchMode) {
+    process.exit(1);
+  }
+}
+
+function writeSourceMap(context: PaeckchenContext, bundleName: string, code: string|undefined,
+    sourceMap: string): void {
+  if (context.config.output.sourceMap === 'inline') {
+    context.host.writeFile(bundleName, appendSourceMap(code as string, sourceMap));
+  } else {
+    const mapName = bundleName + '.map';
+    context.host.writeFile(bundleName, code + sourceMappingURL + basename(mapName));
+    context.host.writeFile(mapName, sourceMap);
+  }
+}
 
 const options = createOptions(process.argv);
 bundle(options, new DefaultHost(), (error, context, code, sourceMap) => {
   if (error) {
-    if (!context) {
-      context = {
-        config: {
-          watchMode: false
-        }
-      } as any;
-    }
-    if (options.logger) {
-      options.logger.error('cli', error, 'Bundeling failed');
-      (options.logger as CliLogger).reset();
-    }
-    if (context && !context.config.watchMode) {
-      process.exit(1);
-    }
+    onError(context, error);
   } else {
     if (context && context.config.output.file) {
       const bundleName = join(context.config.output.folder, context.config.output.file);
-      const mapName = bundleName + '.map';
       if (sourceMap) {
-        if (context.config.output.sourceMap === 'inline') {
-          context.host.writeFile(bundleName, appendSourceMap(code as string, sourceMap));
-        } else {
-          context.host.writeFile(bundleName, code + sourceMappingURL + basename(mapName));
-          context.host.writeFile(mapName, sourceMap);
-        }
+        writeSourceMap(context, bundleName, code, sourceMap);
       } else {
         context.host.writeFile(bundleName, code as string);
       }

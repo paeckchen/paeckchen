@@ -1,8 +1,9 @@
 import test from 'ava';
 import { stripIndent } from 'common-tags';
-import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
-import { State } from '../../src/state';
+
 import { NoopLogger } from '../../src/logger';
+import { State } from '../../src/state';
+import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '../helper';
 
 import { rewriteImportDeclaration } from '../../src/plugins/es6-import';
 

@@ -1,9 +1,10 @@
 import test from 'ava';
 import * as ESTree from 'estree';
 import { join } from 'path';
-import { errorLogger, HostMock, virtualModule } from './helper';
-import { State } from '../src/state';
+
 import { DefaultHost } from '../src/host';
+import { State } from '../src/state';
+import { errorLogger, HostMock, virtualModule } from './helper';
 
 import { bundle, rebundleFactory, PaeckchenContext, BundleOptions } from '../src/bundle';
 
@@ -31,7 +32,7 @@ test.cb('bundle should bundle the given entry-point and its dependencies', t => 
     }
     let called = false;
     virtualModule(code as string, {
-      callme: function(): void {
+      callme(): void {
         called = true;
       }
     });
@@ -45,7 +46,7 @@ test.cb('bundle should bundle global dependencies', t => {
     '/entry-point.js': `
       Buffer.isBuffer();
     `,
-    'BUFFER': `
+    BUFFER: `
       export const Buffer = {
         isBuffer() {
           callme();
@@ -65,7 +66,7 @@ test.cb('bundle should bundle global dependencies', t => {
     }
     let called = false;
     virtualModule(code as string, {
-      callme: function(): void {
+      callme(): void {
         called = true;
       }
     });
@@ -93,7 +94,7 @@ test.cb('bundle should check for a config-file', t => {
     }
     let called = false;
     virtualModule(code as string, {
-      callback: function(): void {
+      callback(): void {
         called = true;
       }
     });

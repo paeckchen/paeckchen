@@ -1,6 +1,6 @@
+import { visit, builders as b, Path, Visitor } from 'ast-types';
 import * as ESTree from 'estree';
 import { dirname } from 'path';
-import { visit, builders as b, Path, Visitor } from 'ast-types';
 
 import { PaeckchenContext } from '../bundle';
 
@@ -13,11 +13,15 @@ export function rewriteGlobalLocals(program: ESTree.Program, currentModule: stri
     .then(() => {
       let detectedFilename = false;
       let detectedDirname = false;
+
+      const isKnownSymbol = (path: Path<ESTree.Identifier>, name: string) =>
+        path.node.name === name && path.scope.lookup(name) === null;
+
       visit(program, {
-        visitIdentifier: function(this: Visitor, path: Path<ESTree.Identifier>): void {
-          if (path.node.name === '__filename' && path.scope.lookup('__filename') === null) {
+        visitIdentifier(this: Visitor, path: Path<ESTree.Identifier>): void {
+          if (isKnownSymbol(path, '__filename')) {
             detectedFilename = true;
-          } else if (path.node.name === '__dirname' && path.scope.lookup('__dirname') === null) {
+          } else if (isKnownSymbol(path, '__dirname')) {
             detectedDirname = true;
           }
           if (detectedFilename && detectedDirname) {

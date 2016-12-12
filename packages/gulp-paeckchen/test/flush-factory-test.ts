@@ -1,6 +1,7 @@
 import test from 'ava';
 import { File } from 'gulp-util';
 import { bundle } from 'paeckchen-core';
+
 import { ExtendedFile } from '../src/context';
 
 import { flushFactory } from '../src/flush-factory';

@@ -1,6 +1,7 @@
 import * as ESTree from 'estree';
-import { DetectedGlobals } from './globals';
+
 import { PaeckchenContext } from './bundle';
+import { DetectedGlobals } from './globals';
 import { updateModule, enqueueModule } from './modules';
 
 export interface WrappedModule {

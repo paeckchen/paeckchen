@@ -1,9 +1,9 @@
-import * as ESTree from 'estree';
 import { visit, builders as b, namedTypes as n, Path } from 'ast-types';
+import * as ESTree from 'estree';
 
-import { getModuleIndex, enqueueModule } from '../modules';
-import { getModulePath } from '../module-path';
 import { PaeckchenContext } from '../bundle';
+import { getModulePath } from '../module-path';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
 export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string,
@@ -17,12 +17,12 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
       const exportNamedUpdates: [string, Path<ESTree.ExportNamedDeclaration>][] = [];
 
       visit(program, {
-        visitExportAllDeclaration: function(path: Path<ESTree.ExportAllDeclaration>): boolean {
+        visitExportAllDeclaration(path: Path<ESTree.ExportAllDeclaration>): boolean {
           // e.g. export * from './a';
           exportAllUpdates.push([path.node.source.value as string, path]);
           return false;
         },
-        visitExportNamedDeclaration: function (path: Path<ESTree.ExportNamedDeclaration>): boolean {
+        visitExportNamedDeclaration (path: Path<ESTree.ExportNamedDeclaration>): boolean {
           if (path.node.declaration) {
             replaceExportNamedDeclaration(path);
           } else {
@@ -36,7 +36,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           }
           return false;
         },
-        visitExportDefaultDeclaration: function(path: Path<ESTree.ExportDefaultDeclaration>): boolean {
+        visitExportDefaultDeclaration(path: Path<ESTree.ExportDefaultDeclaration>): boolean {
           const declaration = path.node.declaration;
 
           if (n.Identifier.check(declaration)) {
@@ -76,7 +76,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           }
           return false;
         },
-        visitStatement: function(): boolean {
+        visitStatement(): boolean {
           // es2015 exports are only allowed at the top level of a module
           // => we could stop here
           return false;

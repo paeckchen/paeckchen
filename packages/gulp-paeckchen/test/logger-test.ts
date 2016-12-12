@@ -7,7 +7,7 @@ import { GulpLogger } from '../src/logger';
 const gulplog = getLogger('gulplog');
 
 test.beforeEach(t => {
-  gulplog.on('info', (message: string) => {
+  gulplog.on('info', message => {
     t.context.message = message;
   });
 });

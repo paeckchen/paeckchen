@@ -1,6 +1,7 @@
 import test, { ContextualTestContext } from 'ava';
-import { resolve } from 'path';
 import { writeFile, readFileSync, existsSync, unlinkSync, unlink } from 'fs';
+import { resolve } from 'path';
+
 import { FSWatcher } from '../src/watcher';
 
 import { DefaultHost } from '../src/host';
@@ -92,7 +93,7 @@ test.cb('DefaultHost#getModificationTime should return the mtime of the given fi
     unlink(file, () => {
       t.end();
     });
-  };
+  }
 
   const file = resolve(process.cwd(), 'mtime-test.txt');
   write(file, '0', () => {

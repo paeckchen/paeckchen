@@ -1,5 +1,5 @@
-import { dirname } from 'path';
 import { FSWatcher as Chokidar } from 'chokidar';
+import { dirname } from 'path';
 
 type FileMap = { [name: string]: boolean };
 type WatcherMap = { [name: string]: number };

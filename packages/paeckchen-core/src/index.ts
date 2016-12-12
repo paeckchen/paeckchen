@@ -8,6 +8,10 @@ export {
   PaeckchenContext
 } from './bundle';
 export {
+  Config,
+  LogLevel
+} from './config';
+export {
   Host,
   DefaultHost
 } from './host';
@@ -15,10 +19,6 @@ export {
   ProgressStep,
   Logger
 } from './logger';
-export {
-  Config,
-  LogLevel
-} from './config';
 export {
   Watcher
 } from './watcher';

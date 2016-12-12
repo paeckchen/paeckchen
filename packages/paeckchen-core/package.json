@@ -9,7 +9,6 @@
   ],
   "scripts": {
     "clean": "rimraf dist .nyc_output coverage",
-    "linter": "tslint '{src,test}/**/*.ts'",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap",
     "prebuild:watch": "npm run clean",
@@ -22,7 +21,9 @@
     "version": "npm run build && conventional-changelog -p angular -v -r 0 > CHANGELOG.md && git add -A .",
     "postversion": "git push && git push --tags",
     "prepublish": "not-in-install && npm run test || echo 'In install cycle, skipping prepublish'",
-    "precoverage": "npm run clean && tsc --inlineSourceMap",
+    "prelinter": "npm run build",
+    "linter": "tslint --project ./tsconfig.json --type-check",
+    "precoverage": "npm run clean && tsc --inlineSourceMap && npm run linter",
     "coverage": "nyc --reporter lcov --all ava"
   },
   "repository": {
@@ -39,6 +40,7 @@
   },
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
+    "@types/browser-resolve": "0.0.4",
     "@types/common-tags": "1.2.3",
     "@types/lodash": "4.14.34",
     "@types/mkdirp": "0.3.29",
@@ -51,7 +53,7 @@
     "nyc": "8.1.0",
     "rimraf": "2.5.4",
     "source-map-support": "0.4.2",
-    "tslint": "3.15.1",
+    "tslint": "4.0.1",
     "typescript": "2.0.0"
   },
   "dependencies": {

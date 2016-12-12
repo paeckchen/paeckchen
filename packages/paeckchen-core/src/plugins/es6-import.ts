@@ -1,9 +1,9 @@
-import * as ESTree from 'estree';
 import { visit, builders as b, namedTypes as n, Path } from 'ast-types';
+import * as ESTree from 'estree';
 
-import { getModuleIndex, enqueueModule } from '../modules';
-import { getModulePath } from '../module-path';
 import { PaeckchenContext } from '../bundle';
+import { getModulePath } from '../module-path';
+import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
 export function rewriteImportDeclaration(program: ESTree.Program, currentModule: string,
@@ -16,11 +16,11 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
       const updates: [string, Path<ESTree.ImportDeclaration>][] = [];
 
       visit(program, {
-        visitImportDeclaration: function(path: Path<ESTree.ImportDeclaration>): boolean {
+        visitImportDeclaration(path: Path<ESTree.ImportDeclaration>): boolean {
           updates.push([path.node.source.value as string, path]);
           return false;
         },
-        visitStatement: function(): boolean {
+        visitStatement(): boolean {
           // es2015 imports are only allowed at the top level of a module
           // => we could stop here
           return false;

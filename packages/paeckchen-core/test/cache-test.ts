@@ -1,4 +1,5 @@
 import test from 'ava';
+
 import { HostMock } from './helper';
 
 import { readCache } from '../src/cache';

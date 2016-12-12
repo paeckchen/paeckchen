@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "clean": "rimraf dist .nyc_output coverage",
-    "linter": "tslint '{src,test}/**/*.ts'",
+    "prelinter": "npm run build",
+    "linter": "tslint --project ./tsconfig.json",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap --skipLibCheck",
     "prebuild:watch": "npm run clean",
@@ -24,7 +25,7 @@
     "version": "npm run build && conventional-changelog -p angular -v -r 0 > CHANGELOG.md && git add -A .",
     "postversion": "git push && git push --tags",
     "prepublish": "not-in-install && npm run test || echo 'In install cycle, skipping prepublish'",
-    "precoverage": "npm run clean && tsc --inlineSourceMap --skipLibCheck",
+    "precoverage": "npm run clean && tsc --inlineSourceMap --skipLibCheck && npm run linter",
     "coverage": "nyc --reporter lcov --all ava"
   },
   "repository": {
@@ -47,6 +48,7 @@
   ],
   "devDependencies": {
     "@types/debug": "0.0.28",
+    "@types/meow": "3.6.0",
     "@types/minimist": "1.1.28",
     "@types/node": "4.0.30",
     "ava": "0.15.2",
@@ -56,7 +58,7 @@
     "nyc": "8.1.0",
     "rimraf": "2.5.4",
     "source-map-support": "0.4.2",
-    "tslint": "3.14.0",
+    "tslint": "4.0.1",
     "typescript": "2.0.0"
   },
   "dependencies": {

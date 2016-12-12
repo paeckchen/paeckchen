@@ -1,5 +1,6 @@
 import test from 'ava';
 import { resolve } from 'path';
+
 import { HostMock, errorLogger } from './helper';
 
 import { State } from '../src/state';

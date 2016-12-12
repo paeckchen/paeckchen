@@ -1,5 +1,6 @@
 import * as browserResolve from 'browser-resolve';
 import * as nodeCoreLibs from 'node-libs-browser';
+
 import { PaeckchenContext } from './bundle';
 import { SourceSpec } from './config';
 
@@ -70,7 +71,7 @@ export function getModulePath(filename: string, importIdentifier: string, contex
       importOrAliasIdentifier = context.config.aliases[importIdentifier];
     }
     const opts = {
-      filename: filename,
+      filename,
       modules: nodeCoreLibs,
       packageFilter: normalizePackageFactory(context),
       readFile: (file: string, cb: (err: Error|undefined|null, file: Buffer|undefined|null) => void) =>
