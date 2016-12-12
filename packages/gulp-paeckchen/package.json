@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "clean": "rimraf dist .nyc_output coverage",
-    "linter": "tslint --project ./tsconfig.json --type-check",
+    "prelinter": "npm run build",
+    "linter": "tslint --project ./tsconfig.json",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap --skipLibCheck",
     "prebuild:watch": "npm run clean",
