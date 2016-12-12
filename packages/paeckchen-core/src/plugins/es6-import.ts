@@ -35,7 +35,7 @@ export function rewriteImportDeclaration(program: ESTree.Program, currentModule:
             replaceImports(path, importModuleIndex);
             enqueueModule(importModule, state, context);
           });
-      }));
+      })) as Promise<any>;
     });
 }
 

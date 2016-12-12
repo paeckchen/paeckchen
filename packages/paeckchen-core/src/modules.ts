@@ -121,7 +121,8 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
     .then(upToDate => {
       if (!upToDate) {
         return Promise.resolve()
-          .then(() => {
+          // todo: remove any code-smell
+          .then((): any => {
             if (!state.wrappedModules[modulePath].remove) {
               let promisedModuleAst: Promise<ESTree.Program>;
               if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
@@ -143,11 +144,11 @@ function wrapModule(modulePath: string, state: State, context: PaeckchenContext,
               return wrapThrowOnRemovedModule(modulePath);
             }
           })
-          .then(moduleAst => {
+          .then((moduleAst: ESTree.Expression) => {
             const moduleIndex = getModuleIndex(modulePath, state);
-            state.modules[moduleIndex] = moduleAst as ESTree.Expression;
+            state.modules[moduleIndex] = moduleAst;
           })
-          .catch(e => {
+          .catch((e: Error) => {
             context.logger.error('module', e, `Failed to process module '${modulePath}'`);
             throw e;
           });
