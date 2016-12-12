@@ -6,37 +6,31 @@ import { getModulePath } from '../module-path';
 import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
-export function rewriteImportDeclaration(program: ESTree.Program, currentModule: string,
+export async function rewriteImportDeclaration(program: ESTree.Program, currentModule: string,
     context: PaeckchenContext, state: State): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      context.logger.trace('plugin', `rewriteImportDeclaration [currentModule=${currentModule}]`);
-    })
-    .then(() => {
-      const updates: [string, Path<ESTree.ImportDeclaration>][] = [];
+  context.logger.trace('plugin', `rewriteImportDeclaration [currentModule=${currentModule}]`);
 
-      visit(program, {
-        visitImportDeclaration(path: Path<ESTree.ImportDeclaration>): boolean {
-          updates.push([path.node.source.value as string, path]);
-          return false;
-        },
-        visitStatement(): boolean {
-          // es2015 imports are only allowed at the top level of a module
-          // => we could stop here
-          return false;
-        }
-      });
+  const updates: [string, Path<ESTree.ImportDeclaration>][] = [];
 
-      return Promise.all(updates.map(update => {
-        const [importPath, path] = update;
-        return getModulePath(currentModule, importPath, context)
-          .then(importModule => {
-            const importModuleIndex = getModuleIndex(importModule, state);
-            replaceImports(path, importModuleIndex);
-            enqueueModule(importModule, state, context);
-          });
-      })) as Promise<any>;
-    });
+  visit(program, {
+    visitImportDeclaration(path: Path<ESTree.ImportDeclaration>): boolean {
+      updates.push([path.node.source.value as string, path]);
+      return false;
+    },
+    visitStatement(): boolean {
+      // es2015 imports are only allowed at the top level of a module
+      // => we could stop here
+      return false;
+    }
+  });
+
+  await Promise.all(updates.map(async update => {
+    const [importPath, path] = update;
+    const importModule = await getModulePath(currentModule, importPath, context);
+    const importModuleIndex = getModuleIndex(importModule, state);
+    replaceImports(path, importModuleIndex);
+    enqueueModule(importModule, state, context);
+  }));
 }
 
 function convertImport(tempIdentifier: ESTree.Identifier, specifier: ESTree.ImportSpecifier

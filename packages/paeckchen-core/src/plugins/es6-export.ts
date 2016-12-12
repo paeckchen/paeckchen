@@ -6,106 +6,98 @@ import { getModulePath } from '../module-path';
 import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
-export function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string,
+export async function rewriteExportNamedDeclaration(program: ESTree.Program, currentModule: string,
     context: PaeckchenContext, state: State): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      context.logger.trace('plugin', `rewriteExportNamedDeclaration [currentModule=${currentModule}]`);
-    })
-    .then(() => {
-      const exportAllUpdates: [string, Path<ESTree.ExportAllDeclaration>][] = [];
-      const exportNamedUpdates: [string, Path<ESTree.ExportNamedDeclaration>][] = [];
+  context.logger.trace('plugin', `rewriteExportNamedDeclaration [currentModule=${currentModule}]`);
 
-      visit(program, {
-        visitExportAllDeclaration(path: Path<ESTree.ExportAllDeclaration>): boolean {
-          // e.g. export * from './a';
-          exportAllUpdates.push([path.node.source.value as string, path]);
-          return false;
-        },
-        visitExportNamedDeclaration (path: Path<ESTree.ExportNamedDeclaration>): boolean {
-          if (path.node.declaration) {
-            replaceExportNamedDeclaration(path);
-          } else {
-            if (path.node.source) {
-              // e.g. export {a as b} from './c';
-              exportNamedUpdates.push([path.node.source.value as string, path]);
-            } else {
-              // e.g. export {a as b};
-              replaceExportRename(path);
-            }
-          }
-          return false;
-        },
-        visitExportDefaultDeclaration(path: Path<ESTree.ExportDefaultDeclaration>): boolean {
-          const declaration = path.node.declaration;
+  const exportAllUpdates: [string, Path<ESTree.ExportAllDeclaration>][] = [];
+  const exportNamedUpdates: [string, Path<ESTree.ExportNamedDeclaration>][] = [];
 
-          if (n.Identifier.check(declaration)) {
-            // e.g. export default a;
-            path.replace(
-              b.expressionStatement(
-                b.assignmentExpression(
-                  '=',
-                  moduleExportsExpression('default'),
-                  b.identifier(declaration.name)
-                )
-              )
-            );
-          } else if (n.FunctionDeclaration.check(declaration) || n.ClassDeclaration.check(declaration)) {
-            // e.g. export default class {}
-            path.replace(declaration);
-            path.insertAfter(
-              b.expressionStatement(
-                b.assignmentExpression(
-                  '=',
-                  moduleExportsExpression('default'),
-                  b.identifier(declaration.id.name)
-                )
-              )
-            );
-          } else if (n.FunctionExpression.check(declaration)) {
-            // e.g. export default function() {}
-            path.replace(
-              b.expressionStatement(
-                b.assignmentExpression(
-                  '=',
-                  moduleExportsExpression('default'),
-                  declaration
-                )
-              )
-            );
-          }
-          return false;
-        },
-        visitStatement(): boolean {
-          // es2015 exports are only allowed at the top level of a module
-          // => we could stop here
-          return false;
+  visit(program, {
+    visitExportAllDeclaration(path: Path<ESTree.ExportAllDeclaration>): boolean {
+      // e.g. export * from './a';
+      exportAllUpdates.push([path.node.source.value as string, path]);
+      return false;
+    },
+    visitExportNamedDeclaration (path: Path<ESTree.ExportNamedDeclaration>): boolean {
+      if (path.node.declaration) {
+        replaceExportNamedDeclaration(path);
+      } else {
+        if (path.node.source) {
+          // e.g. export {a as b} from './c';
+          exportNamedUpdates.push([path.node.source.value as string, path]);
+        } else {
+          // e.g. export {a as b};
+          replaceExportRename(path);
         }
-      });
+      }
+      return false;
+    },
+    visitExportDefaultDeclaration(path: Path<ESTree.ExportDefaultDeclaration>): boolean {
+      const declaration = path.node.declaration;
 
-      const work: Promise<void>[] = [];
-      work.push.apply(work, exportAllUpdates.map(update => {
-        const [exportPath, path] = update;
-        return getModulePath(currentModule, exportPath, context)
-          .then(reexportModuleName => {
-            const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
-            replaceExportAll(path, reexportModuleIndex);
-            enqueueModule(reexportModuleName, state, context);
-          });
-      }));
+      if (n.Identifier.check(declaration)) {
+        // e.g. export default a;
+        path.replace(
+          b.expressionStatement(
+            b.assignmentExpression(
+              '=',
+              moduleExportsExpression('default'),
+              b.identifier(declaration.name)
+            )
+          )
+        );
+      } else if (n.FunctionDeclaration.check(declaration) || n.ClassDeclaration.check(declaration)) {
+        // e.g. export default class {}
+        path.replace(declaration);
+        path.insertAfter(
+          b.expressionStatement(
+            b.assignmentExpression(
+              '=',
+              moduleExportsExpression('default'),
+              b.identifier(declaration.id.name)
+            )
+          )
+        );
+      } else if (n.FunctionExpression.check(declaration)) {
+        // e.g. export default function() {}
+        path.replace(
+          b.expressionStatement(
+            b.assignmentExpression(
+              '=',
+              moduleExportsExpression('default'),
+              declaration
+            )
+          )
+        );
+      }
+      return false;
+    },
+    visitStatement(): boolean {
+      // es2015 exports are only allowed at the top level of a module
+      // => we could stop here
+      return false;
+    }
+  });
 
-      work.push.apply(work, exportNamedUpdates.map(update => {
-        const [exportPath, path] = update;
-        return getModulePath(currentModule, exportPath, context)
-          .then(reexportModuleName => {
-            const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
-            replaceReexportRename(path, reexportModuleIndex);
-            enqueueModule(reexportModuleName, state, context);
-          });
-      }));
+  const work: Promise<void>[] = [];
+  work.push.apply(work, exportAllUpdates.map(async update => {
+    const [exportPath, path] = update;
+    const reexportModuleName = await getModulePath(currentModule, exportPath, context);
+    const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
+    replaceExportAll(path, reexportModuleIndex);
+    enqueueModule(reexportModuleName, state, context);
+  }));
 
-      return Promise.all(work) as Promise<any>;
-    });
+  work.push.apply(work, exportNamedUpdates.map(async update => {
+    const [exportPath, path] = update;
+    const reexportModuleName = await getModulePath(currentModule, exportPath, context);
+    const reexportModuleIndex = getModuleIndex(reexportModuleName, state);
+    replaceReexportRename(path, reexportModuleIndex);
+    enqueueModule(reexportModuleName, state, context);
+  }));
+
+  await Promise.all(work);
 }
 
 function replaceExportAll(path: Path<ESTree.ExportAllDeclaration>, reexportModuleIndex: number): void {
