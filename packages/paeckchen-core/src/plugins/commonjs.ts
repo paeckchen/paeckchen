@@ -42,7 +42,7 @@ export function rewriteRequireStatements(program: ESTree.Program, currentModule:
             replaceRequireCall(path, moduleIndex);
             enqueueModule(modulePath, state, context);
           });
-      }));
+      })) as Promise<any>;
     });
 }
 

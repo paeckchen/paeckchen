@@ -104,7 +104,7 @@ export function rewriteExportNamedDeclaration(program: ESTree.Program, currentMo
           });
       }));
 
-      return Promise.all(work);
+      return Promise.all(work) as Promise<any>;
     });
 }
 

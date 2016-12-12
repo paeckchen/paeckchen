@@ -19,7 +19,7 @@ test('DefaultHost#fileExists should return true for existing file', t => {
 });
 
 test('DefaultHost#fileExists should return false for non-existing file', t => {
-  t.false((t.context.host as DefaultHost).fileExists('./package.json'));
+  t.false((t.context.host as DefaultHost).fileExists('./none-existing-file'));
 });
 
 test('DefaultHost#isFile should return true for file', t => {
