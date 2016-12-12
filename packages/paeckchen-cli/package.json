@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "clean": "rimraf dist .nyc_output coverage",
-    "linter": "tslint --project ./tsconfig.json --type-check",
+    "prelinter": "npm run build",
+    "linter": "tslint --project ./tsconfig.json",
     "prebuild": "npm run clean",
     "build": "tsc --sourceMap --skipLibCheck",
     "prebuild:watch": "npm run clean",
@@ -47,6 +48,7 @@
   ],
   "devDependencies": {
     "@types/debug": "0.0.28",
+    "@types/meow": "3.6.0",
     "@types/minimist": "1.1.28",
     "@types/node": "4.0.30",
     "ava": "0.15.2",

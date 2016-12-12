@@ -1,7 +1,7 @@
 import test from 'ava';
+import * as execa from 'execa';
 import { readFileSync, statSync, unlinkSync } from 'fs';
 import { resolve, join } from 'path';
-import * as execa from 'execa';
 import { runInNewContext } from 'vm';
 
 test.beforeEach('remove test file', t => {
@@ -59,7 +59,7 @@ test.cb('cli with entry-point should output bundle', t => {
       let stdout = '';
       const sandbox = {
         console: {
-          log: function(msg: string): void {
+          log(msg: string): void {
             stdout += msg;
           }
         }
@@ -92,7 +92,7 @@ test.cb('cli with entry-point and out-file should write bundle', t => {
       let output = '';
       const sandbox = {
         console: {
-          log: function(msg: string): void {
+          log(msg: string): void {
             output += msg;
           }
         }

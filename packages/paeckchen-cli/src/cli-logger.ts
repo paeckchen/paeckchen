@@ -1,13 +1,13 @@
 import * as debug from 'debug';
-import { terminal } from 'terminal-kit';
 import { ProgressStep, Logger, Config, LogLevel } from 'paeckchen-core';
+import { terminal } from 'terminal-kit';
 
 const progressStepNames: {[step: number]: string} = {
   [ProgressStep.init]: 'initializing',
   [ProgressStep.bundleModules]: 'bundle modules',
   [ProgressStep.bundleGlobals]: 'bundle globals',
   [ProgressStep.generateBundle]: 'create paeckchen',
-  [ProgressStep.generateSourceMap]: 'create source-map',
+  [ProgressStep.generateSourceMap]: 'create source-map'
 };
 
 export class CliLogger implements Logger {
@@ -70,6 +70,7 @@ export class CliLogger implements Logger {
 
   private updateProgress(fromProgress: boolean): void {
     const percent = Math.min(100, Math.ceil(this.progressTotal * 100 / (this.progressCurrent + this.progressTotal)));
+    // tslint:disable-next-line:cyclomatic-complexity
     switch (this.progressStep) {
       case ProgressStep.init:
         this.startTime = new Date().getTime();
