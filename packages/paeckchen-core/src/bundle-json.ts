@@ -34,22 +34,19 @@ export function buildArray(data: any[]): ESTree.ArrayExpression {
   );
 }
 
-export function wrapJsonFile(modulePath: string, context: PaeckchenContext): Promise<ESTree.Program> {
-  return context.host.readFile(modulePath)
-    .then(data => JSON.parse(data))
-    .then(data => {
-      return b.program([
-        b.expressionStatement(
-          b.assignmentExpression(
-            '=',
-            b.memberExpression(
-              b.identifier('module'),
-              b.identifier('exports'),
-              false
-            ),
-            buildValue(data)
-          )
-        )
-      ]);
-    });
+export async function wrapJsonFile(modulePath: string, context: PaeckchenContext): Promise<ESTree.Program> {
+  const data = JSON.parse(await context.host.readFile(modulePath));
+  return b.program([
+    b.expressionStatement(
+      b.assignmentExpression(
+        '=',
+        b.memberExpression(
+          b.identifier('module'),
+          b.identifier('exports'),
+          false
+        ),
+        buildValue(data)
+      )
+    )
+  ]);
 }

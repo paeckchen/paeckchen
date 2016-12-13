@@ -7,7 +7,7 @@ import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '.
 
 import { rewriteImportDeclaration } from '../../src/plugins/es6-import';
 
-function rewriteImports(input: string, files: any = {}): Promise<string> {
+async function rewriteImports(input: string, files: any = {}): Promise<string> {
   const state = new State([]);
   const host = new HostMock(files);
   const context = {
@@ -19,19 +19,18 @@ function rewriteImports(input: string, files: any = {}): Promise<string> {
     logger: new NoopLogger()
   };
 
-  return parse(input)
-    .then(ast =>
-      rewriteImportDeclaration(ast, 'name', context, state).then(() =>
-        generate(ast)));
+  const ast = await parse(input);
+  await rewriteImportDeclaration(ast, 'name', context, state);
+  return generate(ast);
 }
 
-function executeImports(input: string, files: any = {}, settings: any = {},
+async function executeImports(input: string, files: any = {}, settings: any = {},
     requireResults: any[] = []): Promise<virtualModuleResult> {
-  return rewriteImports(input, files).then(processed =>
-    virtualModule(processed, settings, requireResults));
+  const processed = await rewriteImports(input, files);
+  return virtualModule(processed, settings, requireResults);
 }
 
-test('es6-import plugin should rewrite import specifiers correctly', t => {
+test('es6-import plugin should rewrite import specifiers correctly', async t => {
   const input = stripIndent`
     import {foo} from './bar';
     import {bar as baz} from './bar';
@@ -59,13 +58,12 @@ test('es6-import plugin should rewrite import specifiers correctly', t => {
     foobar: 'baz'
   };
 
-  return executeImports(input, files, {}, [exported])
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeImports(input, files, {}, [exported]);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-import plugin should rewrite default import specifiers correctly', t => {
+test('es6-import plugin should rewrite default import specifiers correctly', async t => {
   const input = stripIndent`
     import foo from './bar';
     module.exports = foo;
@@ -83,13 +81,12 @@ test('es6-import plugin should rewrite default import specifiers correctly', t =
 
   const expected = exported.exports.default;
 
-  return executeImports(input, files, {}, [exported])
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeImports(input, files, {}, [exported]);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-import plugin should rewrite namespace import specifiers correctly', t => {
+test('es6-import plugin should rewrite namespace import specifiers correctly', async t => {
   const input = stripIndent`
     import * as foo from './bar';
     module.exports = foo;
@@ -106,8 +103,7 @@ test('es6-import plugin should rewrite namespace import specifiers correctly', t
 
   const expected = exported.exports;
 
-  return executeImports(input, files, {}, [exported])
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeImports(input, files, {}, [exported]);
+
+  t.deepEqual(actual, expected);
 });

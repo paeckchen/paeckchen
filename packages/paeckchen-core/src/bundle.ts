@@ -177,7 +177,7 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
       return readCache(context)
         .then(cache => {
           const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
-          const state = new State(getModules(paeckchenAst).elements as ESTree.Expression[]);
+          const state = new State(getModules(paeckchenAst).elements);
           if (cache.state) {
             return state.load(context, cache.state)
               .then(() => {
@@ -198,10 +198,10 @@ export function bundle(options: BundleOptions, host: Host = new DefaultHost(), o
             .then(modulePath => {
               enqueueModule(modulePath, state, context);
               if (context.config.watchMode) {
-                context.rebundle = rebundleFactoryFunction(state, paeckchenAst, context, bundleFunction,
+                context.rebundle = rebundleFactoryFunction(state, paeckchenAst!, context, bundleFunction,
                   outputFunction);
               }
-              bundleFunction(state, paeckchenAst, context, outputFunction);
+              bundleFunction(state, paeckchenAst!, context, outputFunction);
             });
         })
         .catch(error => {

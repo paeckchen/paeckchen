@@ -110,54 +110,44 @@ function watchModule(state: State, modulePath: string, context: PaeckchenContext
     });
 }
 
-function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
+async function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
   context.logger.trace('module', `wrapModule [modulePath=${modulePath}]`);
-  return Promise.resolve()
-    .then(() => {
-      // prefill index
-      getModuleIndex(modulePath, state);
-      return state.wrappedModules[modulePath].ast !== undefined;
-    })
-    .then(upToDate => {
-      if (!upToDate) {
-        return Promise.resolve()
-          // todo: remove any code-smell
-          .then((): any => {
-            if (!state.wrappedModules[modulePath].remove) {
-              let promisedModuleAst: Promise<ESTree.Program>;
-              if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
-                promisedModuleAst = wrapExternalModule(modulePath, context);
-              } else if (!context.host.fileExists(modulePath)) {
-                promisedModuleAst = wrapMissingModule(modulePath);
-              } else if (modulePath.match(/\.json$/)) {
-                promisedModuleAst = wrapJsonFile(modulePath, context);
-              } else {
-                promisedModuleAst = processModule(modulePath, context, state, plugins);
-              }
-              return promisedModuleAst
-                .then(moduleAst => createModuleWrapper(context, modulePath, moduleAst, state))
-                .then(wrappedModule => {
-                  state.wrappedModules[modulePath] = wrappedModule;
-                  return state.wrappedModules[modulePath].ast;
-                });
-            } else {
-              return wrapThrowOnRemovedModule(modulePath);
-            }
-          })
-          .then((moduleAst: ESTree.Expression) => {
-            const moduleIndex = getModuleIndex(modulePath, state);
-            state.modules[moduleIndex] = moduleAst;
-          })
-          .catch((e: Error) => {
-            context.logger.error('module', e, `Failed to process module '${modulePath}'`);
-            throw e;
-          });
+  // prefill index
+  getModuleIndex(modulePath, state);
+  const upToDate = state.wrappedModules[modulePath].ast !== undefined;
+  if (!upToDate) {
+    try {
+      let ast;
+      if (!state.wrappedModules[modulePath].remove) {
+        ast = await createModuleProgram(context, modulePath, state, plugins);
       } else {
-        context.logger.trace('module', `wrapModule; upToDate [modulePath=${modulePath}]`);
+        ast = await wrapThrowOnRemovedModule(modulePath);
       }
-      return undefined;
-    });
+      const wrappedModule = await createModuleWrapper(context, modulePath, ast, state);
+      state.wrappedModules[modulePath] = wrappedModule;
+      const moduleAst = state.wrappedModules[modulePath].ast!;
+      const moduleIndex = getModuleIndex(modulePath, state);
+      state.modules[moduleIndex] = moduleAst;
+    } catch (e) {
+      context.logger.error('module', e, `Failed to process module '${modulePath}'`);
+      throw e;
+    }
+  } else {
+    context.logger.trace('module', `wrapModule; upToDate [modulePath=${modulePath}]`);
+  }
+}
 
+async function createModuleProgram(context: PaeckchenContext, modulePath: string, state: State,
+    plugins: any): Promise<ESTree.Program> {
+  if (Object.keys(context.config.externals).indexOf(modulePath) !== -1) {
+    return wrapExternalModule(modulePath, context);
+  } else if (!context.host.fileExists(modulePath)) {
+    return wrapMissingModule(modulePath);
+  } else if (modulePath.match(/\.json$/)) {
+    return wrapJsonFile(modulePath, context);
+  } else {
+    return processModule(modulePath, context, state, plugins);
+  }
 }
 
 function wrapMissingModule(modulePath: string): Promise<ESTree.Program> {
@@ -173,15 +163,17 @@ function wrapMissingModule(modulePath: string): Promise<ESTree.Program> {
   ]));
 }
 
-function wrapThrowOnRemovedModule(modulePath: string): Promise<ESTree.Statement> {
-  return Promise.resolve(b.throwStatement(
-    b.newExpression(
-      b.identifier('Error'),
-      [
-        b.literal(`Module '${modulePath}' was removed`)
-      ]
+function wrapThrowOnRemovedModule(modulePath: string): Promise<ESTree.Program> {
+  return Promise.resolve(b.program([
+    b.throwStatement(
+      b.newExpression(
+        b.identifier('Error'),
+        [
+          b.literal(`Module '${modulePath}' was removed`)
+        ]
+      )
     )
-  ));
+  ]));
 }
 
 function wrapExternalModule(modulePath: string, context: PaeckchenContext): Promise<ESTree.Program> {

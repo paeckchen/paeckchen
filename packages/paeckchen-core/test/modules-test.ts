@@ -37,7 +37,7 @@ test('bundleNextModules with empty queue return false', t => {
   t.deepEqual(bundleNextModules(state, context, plugins), []);
 });
 
-test('bundleNextModules should wrap a module', t => {
+test('bundleNextModules should wrap a module', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -52,13 +52,12 @@ test('bundleNextModules should wrap a module', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      t.deepEqual(Object.keys(state.modules).length, 1);
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+
+  t.deepEqual(Object.keys(state.modules).length, 1);
 });
 
-test('bundleNextModules should call all given plugins', t => {
+test('bundleNextModules should call all given plugins', async t => {
   const state = new State([]);
   let pluginCalls = 0;
   const plugins = {
@@ -77,13 +76,12 @@ test('bundleNextModules should call all given plugins', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      t.deepEqual(pluginCalls, 2);
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+
+  t.deepEqual(pluginCalls, 2);
 });
 
-test('bundleNextModules should not rebundle modules if already up to date', t => {
+test('bundleNextModules should not rebundle modules if already up to date', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -99,20 +97,16 @@ test('bundleNextModules should not rebundle modules if already up to date', t =>
 
   let firstBundled: any;
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      firstBundled = state.modules[0];
-    })
-    .then(() => {
-      enqueueModule('/some/mod.js', state, context);
-      return Promise.all(bundleNextModules(state, context, plugins));
-    })
-    .then(() => {
-      t.is(state.modules[0], firstBundled);
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  firstBundled = state.modules[0];
+
+  enqueueModule('/some/mod.js', state, context);
+  await Promise.all(bundleNextModules(state, context, plugins));
+
+  t.is(state.modules[0], firstBundled);
 });
 
-test('bundleNextModules should rebundle modules if updated', t => {
+test('bundleNextModules should rebundle modules if updated', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -128,18 +122,14 @@ test('bundleNextModules should rebundle modules if updated', t => {
 
   let firstBundled: any;
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      firstBundled = state.modules[0];
-    })
-    .then(() => {
-      updateModule('/some/mod.js', false, state);
-      enqueueModule('/some/mod.js', state, context);
-      return Promise.all(bundleNextModules(state, context, plugins));
-    })
-    .then(() => {
-      t.not(state.modules[0], firstBundled);
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  firstBundled = state.modules[0];
+
+  updateModule('/some/mod.js', false, state);
+  enqueueModule('/some/mod.js', state, context);
+  await Promise.all(bundleNextModules(state, context, plugins));
+
+  t.not(state.modules[0], firstBundled);
 });
 
 test('enqueueModule should not accept duplicate entries', t => {
@@ -161,7 +151,7 @@ test('enqueueModule should not accept duplicate entries', t => {
   t.is(state.moduleBundleQueue.length, 1);
 });
 
-test('bundleNextModules should throw if an error occurred', t => {
+test('bundleNextModules should throw if an error occurred', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({
@@ -176,16 +166,15 @@ test('bundleNextModules should throw if an error occurred', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      t.fail('Expected an error');
-    })
-    .catch(e => {
-      t.is(e.message, 'Unterminated regular expression (1:1)');
-    });
+  try {
+    await Promise.all(bundleNextModules(state, context, plugins));
+    t.fail('Expected an error');
+  } catch (e) {
+    t.is(e.message, 'Unterminated regular expression (1:1)');
+  }
 });
 
-test('bundleNextModules should bundle a virtual module per external configuration', t => {
+test('bundleNextModules should bundle a virtual module per external configuration', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -200,23 +189,21 @@ test('bundleNextModules should bundle a virtual module per external configuratio
   };
 
   enqueueModule('fs', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => generate(state.modules[0] as any))
-    .then(code => code + '_0(module, module.exports);')
-    .then(code => {
-      const sandbox = {
-        fsShim: {},
-        module: {
-          exports: {
-          }
-        }
-      };
-      runInNewContext(code, sandbox);
-      t.is(sandbox.module.exports, sandbox.fsShim);
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  const code = (await generate(state.modules[0] as any))  + '_0(module, module.exports);';
+
+  const sandbox = {
+    fsShim: {},
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(code, sandbox);
+  t.is(sandbox.module.exports, sandbox.fsShim);
 });
 
-test('bundleNextModules should bundle a virtual empty module per external falsy configuration', t => {
+test('bundleNextModules should bundle a virtual empty module per external falsy configuration', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -231,22 +218,20 @@ test('bundleNextModules should bundle a virtual empty module per external falsy 
   };
 
   enqueueModule('fs', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => generate(state.modules[0] as any))
-    .then(code => code + '_0(module, module.exports);')
-    .then(code => {
-      const sandbox = {
-        module: {
-          exports: {
-          }
-        }
-      };
-      runInNewContext(code, sandbox);
-      t.deepEqual(sandbox.module.exports, {});
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  const code = (await generate(state.modules[0] as any)) + '_0(module, module.exports);';
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(code, sandbox);
+  t.deepEqual(sandbox.module.exports, {});
 });
 
-test('bundleNextModules should bundle an error for removed modules', t => {
+test('bundleNextModules should bundle an error for removed modules', async t => {
   const state = new State([]);
   const plugins = {};
   let callMeOnChangesFunction: Function = () => t.fail();
@@ -269,29 +254,25 @@ test('bundleNextModules should bundle an error for removed modules', t => {
   };
 
   enqueueModule('/test', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => {
-      callMeOnChangesFunction('remove', '/test');
-      // call bundleNextModules here, because rebundle is a stub (see above) and
-      // we need a bit more control here
-      return Promise.all(bundleNextModules(state, context, plugins));
-    })
-    .then(() => generate(state.modules[0] as any))
-    .then(code => code + '_0(module, module.exports);')
-    .then(code => {
-      const sandbox = {
-        module: {
-          exports: {
-          }
-        }
-      };
-      t.throws(() => {
-        runInNewContext(code, sandbox);
-      }, "Module '/test' was removed");
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  callMeOnChangesFunction('remove', '/test');
+  // call bundleNextModules here, because rebundle is a stub (see above) and
+  // we need a bit more control here
+  await Promise.all(bundleNextModules(state, context, plugins));
+  const code = (await generate(state.modules[0] as any)) + '_0(module, module.exports);';
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  t.throws(() => {
+    runInNewContext(code, sandbox);
+  }, "Module '/test' was removed");
 });
 
-test('bundleNextModules should bundle an error for unavailable modules', t => {
+test('bundleNextModules should bundle an error for unavailable modules', async t => {
   const state = new State([]);
   const plugins = {};
   const host = new HostMock({});
@@ -304,23 +285,21 @@ test('bundleNextModules should bundle an error for unavailable modules', t => {
   };
 
   enqueueModule('fs', state, context);
-  return Promise.all(bundleNextModules(state, context, plugins))
-    .then(() => generate(state.modules[0] as any))
-    .then(code => code + '_0(module, module.exports);')
-    .then(code => {
-      const sandbox = {
-        module: {
-          exports: {
-          }
-        }
-      };
-      t.throws(() => {
-        runInNewContext(code, sandbox);
-      }, "Module 'fs' not found");
-    });
+  await Promise.all(bundleNextModules(state, context, plugins));
+  const code = (await generate(state.modules[0] as any)) + '_0(module, module.exports);';
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  t.throws(() => {
+    runInNewContext(code, sandbox);
+  }, "Module 'fs' not found");
 });
 
-test('bundleNextModules should add modules to the watch list if enabled', t => {
+test('bundleNextModules should add modules to the watch list if enabled', async t => {
   let watchedFile: string|undefined;
   const state = new State([]);
   const host = new HostMock({
@@ -342,13 +321,12 @@ test('bundleNextModules should add modules to the watch list if enabled', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, {}))
-    .then(() => {
-      t.is(watchedFile, '/some/mod.js');
-    });
+  await Promise.all(bundleNextModules(state, context, {}));
+
+  t.is(watchedFile, '/some/mod.js');
 });
 
-test('bundleNextModules should trigger rebundle on watched file update', t => {
+test('bundleNextModules should trigger rebundle on watched file update', async t => {
   const state = new State([]);
   let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
@@ -372,15 +350,14 @@ test('bundleNextModules should trigger rebundle on watched file update', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, {}))
-    .then(() => {
-      callMeOnChangesFunction('update', '/some/mod.js');
+  await Promise.all(bundleNextModules(state, context, {}));
 
-      t.true(calledRebundle);
-    });
+  callMeOnChangesFunction('update', '/some/mod.js');
+
+  t.true(calledRebundle);
 });
 
-test('bundleNextModules should trigger rebundle on watched file removal', t => {
+test('bundleNextModules should trigger rebundle on watched file removal', async t => {
   const state = new State([]);
   let callMeOnChangesFunction: Function = () => t.fail();
   const host = new HostMock({
@@ -404,15 +381,14 @@ test('bundleNextModules should trigger rebundle on watched file removal', t => {
   };
 
   enqueueModule('/some/mod.js', state, context);
-  return Promise.all(bundleNextModules(state, context, {}))
-    .then(() => {
-      callMeOnChangesFunction('remove', '/some/mod.js');
+  await Promise.all(bundleNextModules(state, context, {}));
 
-      t.true(calledRebundle);
-    });
+  callMeOnChangesFunction('remove', '/some/mod.js');
+
+  t.true(calledRebundle);
 });
 
-test('bundleNextModules should bundle json file', t => {
+test('bundleNextModules should bundle json file', async t => {
   const state = new State([]);
   const host = new HostMock({
     '/some.json': '{"a": true}'
@@ -431,17 +407,15 @@ test('bundleNextModules should bundle json file', t => {
   };
 
   enqueueModule('/some.json', state, context);
-  return Promise.all(bundleNextModules(state, context, {}))
-    .then(() => generate(state.modules[0] as any))
-    .then(code => code + '_0(module, module.exports);')
-    .then(code => {
-      const sandbox = {
-        module: {
-          exports: {
-          }
-        }
-      };
-      runInNewContext(code, sandbox);
-      t.deepEqual(sandbox.module.exports, {a: true} as any);
-    });
+  await Promise.all(bundleNextModules(state, context, {}));
+  const code = (await generate(state.modules[0] as any)) + '_0(module, module.exports);';
+
+  const sandbox = {
+    module: {
+      exports: {
+      }
+    }
+  };
+  runInNewContext(code, sandbox);
+  t.deepEqual(sandbox.module.exports, {a: true} as any);
 });

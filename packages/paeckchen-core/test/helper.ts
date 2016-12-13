@@ -49,22 +49,16 @@ export class HostMock implements Host {
     return resolve(filePath) in this.files;
   }
 
-  public isFile(filePath: string): Promise<boolean> {
-    return Promise.resolve()
-      .then(() => {
-        return resolve(filePath) in this.files;
-      });
+  public async isFile(filePath: string): Promise<boolean> {
+    return resolve(filePath) in this.files;
   }
 
-  public readFile(filePath: string): Promise<string> {
-    return Promise.resolve()
-      .then(() => {
-        if (this.fileExists(filePath)) {
-          return this.files[resolve(filePath)];
-        }
-        throw new Error(oneLine`ENOENT: Could not read file ${resolve(filePath)} from HostMock fs.
-          Available files: ${Object.keys(this.files)}`);
-      });
+  public async readFile(filePath: string): Promise<string> {
+    if (this.fileExists(filePath)) {
+      return this.files[resolve(filePath)];
+    }
+    throw new Error(oneLine`ENOENT: Could not read file ${resolve(filePath)} from HostMock fs.
+      Available files: ${Object.keys(this.files)}`);
   }
 
   public writeFile(filePath: string, content: string): void {
@@ -81,26 +75,20 @@ export class HostMock implements Host {
 
 }
 
-export function parse(input: string): Promise<ESTree.Program> {
-  return Promise.resolve()
-    .then(() => {
-      const acornOptions: acorn.Options = {
-        ecmaVersion: 7,
-        sourceType: 'module',
-        locations: true,
-        ranges: true,
-        allowHashBang: true
-      };
-      const ast = acorn.parse(input, acornOptions);
-      return ast;
-    });
+export async function parse(input: string): Promise<ESTree.Program> {
+  const acornOptions: acorn.Options = {
+    ecmaVersion: 7,
+    sourceType: 'module',
+    locations: true,
+    ranges: true,
+    allowHashBang: true
+  };
+  const ast = acorn.parse(input, acornOptions);
+  return ast;
 }
 
-export function generate(ast: ESTree.Program): Promise<string> {
-  return Promise.resolve()
-    .then(() => {
-      return (escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}) as string).trim();
-    });
+export async function generate(ast: ESTree.Program): Promise<string> {
+  return (escodegenGenerate(ast, {comment: true, format: { quotes: 'double' }}) as string).trim();
 }
 
 const defaultSandbox = {
