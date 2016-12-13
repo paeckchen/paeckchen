@@ -67,19 +67,17 @@ export type BundleChunkFunction = typeof bundleChunks;
 /**
  * Recursivly bundle chunks of modules wich are enqueued.
  */
-export function bundleChunks(step: ProgressStep, state: State, context: PaeckchenContext): Promise<void> {
+export async function bundleChunks(step: ProgressStep, state: State, context: PaeckchenContext): Promise<void> {
   const fns = bundleNextModules(state, context);
   if (fns.length > 0) {
     let num = fns.length - 1;
-    return Promise.all(fns.map(fn => {
-        return fn.then(() => {
-          num--;
-          context.logger.progress(step, state.moduleBundleQueue.length + num, state.modules.length);
-        });
-      }))
-      .then(() => bundleChunks(step, state, context));
+    await Promise.all(fns.map(async fn => {
+        await fn;
+        num--;
+        context.logger.progress(step, state.moduleBundleQueue.length + num, state.modules.length);
+      }));
+    await bundleChunks(step, state, context);
   }
-  return Promise.resolve();
 };
 
 export type BundlingFunction = typeof executeBundling;
@@ -105,25 +103,26 @@ export function executeBundling(state: State, paeckchenAst: ESTree.Program, cont
     }
   }
 
-  bundleChunks(ProgressStep.bundleModules, state, context)
-    .then(() => injectGlobals(state, paeckchenAst, context))
-    .then(() => bundleChunks(ProgressStep.bundleGlobals, state, context))
-    .then(() => {
-        context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
-        const bundleResult = generate(paeckchenAst, {
-          comment: true,
-          sourceMap: Boolean(context.config.output.sourceMap),
-          sourceMapWithCode: Boolean(context.config.output.sourceMap)
-        });
+  Promise.resolve()
+    .then(async () => {
+      await bundleChunks(ProgressStep.bundleModules, state, context);
+      await injectGlobals(state, paeckchenAst, context);
+      await bundleChunks(ProgressStep.bundleGlobals, state, context);
+      context.logger.progress(ProgressStep.generateBundle, state.moduleBundleQueue.length, state.modules.length);
+      const bundleResult = generate(paeckchenAst, {
+        comment: true,
+        sourceMap: Boolean(context.config.output.sourceMap),
+        sourceMapWithCode: Boolean(context.config.output.sourceMap)
+      });
 
-        if (typeof bundleResult === 'string') {
-          return outputAndCache(bundleResult, undefined);
-        } else {
-          context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
-          return generateSourceMap(state, context, bundleResult)
-            .then(sourceMap => outputAndCache(bundleResult.code, sourceMap));
-        }
-      })
+      if (typeof bundleResult === 'string') {
+        outputAndCache(bundleResult, undefined);
+      } else {
+        context.logger.progress(ProgressStep.generateSourceMap, state.moduleBundleQueue.length, state.modules.length);
+        const sourceMap = await generateSourceMap(state, context, bundleResult);
+        outputAndCache(bundleResult.code, sourceMap);
+      }
+    })
     .catch(error => {
       outputFunction(error, context);
     });
@@ -171,42 +170,30 @@ function createContext(config: Config, host: Host, options: BundleOptions): Paec
 export function bundle(options: BundleOptions, host: Host = new DefaultHost(), outputFunction: OutputFunction,
     bundleFunction: BundlingFunction = executeBundling,
       rebundleFactoryFunction: RebundleFactory = rebundleFactory): void {
-  createConfig(options, host)
-    .then(config => {
+  Promise.resolve()
+    .then(async () => {
+      const config = await createConfig(options, host);
       const context = createContext(config, host, options);
-      return readCache(context)
-        .then(cache => {
-          const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
-          const state = new State(getModules(paeckchenAst).elements);
-          if (cache.state) {
-            return state.load(context, cache.state)
-              .then(() => {
-                if (context.config.watchMode) {
-                  Object.keys(state.wrappedModules).forEach(file => {
-                    (context.watcher as Watcher).watchFile(file);
-                  });
-                }
-                return { paeckchenAst, state };
-              });
-          }
-          return { paeckchenAst, state };
-        })
-        .then(({paeckchenAst, state}) => {
-          const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
+      const cache = await readCache(context);
+      const paeckchenAst = cache.paeckchenAst || parse(paeckchenSource);
+      const state = new State(getModules(paeckchenAst).elements);
+      if (cache.state) {
+        await state.load(context, cache.state);
+        if (context.config.watchMode) {
+          Object.keys(state.wrappedModules).forEach(file => {
+            (context.watcher as Watcher).watchFile(file);
+          });
+        }
+      }
+      const absoluteEntryPath = join(host.cwd(), context.config.input.entryPoint);
 
-          return getModulePath('.', absoluteEntryPath, context)
-            .then(modulePath => {
-              enqueueModule(modulePath, state, context);
-              if (context.config.watchMode) {
-                context.rebundle = rebundleFactoryFunction(state, paeckchenAst!, context, bundleFunction,
-                  outputFunction);
-              }
-              bundleFunction(state, paeckchenAst!, context, outputFunction);
-            });
-        })
-        .catch(error => {
-          outputFunction(error, context);
-        });
+      const modulePath = await getModulePath('.', absoluteEntryPath, context);
+      enqueueModule(modulePath, state, context);
+      if (context.config.watchMode) {
+        context.rebundle = rebundleFactoryFunction(state, paeckchenAst!, context, bundleFunction,
+          outputFunction);
+      }
+      bundleFunction(state, paeckchenAst!, context, outputFunction);
     })
     .catch(error => {
       outputFunction(error, undefined);

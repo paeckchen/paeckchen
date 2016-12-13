@@ -4,392 +4,367 @@ import { HostMock } from './helper';
 
 import { createConfig, Config, SourceSpec, Runtime, LogLevel } from '../src/config';
 
-test('createConfig should return the config defaults', t => {
+test('createConfig should return the config defaults', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config, {
-        input: {
-          entryPoint: undefined,
-          source: SourceSpec.ES2015
-        },
-        output: {
-          folder: host.cwd(),
-          file: undefined,
-          runtime: Runtime.browser,
-          sourceMap: false
-        },
-        aliases: {},
-        externals: {},
-        watchMode: false,
-        logLevel: LogLevel.default,
-        debug: false
-      } as Config);
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config, {
+    input: {
+      entryPoint: undefined,
+      source: SourceSpec.ES2015
+    },
+    output: {
+      folder: host.cwd(),
+      file: undefined,
+      runtime: Runtime.browser,
+      sourceMap: false
+    },
+    aliases: {},
+    externals: {},
+    watchMode: false,
+    logLevel: LogLevel.default,
+    debug: false
+  } as Config);
 });
 
-test('createConfig should prefer entry point of options', t => {
+test('createConfig should prefer entry point of options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
-  return createConfig({entryPoint: 'options'}, host)
-    .then(config => {
-      t.is(config.input.entryPoint, 'options');
-    });
+  const config = await createConfig({entryPoint: 'options'}, host);
+
+  t.is(config.input.entryPoint, 'options');
 });
 
-test('createConfig should fallback to entry point of config', t => {
+test('createConfig should fallback to entry point of config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"input": {"entry": "config"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.is(config.input.entryPoint, 'config');
-    });
+  const config = await createConfig({}, host);
+
+  t.is(config.input.entryPoint, 'config');
 });
 
-test('createConfig should prefer sourceMap of options', t => {
+test('createConfig should prefer sourceMap of options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": false}}'
   }, '/');
 
-  return createConfig({sourceMap: true}, host)
-    .then(config => {
-      t.is(config.output.sourceMap, true);
-    });
+  const config = await createConfig({sourceMap: true}, host);
+
+  t.is(config.output.sourceMap, true);
 });
 
-test('createConfig should fallback to sourceMap of config', t => {
+test('createConfig should fallback to sourceMap of config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": true}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.is(config.output.sourceMap, true);
-    });
+  const config = await createConfig({}, host);
+
+  t.is(config.output.sourceMap, true);
 });
 
-test('createConfig should prefer sourceMap of options (inline)', t => {
+test('createConfig should prefer sourceMap of options (inline)', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": true}}'
   }, '/');
 
-  return createConfig({sourceMap: 'inline'}, host)
-    .then(config => {
-      t.is(config.output.sourceMap as string, 'inline');
-    });
+  const config = await createConfig({sourceMap: 'inline'}, host);
+
+  t.is(config.output.sourceMap as string, 'inline');
 });
 
-test('createConfig should allow sourceMap "true"', t => {
+test('createConfig should allow sourceMap "true"', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": "true"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.is(config.output.sourceMap, true);
-    });
+  const config = await createConfig({}, host);
+
+  t.is(config.output.sourceMap, true);
 });
 
-test('createConfig should allow sourceMap "false"', t => {
+test('createConfig should allow sourceMap "false"', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": "false"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.is(config.output.sourceMap, false);
-    });
+  const config = await createConfig({}, host);
+
+  t.is(config.output.sourceMap, false);
 });
 
-test('createConfig should fail on invalid sourceMap values', t => {
+test('createConfig should fail on invalid sourceMap values', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"sourceMap": "foo"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.fail('Expected exception');
-    })
-    .catch(e => {
-      t.regex(e.message, /Invalid sourceMap/);
-    });
+  try {
+    await createConfig({}, host);
+    t.fail('Expected exception');
+  } catch (e) {
+    t.regex(e.message, /Invalid sourceMap/);
+  }
 });
 
-test('createConfig should prefer source level of options', t => {
+test('createConfig should prefer source level of options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"source": "es2015"}'
   }, '/');
 
-  return createConfig({source: 'es5'}, host)
-    .then(config => {
-      t.is(config.input.source, SourceSpec.ES5);
-    });
+  const config = await createConfig({source: 'es5'}, host);
+
+  t.is(config.input.source, SourceSpec.ES5);
 });
 
-test('createConfig should throw on invalid source value', t => {
+test('createConfig should throw on invalid source value', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"input": {"source": "abc"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(() => t.fail('Expected error'))
-    .catch(e => {
-      t.is(e.message, 'Invalid source option abc');
-    });
+  try {
+    await createConfig({}, host);
+    t.fail('Expected error');
+  } catch (e) {
+    t.is(e.message, 'Invalid source option abc');
+  }
 });
 
-test('createConfig should throw on invalid runtime value', t => {
+test('createConfig should throw on invalid runtime value', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"runtime": "abc"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(() => t.fail('Expected error'))
-    .catch(e => {
-      t.is(e.message, 'Invalid runtime abc');
-    });
+  try {
+    await createConfig({}, host);
+    t.fail('Expected error');
+  } catch (e) {
+    t.is(e.message, 'Invalid runtime abc');
+  }
 });
 
-test('createConfig should throw on invalid config file', t => {
+test('createConfig should throw on invalid config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': "{'test': value}"
   }, '/');
 
-  return createConfig({}, host)
-    .then(() => t.fail('Expected error'))
-    .catch(e => {
-      t.truthy(e.message.match(/Failed to read config file/));
-    });
+  try {
+    await createConfig({}, host);
+    t.fail('Expected error');
+  } catch (e) {
+    t.truthy(e.message.match(/Failed to read config file/));
+  }
 });
 
-test('createConfig should prefer output directory option', t => {
+test('createConfig should prefer output directory option', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"folder": "foo"}}'
   }, '/');
 
-  return createConfig({outputDirectory: 'bar'}, host)
-    .then(config => {
-      t.is(config.output.folder, 'bar');
-    });
+  const config = await createConfig({outputDirectory: 'bar'}, host);
+
+  t.is(config.output.folder, 'bar');
 });
 
-test('createConfig should prefer output file option', t => {
+test('createConfig should prefer output file option', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"file": "foo"}}'
   }, '/');
 
-  return createConfig({outputFile: 'bar'}, host)
-    .then(config => {
-      t.is(config.output.file, 'bar');
-    });
+  const config = await createConfig({outputFile: 'bar'}, host);
+
+  t.is(config.output.file, 'bar');
 });
 
-test('createConfig should read alias from config file', t => {
+test('createConfig should read alias from config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config.aliases, {module: '/some/path'} as {[name: string]: string});
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config.aliases, {module: '/some/path'} as {[name: string]: string});
 });
 
-test('createConfig should join single alias into config', t => {
+test('createConfig should join single alias into config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  return createConfig({alias: 'name=path'}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        module: '/some/path',
-        name: 'path'
-      };
-      t.deepEqual(config.aliases, expected);
-    });
+  const config = await createConfig({alias: 'name=path'}, host);
+
+  const expected: {[name: string]: string} = {
+    module: '/some/path',
+    name: 'path'
+  };
+  t.deepEqual(config.aliases, expected);
 });
 
-test('createConfig should join multi aliases into config', t => {
+test('createConfig should join multi aliases into config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"aliases": {"module": "/some/path"}}'
   }, '/');
 
-  return createConfig({alias: ['name=path', 'name2=path2']}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        module: '/some/path',
-        name: 'path',
-        name2: 'path2'
-      };
-      t.deepEqual(config.aliases, expected);
-    });
+  const config = await createConfig({alias: ['name=path', 'name2=path2']}, host);
+
+  const expected: {[name: string]: string} = {
+    module: '/some/path',
+    name: 'path',
+    name2: 'path2'
+  };
+  t.deepEqual(config.aliases, expected);
 });
 
-test('createConfig should create options from aliases', t => {
+test('createConfig should create options from aliases', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{}'
   }, '/');
 
-  return createConfig({alias: 'name=path'}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        name: 'path'
-      };
-      t.deepEqual(config.aliases, expected);
-    });
+  const config = await createConfig({alias: 'name=path'}, host);
+
+  const expected: {[name: string]: string} = {
+    name: 'path'
+  };
+  t.deepEqual(config.aliases, expected);
 });
 
-test('createConfig should read runtime from config file', t => {
+test('createConfig should read runtime from config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"runtime": "node"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config.output.runtime, Runtime.node);
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config.output.runtime, Runtime.node);
 });
 
-test('createConfig should prefer runtime from options', t => {
+test('createConfig should prefer runtime from options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"output": {"runtime": "node"}}'
   }, '/');
 
-  return createConfig({runtime: 'browser'}, host)
-    .then(config => {
-      t.deepEqual(config.output.runtime, Runtime.browser);
-    });
+  const config = await createConfig({runtime: 'browser'}, host);
+
+  t.deepEqual(config.output.runtime, Runtime.browser);
 });
 
-test('createConfig should read externals from config file', t => {
+test('createConfig should read externals from config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config.externals, {module: 'Global'});
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config.externals, {module: 'Global'});
 });
 
-test('createConfig should convert externals "false" to false', t => {
+test('createConfig should convert externals "false" to false', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"externals": {"module": "false"}}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config.externals, {module: false});
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config.externals, {module: false});
 });
 
-test('createConfig should join single external into config', t => {
+test('createConfig should join single external into config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  return createConfig({external: 'name=var'}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        module: 'Global',
-        name: 'var'
-      };
-      t.deepEqual(config.externals, expected);
-    });
+  const config = await createConfig({external: 'name=var'}, host);
+
+  const expected: {[name: string]: string} = {
+    module: 'Global',
+    name: 'var'
+  };
+  t.deepEqual(config.externals, expected);
 });
 
-test('createConfig should join multi externals into config', t => {
+test('createConfig should join multi externals into config', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"externals": {"module": "Global"}}'
   }, '/');
 
-  return createConfig({external: ['name=var', 'name2=var2']}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        module: 'Global',
-        name: 'var',
-        name2: 'var2'
-      };
-      t.deepEqual(config.externals, expected);
-    });
+  const config = await createConfig({external: ['name=var', 'name2=var2']}, host);
+
+  const expected: {[name: string]: string} = {
+    module: 'Global',
+    name: 'var',
+    name2: 'var2'
+  };
+  t.deepEqual(config.externals, expected);
 });
 
-test('createConfig should create options from externals', t => {
+test('createConfig should create options from externals', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{}'
   }, '/');
 
-  return createConfig({external: 'name=var'}, host)
-    .then(config => {
-      const expected: {[name: string]: string} = {
-        name: 'var'
-      };
-      t.deepEqual(config.externals, expected);
-    });
+  const config = await createConfig({external: 'name=var'}, host);
+
+  const expected: {[name: string]: string} = {
+    name: 'var'
+  };
+  t.deepEqual(config.externals, expected);
 });
 
-test('createConfig should read loglevel from config file', t => {
+test('createConfig should read loglevel from config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"logLevel": "debug"}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.deepEqual(config.logLevel, LogLevel.debug);
-    });
+  const config = await createConfig({}, host);
+
+  t.deepEqual(config.logLevel, LogLevel.debug);
 });
 
-test('createConfig should prefer loglevel from options', t => {
+test('createConfig should prefer loglevel from options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"logLevel": "debug"}'
   }, '/');
 
-  return createConfig({logLevel: 'trace'}, host)
-    .then(config => {
-      t.deepEqual(config.logLevel, LogLevel.trace);
-    });
+  const config = await createConfig({logLevel: 'trace'}, host);
+
+  t.deepEqual(config.logLevel, LogLevel.trace);
 });
 
-test('createConfig should fail on invalid loglevel', t => {
+test('createConfig should fail on invalid loglevel', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"logLevel": "foo"}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.fail('Expected exception');
-    })
-    .catch(e => {
-      t.regex(e.message, /Invalid logLevel/);
-    });
+  try {
+    await createConfig({}, host);
+    t.fail('Expected exception');
+  } catch (e) {
+    t.regex(e.message, /Invalid logLevel/);
+  }
 });
 
-test('createConfig should read debug from config file', t => {
+test('createConfig should read debug from config file', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"debug": true}'
   }, '/');
 
-  return createConfig({}, host)
-    .then(config => {
-      t.true(config.debug);
-    });
+  const config = await createConfig({}, host);
+
+  t.true(config.debug);
 });
 
-test('createConfig should prefer debug from options', t => {
+test('createConfig should prefer debug from options', async t => {
   const host = new HostMock({
     '/paeckchen.json': '{"debug": "false"}'
   }, '/');
 
-  return createConfig({debug: true}, host)
-    .then(config => {
-      t.true(config.debug);
-    });
+  const config = await createConfig({debug: true}, host);
+
+  t.true(config.debug);
 });

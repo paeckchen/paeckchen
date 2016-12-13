@@ -30,29 +30,26 @@ export function updateModule(moduleName: string, remove: boolean, state: State):
   }
 }
 
-function createModuleWrapper(context: PaeckchenContext, name: string, moduleAst: ESTree.Program,
+async function createModuleWrapper(context: PaeckchenContext, name: string, moduleAst: ESTree.Program,
     state: State): Promise<WrappedModule> {
   context.logger.trace('module', `createModuleWrapper [name=${name}]`);
   const index = getModuleIndex(name, state);
-  return context.host.getModificationTime(name)
-    .then(mtime => {
-      return {
-        index,
-        name,
-        ast: b.functionExpression(
-          b.identifier(`_${index}`),
-          [
-            b.identifier('module'),
-            b.identifier('exports')
-          ],
-          b.blockStatement(
-            moduleAst.body as ESTree.Statement[]
-          )
-        ),
-        remove: false,
-        mtime
-      };
-    });
+  return {
+    index,
+    name,
+    ast: b.functionExpression(
+      b.identifier(`_${index}`),
+      [
+        b.identifier('module'),
+        b.identifier('exports')
+      ],
+      b.blockStatement(
+        moduleAst.body as ESTree.Statement[]
+      )
+    ),
+    remove: false,
+    mtime: await context.host.getModificationTime(name)
+  };
 }
 
 export function enqueueModule(modulePath: string, state: State, context: PaeckchenContext): void {
@@ -68,46 +65,43 @@ export function bundleNextModules(state: State, context: PaeckchenContext,
     return [];
   }
   const modules = state.moduleBundleQueue.splice(0, 4);
-  return modules.map(modulePath => {
+  return modules.map(async modulePath => {
     context.logger.debug('module', `bundle ${modulePath}`);
-    return watchModule(state, modulePath, context)
-      .then(() => wrapModule(modulePath, state, context, plugins));
+    await watchModule(state, modulePath, context);
+    await wrapModule(modulePath, state, context, plugins);
   });
 }
 
-function watchModule(state: State, modulePath: string, context: PaeckchenContext): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      if (context.config.watchMode) {
-        context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
+async function watchModule(state: State, modulePath: string, context: PaeckchenContext): Promise<void> {
+  if (context.config.watchMode) {
+    context.logger.trace('module', `watchModule [modulePath=${modulePath}]`);
 
-        if (!state.moduleWatchCallbackAdded) {
-          state.moduleWatchCallbackAdded = true;
-          if (context.watcher) {
-            context.watcher.start((event, fileName) => {
-              let rebundle = false;
-              if (event === 'update') {
-                context.logger.trace('watch', `update [modulePath=${fileName}]`);
-                updateModule(fileName, false, state);
-                enqueueModule(fileName, state, context);
-                rebundle = true;
-              } else if (event === 'remove') {
-                context.logger.trace('watch', `remove [modulePath=${fileName}]`);
-                updateModule(fileName, true, state);
-                enqueueModule(fileName, state, context);
-                rebundle = true;
-              }
-              if (rebundle && context.rebundle) {
-                context.rebundle();
-              }
-            });
+    if (!state.moduleWatchCallbackAdded) {
+      state.moduleWatchCallbackAdded = true;
+      if (context.watcher) {
+        context.watcher.start((event, fileName) => {
+          let rebundle = false;
+          if (event === 'update') {
+            context.logger.trace('watch', `update [modulePath=${fileName}]`);
+            updateModule(fileName, false, state);
+            enqueueModule(fileName, state, context);
+            rebundle = true;
+          } else if (event === 'remove') {
+            context.logger.trace('watch', `remove [modulePath=${fileName}]`);
+            updateModule(fileName, true, state);
+            enqueueModule(fileName, state, context);
+            rebundle = true;
           }
-        }
-        if (context.watcher) {
-          context.watcher.watchFile(modulePath);
-        }
+          if (rebundle && context.rebundle) {
+            context.rebundle();
+          }
+        });
       }
-    });
+    }
+    if (context.watcher) {
+      context.watcher.watchFile(modulePath);
+    }
+  }
 }
 
 async function wrapModule(modulePath: string, state: State, context: PaeckchenContext, plugins: any): Promise<void> {
@@ -195,30 +189,26 @@ function wrapExternalModule(modulePath: string, context: PaeckchenContext): Prom
   ]));
 }
 
-function processModule(modulePath: string, context: PaeckchenContext, state: State,
+async function processModule(modulePath: string, context: PaeckchenContext, state: State,
     plugins: Plugins): Promise<ESTree.Program> {
   context.logger.trace('module', `processModule [modulePath=${modulePath}]`);
-  return context.host.readFile(modulePath)
-    .then(code => {
-      // parse...
-      const moduleAst = parse(code, {
-        ecmaVersion: 7,
-        sourceType: 'module',
-        locations: true,
-        ranges: true,
-        sourceFile: modulePath,
-        allowHashBang: true
-      });
+  const code = await context.host.readFile(modulePath);
+  // parse...
+  const moduleAst = parse(code, {
+    ecmaVersion: 7,
+    sourceType: 'module',
+    locations: true,
+    ranges: true,
+    sourceFile: modulePath,
+    allowHashBang: true
+  });
 
-      // ... check for global features...
-      checkGlobals(state, moduleAst);
+  // ... check for global features...
+  checkGlobals(state, moduleAst);
 
-      // ... and rewrite ast
-      return Promise
-        .all(Object.keys(plugins).map(plugin => {
-          return plugins[plugin](moduleAst, modulePath, context, state);
-        }))
-        .then(() => moduleAst);
-
-    });
+  // ... and rewrite ast
+  await Promise.all(Object.keys(plugins).map(plugin => {
+    return plugins[plugin](moduleAst, modulePath, context, state);
+  }));
+  return moduleAst;
 }

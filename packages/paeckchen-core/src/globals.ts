@@ -32,149 +32,124 @@ export function checkGlobals(state: State, ast: ESTree.Program): void {
   state.detectedGlobals.buffer = state.detectedGlobals.buffer || checkGlobalIdentifier('Buffer', ast);
 }
 
-function injectGlobal(ast: ESTree.Program): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      visit(ast, {
-        visitProgram(path: Path<ESTree.Program>): boolean {
-          if (path.scope.lookup('global') === null) {
-            const body = path.get<ESTree.Statement[]>('body');
-            body.get(body.value.length - 1).insertBefore(
-              b.variableDeclaration(
-                'var',
-                [
-                  b.variableDeclarator(
-                    b.identifier('global'),
-                    b.thisExpression()
-                  )
-                ]
+async function injectGlobal(ast: ESTree.Program): Promise<void> {
+  visit(ast, {
+    visitProgram(path: Path<ESTree.Program>): boolean {
+      if (path.scope.lookup('global') === null) {
+        const body = path.get<ESTree.Statement[]>('body');
+        body.get(body.value.length - 1).insertBefore(
+          b.variableDeclaration(
+            'var',
+            [
+              b.variableDeclarator(
+                b.identifier('global'),
+                b.thisExpression()
               )
-            );
-          }
-          return false;
-        }
-    });
+            ]
+          )
+        );
+      }
+      return false;
+    }
   });
 }
 
-function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      let processPath: Path<ESTree.Program>|undefined = undefined;
+async function injectProcess(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
+  let processPath: Path<ESTree.Program>|undefined;
 
-      visit(ast, {
-        visitProgram(path: Path<ESTree.Program>): boolean {
-          if (path.scope.lookup('process') === null) {
-            processPath = path;
-          }
-          return false;
-        }
-      });
-
-      if (processPath === undefined) {
-        return Promise.resolve();
+  visit(ast, {
+    visitProgram(path: Path<ESTree.Program>): boolean {
+      if (path.scope.lookup('process') === null) {
+        processPath = path;
       }
-      return getModulePath('.', 'process', context)
-        .then(processModulePath => {
-          const processIndex = getModuleIndex(processModulePath, state);
+      return false;
+    }
+  });
 
-          if (processPath !== undefined) {
-            const body = processPath.get<ESTree.Statement[]>('body');
-            body.get(body.value.length - 1).insertBefore(
-              b.variableDeclaration(
-                'var',
-                [
-                  b.variableDeclarator(
-                    b.identifier('process'),
-                    b.memberExpression(
-                      b.callExpression(
-                        b.identifier('__paeckchen_require__'),
-                        [
-                          b.literal(processIndex)
-                        ]
-                      ),
-                      b.identifier('exports'),
-                      false
-                    )
-                  )
-                ]
-              )
-            );
-            enqueueModule(processModulePath, state, context);
-          }
-        });
-    });
+  if (processPath === undefined) {
+    return Promise.resolve();
+  }
+
+  const processModulePath = await getModulePath('.', 'process', context);
+  const processIndex = getModuleIndex(processModulePath, state);
+  const body = processPath.get<ESTree.Statement[]>('body');
+  body.get(body.value.length - 1).insertBefore(
+    b.variableDeclaration(
+      'var',
+      [
+        b.variableDeclarator(
+          b.identifier('process'),
+          b.memberExpression(
+            b.callExpression(
+              b.identifier('__paeckchen_require__'),
+              [
+                b.literal(processIndex)
+              ]
+            ),
+            b.identifier('exports'),
+            false
+          )
+        )
+      ]
+    )
+  );
+  enqueueModule(processModulePath, state, context);
 }
 
-function injectBuffer(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      let bufferPath: Path<ESTree.Program>|undefined = undefined;
+async function injectBuffer(ast: ESTree.Program, context: PaeckchenContext, state: State): Promise<void> {
+  let bufferPath: Path<ESTree.Program>|undefined;
 
-      visit(ast, {
-        visitProgram(path: Path<ESTree.Program>): boolean {
-          if (path.scope.lookup('Buffer') === null) {
-            bufferPath = path;
-          }
-          return false;
-        }
-      });
-
-      if (bufferPath === undefined) {
-        return Promise.resolve();
+  visit(ast, {
+    visitProgram(path: Path<ESTree.Program>): boolean {
+      if (path.scope.lookup('Buffer') === null) {
+        bufferPath = path;
       }
-      return getModulePath('.', 'buffer', context)
-        .then(bufferModulePath => {
-          const bufferIndex = getModuleIndex(bufferModulePath, state);
+      return false;
+    }
+  });
 
-          if (bufferPath !== undefined) {
-            const body = bufferPath.get<ESTree.Statement[]>('body');
-            body.get(body.value.length - 1).insertBefore(
-              b.variableDeclaration(
-                'var',
+  if (bufferPath === undefined) {
+    return Promise.resolve();
+  }
+  const bufferModulePath = await getModulePath('.', 'buffer', context);
+  const bufferIndex = getModuleIndex(bufferModulePath, state);
+  const body = bufferPath.get<ESTree.Statement[]>('body');
+  body.get(body.value.length - 1).insertBefore(
+    b.variableDeclaration(
+      'var',
+      [
+        b.variableDeclarator(
+          b.identifier('Buffer'),
+          b.memberExpression(
+            b.memberExpression(
+              b.callExpression(
+                b.identifier('__paeckchen_require__'),
                 [
-                  b.variableDeclarator(
-                    b.identifier('Buffer'),
-                    b.memberExpression(
-                      b.memberExpression(
-                        b.callExpression(
-                          b.identifier('__paeckchen_require__'),
-                          [
-                            b.literal(bufferIndex)
-                          ]
-                        ),
-                        b.identifier('exports'),
-                        false
-                      ),
-                      b.identifier('Buffer'),
-                      false
-                    )
-                  )
+                  b.literal(bufferIndex)
                 ]
-              )
-            );
-            enqueueModule(bufferModulePath, state, context);
-          }
-        });
-    });
+              ),
+              b.identifier('exports'),
+              false
+            ),
+            b.identifier('Buffer'),
+            false
+          )
+        )
+      ]
+    )
+  );
+  enqueueModule(bufferModulePath, state, context);
 }
 
-export function injectGlobals(state: State, ast: ESTree.Program,
+export async function injectGlobals(state: State, ast: ESTree.Program,
     context: PaeckchenContext): Promise<void> {
-  return Promise.resolve()
-    .then((): any => {
-      if (state.detectedGlobals.global) {
-        return injectGlobal(ast);
-      }
-    })
-    .then((): any => {
-      if (state.detectedGlobals.process) {
-        return injectProcess(ast, context, state);
-      }
-    })
-    .then((): any => {
-      if (state.detectedGlobals.buffer) {
-        return injectBuffer(ast, context, state);
-      }
-    });
+  if (state.detectedGlobals.global) {
+    await injectGlobal(ast);
+  }
+  if (state.detectedGlobals.process) {
+    await injectProcess(ast, context, state);
+  }
+  if (state.detectedGlobals.buffer) {
+    await injectBuffer(ast, context, state);
+  }
 }
