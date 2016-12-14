@@ -7,23 +7,22 @@ import { HostMock } from './helper';
 
 import { getModulePath } from '../src/module-path';
 
-test('getModulePath should throw on non existing module', t => {
+test('getModulePath should throw on non existing module', async t => {
   const host = new HostMock({});
   const context = {
     config: {} as any,
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './else', context)
-    .then(() => {
-      t.fail('Expected to throw');
-    })
-    .catch(e => {
-      t.truthy(e);
-    });
+  try {
+    await getModulePath('some/where', './else', context);
+    t.fail('Expected to throw');
+  } catch (e) {
+    t.truthy(e);
+  }
 });
 
-test('getModulePath should resolve an existing relative file', t => {
+test('getModulePath should resolve an existing relative file', async t => {
   const host = new HostMock({
     'some/else': ''
   });
@@ -35,13 +34,12 @@ test('getModulePath should resolve an existing relative file', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './else', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/else'));
-    });
+  const resolved = await getModulePath('some/where', './else', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/else'));
 });
 
-test('getModulePath should resolve a relative file while adding .js', t => {
+test('getModulePath should resolve a relative file while adding .js', async t => {
   const host = new HostMock({
     'some/else.js': ''
   });
@@ -53,13 +51,12 @@ test('getModulePath should resolve a relative file while adding .js', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './else', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/else.js'));
-    });
+  const resolved = await getModulePath('some/where', './else', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/else.js'));
 });
 
-test('getModulePath should resolve a relative directory with package.json and main', t => {
+test('getModulePath should resolve a relative directory with package.json and main', async t => {
   const host = new HostMock({
     'some/dir/package.json': '{"main": "./main.js"}',
     'some/dir/main.js': ''
@@ -73,13 +70,12 @@ test('getModulePath should resolve a relative directory with package.json and ma
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
 });
 
-test('getModulePath should resolve browser field correctly', t => {
+test('getModulePath should resolve browser field correctly', async t => {
   const host = new HostMock({
     'some/dir/package.json': '{"browser": "./browser.js"}',
     'some/dir/main.js': '',
@@ -94,13 +90,12 @@ test('getModulePath should resolve browser field correctly', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
 });
 
-test('getModulePath should resolve jsnext:main field correctly', t => {
+test('getModulePath should resolve jsnext:main field correctly', async t => {
   const host = new HostMock({
     'some/dir/package.json': '{"jsnext:main": "./jsnext.js"}',
     'some/dir/jsnext.js': '',
@@ -115,13 +110,12 @@ test('getModulePath should resolve jsnext:main field correctly', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/dir/jsnext.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/dir/jsnext.js'));
 });
 
-test('getModulePath should not resolve jsnext:main field if source-config is set to es5', t => {
+test('getModulePath should not resolve jsnext:main field if source-config is set to es5', async t => {
   const host = new HostMock({
     'some/dir/package.json': '{"jsnext:main": "./jsnext.js", "main": "./main.js"}',
     'some/dir/jsnext.js': '',
@@ -138,13 +132,12 @@ test('getModulePath should not resolve jsnext:main field if source-config is set
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/dir/main.js'));
 });
 
-test('getModulePath should resolve browser, jsnext:main and main in correct precedence', t => {
+test('getModulePath should resolve browser, jsnext:main and main in correct precedence', async t => {
   const host = new HostMock({
     'some/dir/package.json': '{"browser": "./browser", "jsnext:main": "./jsnext.js", "main": "./main.js"}',
     'some/dir/browser.js': '',
@@ -161,13 +154,12 @@ test('getModulePath should resolve browser, jsnext:main and main in correct prec
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.is(resolved, path.resolve(process.cwd(), 'some/dir/browser.js'));
 });
 
-test('getModulePath should resolve a relative directory without package.json but index.js', t => {
+test('getModulePath should resolve a relative directory without package.json but index.js', async t => {
   const host = new HostMock({
     'some/dir/index.js': ''
   });
@@ -181,13 +173,12 @@ test('getModulePath should resolve a relative directory without package.json but
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('some/where', './dir', context)
-    .then(resolved => {
-      t.deepEqual(resolved, path.resolve(process.cwd(), 'some/dir/index.js'));
-    });
+  const resolved = await getModulePath('some/where', './dir', context);
+
+  t.deepEqual(resolved, path.resolve(process.cwd(), 'some/dir/index.js'));
 });
 
-test('getModulePath should resolve from node_modules', t => {
+test('getModulePath should resolve from node_modules', async t => {
   const host = new HostMock({
     'dir/node_modules/mod/index.js': ''
   });
@@ -201,13 +192,12 @@ test('getModulePath should resolve from node_modules', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('dir/some/where', 'mod', context)
-    .then(resolved => {
-      t.deepEqual(resolved, path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
-    });
+  const resolved = await getModulePath('dir/some/where', 'mod', context);
+
+  t.deepEqual(resolved, path.resolve(process.cwd(), 'dir/node_modules/mod/index.js'));
 });
 
-test('getModulePath should return the core-modules name where no shim is available', t => {
+test('getModulePath should return the core-modules name where no shim is available', async t => {
   const host = new HostMock({});
   const context = {
     config: {
@@ -219,13 +209,12 @@ test('getModulePath should return the core-modules name where no shim is availab
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/module.js', 'fs', context)
-    .then(resolved => {
-      t.is(resolved, 'fs');
-    });
+  const resolved = await getModulePath('/some/module.js', 'fs', context);
+
+  t.is(resolved, 'fs');
 });
 
-test('getModulePath should use the alias name if possible', t => {
+test('getModulePath should use the alias name if possible', async t => {
   const host = new HostMock({
     '/alias.js': ''
   });
@@ -241,13 +230,12 @@ test('getModulePath should use the alias name if possible', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/module.js', 'alias-module', context)
-    .then(resolved => {
-      t.is(resolved, path.resolve('/alias.js'));
-    });
+  const resolved = await getModulePath('/some/module.js', 'alias-module', context);
+
+  t.is(resolved, path.resolve('/alias.js'));
 });
 
-test('getModulePath should keep external module names as is', t => {
+test('getModulePath should keep external module names as is', async t => {
   const host = new HostMock({});
   const context = {
     config: {
@@ -260,13 +248,12 @@ test('getModulePath should keep external module names as is', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/module.js', 'jQuery', context)
-    .then(resolved => {
-      t.is(resolved, 'jQuery');
-    });
+  const resolved = await getModulePath('/some/module.js', 'jQuery', context);
+
+  t.is(resolved, 'jQuery');
 });
 
-test('getModulePath should throw if an error occurs during file reading', t => {
+test('getModulePath should throw if an error occurs during file reading', async t => {
   const host = new HostMock({}, '/');
   const origFileExists = host.fileExists;
   host.fileExists = name => {
@@ -290,16 +277,15 @@ test('getModulePath should throw if an error occurs during file reading', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/where', './else', context)
-    .then(() => {
-      t.fail('Expected to throw');
-    })
-    .catch(e => {
-      t.truthy(e);
-    });
+  try {
+    await getModulePath('/some/where', './else', context);
+    t.fail('Expected to throw');
+  } catch (e) {
+    t.truthy(e);
+  }
 });
 
-test('getModulePath should throw if file existance check throws', t => {
+test('getModulePath should throw if file existance check throws', async t => {
   const host = new HostMock({}, '/');
   const origFileExists = host.fileExists;
   host.fileExists = name => {
@@ -323,16 +309,15 @@ test('getModulePath should throw if file existance check throws', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/where', './else', context)
-    .then(() => {
-      t.fail('Expected to throw');
-    })
-    .catch(e => {
-      t.regex(e.message, /Cannot find module/);
-    });
+  try {
+    await getModulePath('/some/where', './else', context);
+    t.fail('Expected to throw');
+  } catch (e) {
+    t.regex(e.message, /Cannot find module/);
+  }
 });
 
-test('getModulePath should throw if file check throws', t => {
+test('getModulePath should throw if file check throws', async t => {
   const host = new HostMock({}, '/');
   const origFileExists = host.fileExists;
   host.fileExists = name => {
@@ -356,11 +341,10 @@ test('getModulePath should throw if file check throws', t => {
     host,
     logger: new NoopLogger()
   };
-  return getModulePath('/some/where', './else', context)
-    .then(() => {
-      t.fail('Expected to throw');
-    })
-    .catch(e => {
-      t.regex(e.message, /Cannot find module/);
-    });
+  try {
+    await getModulePath('/some/where', './else', context);
+    t.fail('Expected to throw');
+  } catch (e) {
+    t.regex(e.message, /Cannot find module/);
+  }
 });

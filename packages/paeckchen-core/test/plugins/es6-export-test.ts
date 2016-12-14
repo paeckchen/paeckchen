@@ -7,7 +7,7 @@ import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '.
 
 import { rewriteExportNamedDeclaration } from '../../src/plugins/es6-export';
 
-function rewriteExports(input: string, files: any = {}): Promise<string> {
+async function rewriteExports(input: string, files: any = {}): Promise<string> {
   const state = new State([]);
   const host = new HostMock(files);
   const context = {
@@ -19,19 +19,18 @@ function rewriteExports(input: string, files: any = {}): Promise<string> {
     logger: new NoopLogger()
   };
 
-  return parse(input)
-    .then(ast =>
-      rewriteExportNamedDeclaration(ast, 'name', context, state).then(() =>
-        generate(ast)));
+  const ast = await parse(input);
+  await rewriteExportNamedDeclaration(ast, 'name', context, state);
+  return generate(ast);
 }
 
-function executeExports(input: string, files: any = {}, settings: any = {},
+async function executeExports(input: string, files: any = {}, settings: any = {},
     requireResults: any[] = []): Promise<virtualModuleResult> {
-  return rewriteExports(input, files).then(processed =>
-    virtualModule(processed, settings, requireResults));
+  const processed = await rewriteExports(input, files);
+  return virtualModule(processed, settings, requireResults);
 }
 
-test('es6-export plugin should rewrite variable assignment exports correctly', t => {
+test('es6-export plugin should rewrite variable assignment exports correctly', async t => {
   const input = stripIndent`
     export const foo = 'bar';
     export const bar = 'foo';
@@ -42,13 +41,12 @@ test('es6-export plugin should rewrite variable assignment exports correctly', t
     bar: 'foo'
   };
 
-  return executeExports(input)
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeExports(input);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-export plugin should rewrite default exports correctly', t => {
+test('es6-export plugin should rewrite default exports correctly', async t => {
   const input = stripIndent`
     const bar = 'bar';
     export default bar;
@@ -58,47 +56,43 @@ test('es6-export plugin should rewrite default exports correctly', t => {
     default: 'bar'
   };
 
-  return executeExports(input)
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeExports(input);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-export plugin should rewrite anonymous function default export correctly', t => {
+test('es6-export plugin should rewrite anonymous function default export correctly', async t => {
   const input = stripIndent`
     export default function () {}
   `;
 
-  return executeExports(input)
-    .then(actual => {
-      t.truthy(typeof actual['default'] === 'function');
-    });
+  const actual = await executeExports(input);
+
+  t.truthy(typeof actual['default'] === 'function');
 });
 
-test('es6-export plugin should rewrite class default export correctly', t => {
+test('es6-export plugin should rewrite class default export correctly', async t => {
   const input = `
     'use strict';
     export default class Foo {}
   `;
 
-  return executeExports(input)
-    .then(actual => {
-      t.truthy(typeof actual['default'] === 'function');
-    });
+  const actual = await executeExports(input);
+
+  t.truthy(typeof actual['default'] === 'function');
 });
 
-test('es6-export plugin should rewrite named function default export correctly', t => {
+test('es6-export plugin should rewrite named function default export correctly', async t => {
   const input = stripIndent`
     export default function foo () {}
   `;
 
-  return executeExports(input)
-    .then(actual => {
-      t.truthy(typeof actual['default'] === 'function');
-    });
+  const actual = await executeExports(input);
+
+  t.truthy(typeof actual['default'] === 'function');
 });
 
-test('es6-export plugin should rewrite named exports correctly', t => {
+test('es6-export plugin should rewrite named exports correctly', async t => {
   const input = stripIndent`
     const foo = 'foo';
     export {foo as bar};
@@ -108,13 +102,12 @@ test('es6-export plugin should rewrite named exports correctly', t => {
     bar: 'foo'
   };
 
-  return executeExports(input)
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeExports(input);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-export plugin should rewrite named reexports correctly', t => {
+test('es6-export plugin should rewrite named reexports correctly', async t => {
   const input = stripIndent`
     export {foo as bar} from './dependency';
   `;
@@ -131,13 +124,12 @@ test('es6-export plugin should rewrite named reexports correctly', t => {
     bar: 'bar'
   };
 
-  return executeExports(input, files, {}, [exported])
-    .then(actual => {
-      t.deepEqual(actual, expected);
-    });
+  const actual = await executeExports(input, files, {}, [exported]);
+
+  t.deepEqual(actual, expected);
 });
 
-test('es6-export plugin should rewrite export-all declarations correctly', t => {
+test('es6-export plugin should rewrite export-all declarations correctly', async t => {
   const input = stripIndent`
     export * from './dependency';
   `;
@@ -152,19 +144,17 @@ test('es6-export plugin should rewrite export-all declarations correctly', t => 
     }
   };
 
-  return executeExports(input, files, {}, [expected])
-    .then(actual => {
-      t.deepEqual(actual, expected.exports);
-    });
+  const actual = await executeExports(input, files, {}, [expected]);
+
+  t.deepEqual(actual, expected.exports);
 });
 
-test('es6-export plugin should rewrite exported function declarations correctly', t => {
+test('es6-export plugin should rewrite exported function declarations correctly', async t => {
   const input = stripIndent`
     export function exported() {};
   `;
 
-  return executeExports(input)
-    .then(actual => {
-      t.truthy(typeof actual['exported'] === 'function');
-    });
+  const actual = await executeExports(input);
+
+  t.truthy(typeof actual['exported'] === 'function');
 });

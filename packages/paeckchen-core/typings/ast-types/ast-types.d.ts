@@ -90,5 +90,6 @@ declare module 'ast-types' {
     export function arrayExpression(elements?: ESTree.Expression[]): ESTree.ArrayExpression;
     export function returnStatement(argument?: ESTree.Expression): ESTree.ReturnStatement;
     export function newExpression(callee: ESTree.Expression, _arguments: ESTree.Expression[]): ESTree.NewExpression;
+    export function sequenceExpression(expressions: ESTree.Expression[]): ESTree.Expression;
   }
 }

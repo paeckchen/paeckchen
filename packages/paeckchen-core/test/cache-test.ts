@@ -4,7 +4,7 @@ import { HostMock } from './helper';
 
 import { readCache } from '../src/cache';
 
-test('cache should be disabled in non debug mode', t => {
+test('cache should be disabled in non debug mode', async t => {
   const host = new HostMock({
     'paeckchen.cache.json': `{
       "globals": {}
@@ -16,8 +16,7 @@ test('cache should be disabled in non debug mode', t => {
     },
     host
   };
-  return readCache(context as any)
-    .then(cache => {
-      t.deepEqual(cache, {});
-    });
+  const cache = await readCache(context as any);
+
+  t.deepEqual(cache, {});
 });

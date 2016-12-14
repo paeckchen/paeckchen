@@ -6,44 +6,38 @@ import { getModulePath } from '../module-path';
 import { getModuleIndex, enqueueModule } from '../modules';
 import { State } from '../state';
 
-export function rewriteRequireStatements(program: ESTree.Program, currentModule: string,
+export async function rewriteRequireStatements(program: ESTree.Program, currentModule: string,
     context: PaeckchenContext, state: State): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      context.logger.trace('plugin', `rewriteRequireStatements [currentModule=${currentModule}]`);
-    })
-    .then(() => {
-      const requireUpdates: [string, Path<ESTree.CallExpression>][] = [];
+  context.logger.trace('plugin', `rewriteRequireStatements [currentModule=${currentModule}]`);
 
-      visit(program, {
-        visitCallExpression(this: Visitor, path: Path<ESTree.CallExpression>): boolean|void {
-          const callee = path.node.callee;
-          // tslint:disable-next-line
-          // TODO: check binding here, not name
-          if (n.Identifier.check(callee) && callee.name === 'require') {
-            const importPath = path.node.arguments[0];
-            if (n.Literal.check(importPath) && (importPath as ESTree.Literal).value) {
-              const value = (importPath as ESTree.Literal).value;
-              if (value) {
-                requireUpdates.push([value.toString(), path]);
-              }
-            }
-            return false;
+  const requireUpdates: [string, Path<ESTree.CallExpression>][] = [];
+
+  visit(program, {
+    visitCallExpression(this: Visitor, path: Path<ESTree.CallExpression>): boolean|void {
+      const callee = path.node.callee;
+      // tslint:disable-next-line
+      // TODO: check binding here, not name
+      if (n.Identifier.check(callee) && callee.name === 'require') {
+        const importPath = path.node.arguments[0];
+        if (n.Literal.check(importPath) && (importPath as ESTree.Literal).value) {
+          const value = (importPath as ESTree.Literal).value;
+          if (value) {
+            requireUpdates.push([value.toString(), path]);
           }
-          this.traverse(path);
         }
-      });
+        return false;
+      }
+      this.traverse(path);
+    }
+  });
 
-      return Promise.all(requireUpdates.map(update => {
-        const [requirePath, path] = update;
-        return getModulePath(currentModule, requirePath, context)
-          .then(modulePath => {
-            const moduleIndex = getModuleIndex(modulePath, state);
-            replaceRequireCall(path, moduleIndex);
-            enqueueModule(modulePath, state, context);
-          });
-      })) as Promise<any>;
-    });
+  await Promise.all(requireUpdates.map(async update => {
+    const [requirePath, path] = update;
+    const modulePath = await getModulePath(currentModule, requirePath, context);
+    const moduleIndex = getModuleIndex(modulePath, state);
+    replaceRequireCall(path, moduleIndex);
+    enqueueModule(modulePath, state, context);
+  }));
 }
 
 function replaceRequireCall(path: Path<ESTree.CallExpression>, moduleIndex: number): void {

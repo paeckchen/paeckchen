@@ -26,7 +26,7 @@ test('save should return a serialized state object', t => {
   t.deepEqual(result.wrappedModules, []);
 });
 
-test('load should create and revalidate state from serialized state object', t => {
+test('load should create and revalidate state from serialized state object', async t => {
   const host = new HostMock({
     'name1': ''
   });
@@ -64,9 +64,8 @@ test('load should create and revalidate state from serialized state object', t =
       mtime: Number.MAX_SAFE_INTEGER
     }]
   };
-  return state.load(context, input, update, enqueue)
-    .then(() => {
-      t.is(calledUpdate, 2);
-      t.is(calledEnqueue, 2);
-    });
+  await state.load(context, input, update, enqueue);
+
+  t.is(calledUpdate, 2);
+  t.is(calledEnqueue, 2);
 });

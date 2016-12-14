@@ -5,7 +5,7 @@ import { HostMock, virtualModule, virtualModuleResult, parse, generate } from '.
 
 import { rewriteGlobalLocals } from '../../src/plugins/global-locals';
 
-function rewriteExports(input: string, files: any = {}): Promise<string> {
+async function rewriteExports(input: string, files: any = {}): Promise<string> {
   const host = new HostMock(files, '/cwd');
   const context = {
     config: {} as any,
@@ -13,19 +13,18 @@ function rewriteExports(input: string, files: any = {}): Promise<string> {
     logger: new NoopLogger()
   };
 
-  return parse(input)
-    .then(ast =>
-      rewriteGlobalLocals(ast, '/cwd/path/to/name', context).then(() =>
-        generate(ast)));
+  const ast = await parse(input);
+  await rewriteGlobalLocals(ast, '/cwd/path/to/name', context);
+  return generate(ast);
 }
 
-function executeExports(input: string, files: any = {}, settings: any = {},
+async function executeExports(input: string, files: any = {}, settings: any = {},
     requireResults: any[] = []): Promise<virtualModuleResult> {
-  return rewriteExports(input, files).then(processed =>
-    virtualModule(processed, settings, requireResults));
+  const processed = await rewriteExports(input, files);
+  return virtualModule(processed, settings, requireResults);
 }
 
-test('rewriteGlobalLocals plugin should wrap module in closure with __filename and __dirname', t => {
+test('rewriteGlobalLocals plugin should wrap module in closure with __filename and __dirname', async t => {
   const input = `
     filename(__filename);
     dirname(__dirname);
@@ -41,9 +40,8 @@ test('rewriteGlobalLocals plugin should wrap module in closure with __filename a
     }
   };
 
-  return executeExports(input, {}, settings)
-    .then(() => {
-      t.is(calledFilename, '/cwd/path/to/name');
-      t.is(calledDirname, '/cwd/path/to');
-    });
+  await executeExports(input, {}, settings);
+
+  t.is(calledFilename, '/cwd/path/to/name');
+  t.is(calledDirname, '/cwd/path/to');
 });

@@ -7,7 +7,7 @@ import { HostMock, parse, generate } from '../helper';
 
 import { rewriteRequireStatements } from '../../src/plugins/commonjs';
 
-test('commonjs should rewrite require statements', t => {
+test('commonjs should rewrite require statements', async t => {
   const state = new State([]);
   const input = stripIndent`
     var a = require('./dependency');
@@ -27,15 +27,14 @@ test('commonjs should rewrite require statements', t => {
     var a = __paeckchen_require__(0).exports;
   `;
 
-  return parse(input).then(ast =>
-    rewriteRequireStatements(ast, 'name', context, state).then(() =>
-      generate(ast)))
-    .then(actual => {
-      t.is(actual, expected);
-    });
+  const ast = await parse(input);
+  await rewriteRequireStatements(ast, 'name', context, state);
+  const actual = await generate(ast);
+
+  t.is(actual, expected);
 });
 
-test('commonjs should rewrite require statements which are nested inside call chains', t => {
+test('commonjs should rewrite require statements which are nested inside call chains', async t => {
   const state = new State([]);
   const input = stripIndent`
     require('./dependency')();
@@ -56,10 +55,9 @@ test('commonjs should rewrite require statements which are nested inside call ch
     __paeckchen_require__(0).exports();
   `;
 
-  return parse(input).then(ast =>
-    rewriteRequireStatements(ast, 'name', context, state).then(() =>
-      generate(ast)))
-    .then(actual => {
-      t.is(actual, expected);
-    });
+  const ast = await parse(input);
+  await rewriteRequireStatements(ast, 'name', context, state);
+  const actual = await generate(ast);
+
+  t.is(actual, expected);
 });

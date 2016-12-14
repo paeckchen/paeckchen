@@ -22,47 +22,42 @@ test('DefaultHost#fileExists should return false for non-existing file', t => {
   t.false((t.context.host as DefaultHost).fileExists('./none-existing-file'));
 });
 
-test('DefaultHost#isFile should return true for file', t => {
-  return (t.context.host as DefaultHost).isFile('../../package.json')
-    .then(result => {
-      t.true(result);
-    });
+test('DefaultHost#isFile should return true for file', async t => {
+  const result = await (t.context.host as DefaultHost).isFile('../../package.json');
+
+  t.true(result);
 });
 
-test('DefaultHost#isFile should return false for directory', t => {
-  return (t.context.host as DefaultHost).isFile('../../node_modules')
-    .then(result => {
-      t.false(result);
-    });
+test('DefaultHost#isFile should return false for directory', async t => {
+  const result = await (t.context.host as DefaultHost).isFile('../../node_modules');
+
+  t.false(result);
 });
 
-test('DefaultHost#isFile should fail for non existing file', t => {
-  return (t.context.host as DefaultHost).isFile('../../package.jsno')
-    .then(result => {
-      t.fail('Exception expected');
-    })
-    .catch(e => {
-      t.truthy(e.message.match(/no such file/));
-    });
+test('DefaultHost#isFile should fail for non existing file', async t => {
+  try {
+    await (t.context.host as DefaultHost).isFile('../../package.jsno');
+    t.fail('Exception expected');
+  } catch (e) {
+    t.truthy(e.message.match(/no such file/));
+  }
 });
 
-test('DefaultHost#readFile should return the file content', t => {
+test('DefaultHost#readFile should return the file content', async t => {
   const path = '../../package.json';
-  return (t.context.host as DefaultHost).readFile(path)
-    .then(data => {
-      t.deepEqual(data, readFileSync(path).toString());
-    });
+  const data = await (t.context.host as DefaultHost).readFile(path);
+
+  t.deepEqual(data, readFileSync(path).toString());
 });
 
-test('DefaultHost#readFile should fail for non existing file', t => {
+test('DefaultHost#readFile should fail for non existing file', async t => {
   const path = '../../package.jsno';
-  return (t.context.host as DefaultHost).readFile(path)
-    .then(data => {
-      t.fail('Exception expected');
-    })
-    .catch(e => {
-      t.truthy(e.message.match(/no such file/));
-    });
+  try {
+    await (t.context.host as DefaultHost).readFile(path);
+    t.fail('Exception expected');
+  } catch (e) {
+    t.truthy(e.message.match(/no such file/));
+  }
 });
 
 test('DefaultHost#writeFile should dump the content to disk', t => {
@@ -96,36 +91,33 @@ test.cb('DefaultHost#getModificationTime should return the mtime of the given fi
   }
 
   const file = resolve(process.cwd(), 'mtime-test.txt');
-  write(file, '0', () => {
-    (t.context.host as DefaultHost).getModificationTime(file)
-      .then(mtime1 => {
-        setTimeout(() => {
-          write(file, '1', () => {
-            (t.context.host as DefaultHost).getModificationTime(file)
-              .then(mtime2 => {
-                unlinkFile(file);
-                t.true(mtime2 > mtime1);
-                t.end();
-              })
-              .catch(err => {
-                t.fail('Failed to get mtime1');
-                unlinkFile(file);
-              });
-          });
-        }, 10);
-      })
-      .catch(err => {
-        t.fail('Failed to get mtime1');
-        unlinkFile(file);
-      });
+  write(file, '0', async () => {
+    try {
+      const mtime1 = await (t.context.host as DefaultHost).getModificationTime(file);
+      setTimeout(() => {
+        write(file, '1', async () => {
+          try {
+            const mtime2 = await (t.context.host as DefaultHost).getModificationTime(file);
+            t.true(mtime2 > mtime1);
+            t.end();
+          } catch (err) {
+            t.fail('Failed to get mtime1');
+          } finally {
+            unlinkFile(file);
+          }
+        });
+      }, 10);
+    } catch (e) {
+      t.fail('Failed to get mtime1');
+      unlinkFile(file);
+    }
   });
 });
 
-test('DefaultHost#getModificationTime should return -1 if file does not exist', t => {
-  return (t.context.host as DefaultHost).getModificationTime('does-not-exist')
-    .then(mtime => {
-      t.is(mtime, -1);
-    });
+test('DefaultHost#getModificationTime should return -1 if file does not exist', async t => {
+  const mtime = await (t.context.host as DefaultHost).getModificationTime('does-not-exist');
+
+  t.is(mtime, -1);
 });
 
 test('DefaultHost#createWatcher should return a new watcher instance', t => {

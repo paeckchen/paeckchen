@@ -7,63 +7,56 @@ import { generate, HostMock, virtualModule } from './helper';
 
 import { buildArray, buildObject, buildValue, wrapJsonFile } from '../src/bundle-json';
 
-test('buildArray should create a valid array expression', t => {
+test('buildArray should create a valid array expression', async t => {
   const input = [0, 1, 2];
-  return generate(buildArray(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildArray(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildObject should create a valid object expression', t => {
+test('buildObject should create a valid object expression', async t => {
   const input = {a: 0, b: 1, c: 2};
-  return generate(buildObject(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildObject(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue given null should return a null literal', t => {
+test('buildValue given null should return a null literal', async t => {
   const input: any = null;
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue given a number should return a number literal', t => {
+test('buildValue given a number should return a number literal', async t => {
   const input = 0;
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue given a boolean should return a boolean literal', t => {
+test('buildValue given a boolean should return a boolean literal', async t => {
   const input = true;
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue given an array should return an array literal', t => {
+test('buildValue given an array should return an array literal', async t => {
   const input = ['a', 'b', 'c'];
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue given an object should return an object literal', t => {
+test('buildValue given an object should return an object literal', async t => {
   const input = {key: 'value'};
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('buildValue should allow nesting', t => {
+test('buildValue should allow nesting', async t => {
   const input = {
     key: 'value',
     array: [
@@ -72,13 +65,12 @@ test('buildValue should allow nesting', t => {
       }
     ]
   };
-  return generate(buildValue(input) as any)
-    .then(code => {
-      t.deepEqual(JSON.parse(code), input);
-    });
+  const code = await generate(buildValue(input) as any);
+
+  t.deepEqual(JSON.parse(code), input);
 });
 
-test('wrapJsonFile should return a requested json file as ast program exporting the json data', t => {
+test('wrapJsonFile should return a requested json file as ast program exporting the json data', async t => {
   const context: PaeckchenContext =  {
     config: {
       input: {
@@ -103,9 +95,8 @@ test('wrapJsonFile should return a requested json file as ast program exporting 
     logger: new NoopLogger()
   };
 
-  return wrapJsonFile('/file.json', context)
-    .then(program => generate(program)
-    .then(code => {
-      t.deepEqual(virtualModule(code), {key: 'value'});
-    }));
+  const program = await wrapJsonFile('/file.json', context);
+  const code = await generate(program);
+
+  t.deepEqual(virtualModule(code), {key: 'value'});
 });

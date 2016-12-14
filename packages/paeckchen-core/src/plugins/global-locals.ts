@@ -4,54 +4,50 @@ import { dirname } from 'path';
 
 import { PaeckchenContext } from '../bundle';
 
-export function rewriteGlobalLocals(program: ESTree.Program, currentModule: string,
+export async function rewriteGlobalLocals(program: ESTree.Program, currentModule: string,
     context: PaeckchenContext): Promise<void> {
-  return Promise.resolve()
-    .then(() => {
-      context.logger.trace('plugin', `rewriteGlobalLocals [currentModule=${currentModule}]`);
-    })
-    .then(() => {
-      let detectedFilename = false;
-      let detectedDirname = false;
+  context.logger.trace('plugin', `rewriteGlobalLocals [currentModule=${currentModule}]`);
 
-      const isKnownSymbol = (path: Path<ESTree.Identifier>, name: string) =>
-        path.node.name === name && path.scope.lookup(name) === null;
+  let detectedFilename = false;
+  let detectedDirname = false;
 
-      visit(program, {
-        visitIdentifier(this: Visitor, path: Path<ESTree.Identifier>): void {
-          if (isKnownSymbol(path, '__filename')) {
-            detectedFilename = true;
-          } else if (isKnownSymbol(path, '__dirname')) {
-            detectedDirname = true;
-          }
-          if (detectedFilename && detectedDirname) {
-            this.abort();
-          }
-          this.traverse(path);
-        }
-      });
+  const isKnownSymbol = (path: Path<ESTree.Identifier>, name: string) =>
+    path.node.name === name && path.scope.lookup(name) === null;
 
-      if (detectedFilename || detectedDirname) {
-        program.body = [
-          b.expressionStatement(
-            b.callExpression(
-              b.functionExpression(
-                null,
-                [
-                  b.identifier('__filename'),
-                  b.identifier('__dirname')
-                ],
-                b.blockStatement(
-                  program.body as ESTree.Statement[]
-                )
-              ),
-              [
-                b.literal(currentModule),
-                b.literal(dirname(currentModule))
-              ]
-            )
-          )
-        ];
+  visit(program, {
+    visitIdentifier(this: Visitor, path: Path<ESTree.Identifier>): void {
+      if (isKnownSymbol(path, '__filename')) {
+        detectedFilename = true;
+      } else if (isKnownSymbol(path, '__dirname')) {
+        detectedDirname = true;
       }
-    });
+      if (detectedFilename && detectedDirname) {
+        this.abort();
+      }
+      this.traverse(path);
+    }
+  });
+
+  if (detectedFilename || detectedDirname) {
+    program.body = [
+      b.expressionStatement(
+        b.callExpression(
+          b.functionExpression(
+            null,
+            [
+              b.identifier('__filename'),
+              b.identifier('__dirname')
+            ],
+            b.blockStatement(
+              program.body as ESTree.Statement[]
+            )
+          ),
+          [
+            b.literal(currentModule),
+            b.literal(dirname(currentModule))
+          ]
+        )
+      )
+    ];
+  }
 }

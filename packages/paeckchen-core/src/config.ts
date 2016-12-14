@@ -117,39 +117,34 @@ function falseStringToBoolean<V>(input: {[key: string]: V}): {[key: string]: V} 
   }, {});
 }
 
-export function createConfig(options: BundleOptions, host: Host): Promise<Config> {
-  return Promise.resolve()
-    .then(() => {
-      const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');
-      if (host.fileExists(configPath)) {
-        return host.readFile(configPath)
-          .then(data => {
-            return JSON.parse(data);
-          })
-          .catch(e => {
-            throw new Error(`Failed to read config file [file=${configPath}, message=${e.message}]`);
-          });
-      }
-      return {};
-    })
-    // tslint:disable-next-line cyclomatic-complexity
-    .then((configFile: any) => {
-      return {
-        input: {
-          entryPoint: options.entryPoint || configFile.input && configFile.input.entry || undefined,
-          source: getSource(options.source || configFile.input && configFile.input.source || 'es2015')
-        },
-        output: {
-          folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
-          file: options.outputFile || configFile.output && configFile.output.file || undefined,
-          runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
-          sourceMap: getSourceMap(options.sourceMap || configFile.output && configFile.output.sourceMap || false)
-        },
-        aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
-        externals: falseStringToBoolean(processKeyValueOption<string|boolean>(options.external, configFile.externals)),
-        watchMode: options.watchMode || configFile.watchMode || false,
-        logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default'),
-        debug: options.debug || configFile.debug || false
-      };
-    });
+export async function createConfig(options: BundleOptions, host: Host): Promise<Config> {
+  let configFile: any = {};
+  const configPath = join(host.cwd(), options.configFile || 'paeckchen.json');
+  if (host.fileExists(configPath)) {
+    try {
+      const data = await host.readFile(configPath);
+      configFile = JSON.parse(data);
+    } catch (e) {
+      throw new Error(`Failed to read config file [file=${configPath}, message=${e.message}]`);
+    }
+  }
+
+  // tslint:disable-next-line cyclomatic-complexity
+  return {
+    input: {
+      entryPoint: options.entryPoint || configFile.input && configFile.input.entry || undefined,
+      source: getSource(options.source || configFile.input && configFile.input.source || 'es2015')
+    },
+    output: {
+      folder: options.outputDirectory || configFile.output && configFile.output.folder || host.cwd(),
+      file: options.outputFile || configFile.output && configFile.output.file || undefined,
+      runtime: getRuntime(options.runtime || configFile.output && configFile.output.runtime || 'browser'),
+      sourceMap: getSourceMap(options.sourceMap || configFile.output && configFile.output.sourceMap || false)
+    },
+    aliases: processKeyValueOption<string>(options.alias, configFile.aliases),
+    externals: falseStringToBoolean(processKeyValueOption<string|boolean>(options.external, configFile.externals)),
+    watchMode: options.watchMode || configFile.watchMode || false,
+    logLevel: getLogLevel(options.logLevel || configFile.logLevel || 'default'),
+    debug: options.debug || configFile.debug || false
+  };
 }

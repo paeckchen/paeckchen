@@ -28,22 +28,28 @@ function normalizePackageFactory(context: PaeckchenContext): (pkg: Package) => P
   };
 }
 
-function nodebackReadFile(context: PaeckchenContext, file: string,
-    cb: (err: Error|null, file?: Buffer) => void): void {
-  context.host.readFile(file)
-    .then(data => cb(null, new Buffer(data)))
-    .catch(cb);
+async function nodebackReadFile(context: PaeckchenContext, file: string,
+    cb: (err: Error|null, file?: Buffer) => void): Promise<void> {
+  try {
+    const data = await context.host.readFile(file);
+    cb(null, new Buffer(data));
+  } catch (e) {
+    cb(e);
+  }
 }
 
-function nodebackIsFile(context: PaeckchenContext, file: string,
-    cb: (err: Error|null, isFile?: boolean) => void): void {
+async function nodebackIsFile(context: PaeckchenContext, file: string,
+    cb: (err: Error|null, isFile?: boolean) => void): Promise<void> {
   try {
     if (!context.host.fileExists(file)) {
       cb(null, false);
     } else {
-      context.host.isFile(file)
-        .then(isFile => cb(null, isFile))
-        .catch(cb);
+      try {
+        const isFile = await context.host.isFile(file);
+        cb(null, isFile);
+      } catch (e) {
+        cb(e);
+      }
     }
   } catch (e) {
     cb(e);
