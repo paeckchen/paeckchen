@@ -15,7 +15,7 @@ test('getModulePath should throw on non existing module', async t => {
     logger: new NoopLogger()
   };
   try {
-    await getModulePath('some/where', './else', context)
+    await getModulePath('some/where', './else', context);
     t.fail('Expected to throw');
   } catch (e) {
     t.truthy(e);
@@ -342,7 +342,7 @@ test('getModulePath should throw if file check throws', async t => {
     logger: new NoopLogger()
   };
   try {
-    await getModulePath('/some/where', './else', context)
+    await getModulePath('/some/where', './else', context);
     t.fail('Expected to throw');
   } catch (e) {
     t.regex(e.message, /Cannot find module/);
