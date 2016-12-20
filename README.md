@@ -2,7 +2,6 @@
 
 [![license][license-image]][license-url]
 [![dep][daviddm-paeckchen-image]][daviddm-paeckchen-url]
-[![dev][daviddm-dev-paeckchen-image]][daviddm-dev-paeckchen-url]
 [![travis][travis-image]][travis-url]
 [![appveyor][appveyor-image]][appveyor-url]
 [![coveralls][coveralls-image]][coveralls-url]
@@ -23,11 +22,11 @@ paeckchen to do its job fast and efficiently.
 
 paeckchen is developed as a monorepository, this means all packages belonging to paeckchen live in this repository.
 
- Package          | Version                                                | Dependencies                                   | DevDependencies
-------------------|:-------------------------------------------------------|:-----------------------------------------------|:------------------------------------------------------
- [paeckchen-core] | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url] | [![dev][daviddm-dev-core-image]][daviddm-dev-core-url]
- paeckchen-cli    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]   | [![dev][daviddm-dev-cli-image]][daviddm-dev-cli-url]
- gulp-paeckchen   | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url] | [![dev][daviddm-dev-gulp-image]][daviddm-dev-gulp-url]
+ Package          | Version                                                | Dependencies
+------------------|:-------------------------------------------------------|:-----------------------------------------------
+ [paeckchen-core] | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url]
+ paeckchen-cli    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]
+ gulp-paeckchen   | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url]
 
 ## Installation
 
@@ -56,9 +55,9 @@ stay tuned
 * [x] Basic support for `jsnext:main` field | [Reference](https://github.com/rollup/rollup/wiki/jsnext:main)
 * [x] Basic support for `browser` field | [Reference](https://github.com/defunctzombie/package-browser-field-spec)
 * [x] Incremental bundling
-* [X] Watch mode
-* [X] SourceMaps
-* [X] Development Cache
+* [x] Watch mode
+* [x] SourceMaps
+* [x] Development Cache
 
 See [Roadmap](https://github.com/paeckchen/paeckchen/milestones) for upcoming stuff.
 
@@ -101,10 +100,8 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [license-image]: https://img.shields.io/github/license/paeckchen/paeckchen.svg
 [license-url]: https://github.com/paeckchen/paeckchen
 
-[daviddm-paeckchen-image]: https://david-dm.org/paeckchen/paeckchen.svg
+[daviddm-paeckchen-image]: https://img.shields.io/david/paeckchen/paeckchen.svg
 [daviddm-paeckchen-url]: https://david-dm.org/paeckchen/paeckchen
-[daviddm-dev-paeckchen-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg
-[daviddm-dev-paeckchen-url]: https://david-dm.org/paeckchen/paeckchen
 
 [travis-image]: https://travis-ci.org/paeckchen/paeckchen.svg?branch=master
 [travis-url]: https://travis-ci.org/paeckchen/paeckchen
@@ -125,15 +122,9 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [npm-version-gulp-image]: https://img.shields.io/npm/v/gulp-paeckchen.svg
 [npm-version-gulp-url]: https://www.npmjs.com/package/gulp-paeckchen
 
-[daviddm-core-image]: https://david-dm.org/paeckchen/paeckchen-core/status.svg
+[daviddm-core-image]: https://img.shields.io/david/paeckchen/paeckchen-core.svg
 [daviddm-core-url]: https://david-dm.org/paeckchen/paeckchen-core
-[daviddm-dev-core-image]: https://david-dm.org/paeckchen/paeckchen-core/dev-status.svg
-[daviddm-dev-core-url]: https://david-dm.org/paeckchen/paeckchen-core?type=dev
 [daviddm-cli-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/paeckchen-cli
 [daviddm-cli-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-cli
-[daviddm-dev-cli-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg?path=packages/paeckchen-cli
-[daviddm-dev-cli-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-cli&type=dev
 [daviddm-gulp-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/gulp-paeckchen
 [daviddm-gulp-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/gulp-paeckchen
-[daviddm-dev-gulp-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg?path=packages/gulp-paeckchen
-[daviddm-dev-gulp-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/gulp-paeckchen&type=dev
