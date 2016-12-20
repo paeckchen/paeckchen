@@ -20,7 +20,7 @@ test('GulpHost should store files written with it', t => {
 
   host.writeFile('/test', 'content');
   t.is((host.getFile('/test') as File).path, '/test');
-  t.is((host.getFile('/test') as File).contents.toString(), 'content');
+  t.is((host.getFile('/test') as File).contents!.toString(), 'content');
 });
 
 test.cb('GulpHost should add new watched files to the watcher', t => {
@@ -109,7 +109,7 @@ test.cb('GulpHost should update only newer files', t => {
   const file3 = new File({
     path: 'two.js',
     stat: {
-      mtime: new Date(file2.stat.mtime.getTime() + 100)
+      mtime: new Date(file2.stat!.mtime.getTime() + 100)
     } as any
   });
   host.addFile(file);

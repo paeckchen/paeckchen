@@ -34,7 +34,7 @@ test.cb('flushFactory bundles on call', t => {
   };
   flush.call(fakeEmitter, () => {
     t.is(bundleFile.path, 'result.js');
-    t.is(bundleFile.contents.toString(), 'code');
+    t.is(bundleFile.contents!.toString(), 'code');
     t.end();
   });
 });
