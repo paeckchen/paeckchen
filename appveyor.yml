@@ -4,7 +4,6 @@ environment:
     - nodejs_version: '4'
 cache:
   - node_modules -> .cleanup-appveyor-caches
-  - packages\paeckchen-core\node_modules -> .cleanup-appveyor-caches
   - packages\paeckchen-cli\node_modules -> .cleanup-appveyor-caches
   - packages\gulp-paeckchen\node_modules -> .cleanup-appveyor-caches
 install:
