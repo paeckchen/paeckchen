@@ -61,7 +61,7 @@ export class GulpHost implements Host {
   public readFile(path: string): Promise<string> {
     return Promise.resolve()
       .then(() => {
-        return this.files[path].contents.toString();
+        return this.files[path].contents!.toString();
       });
   }
 

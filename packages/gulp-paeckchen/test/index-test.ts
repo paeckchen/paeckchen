@@ -51,7 +51,7 @@ test.cb('paeckchen-gulp will stop on error by default', t => {
 
 test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
   function touchFile(this: Transform, file: File, _: any, callback: () => void): void {
-    file.stat.mtime.setTime(file.stat.mtime.getTime() + 1);
+    file.stat!.mtime.setTime(file.stat!.mtime.getTime() + 1);
     this.push(file);
     callback();
   }
@@ -68,7 +68,7 @@ test.cb('paeckchen-gulp will emit host updates in watch mode', t => {
         .pipe(bundler())
         .on('data', (dataUpdate: File) => {
           t.is(dataUpdate.basename, 'test.js');
-          t.deepEqual(data.contents.toString(), dataUpdate.contents.toString());
+          t.deepEqual(data.contents!.toString(), dataUpdate.contents!.toString());
           t.end();
         })
         .on('error', (err: PluginError) => {
