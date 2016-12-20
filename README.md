@@ -23,11 +23,11 @@ paeckchen to do its job fast and efficiently.
 
 paeckchen is developed as a monorepository, this means all packages belonging to paeckchen live in this repository.
 
- Package        | Version                                                | Dependencies                                   | DevDependencies
-----------------|:-------------------------------------------------------|:-----------------------------------------------|:------------------------------------------------------
- paeckchen-core | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url] | [![dev][daviddm-dev-core-image]][daviddm-dev-core-url]
- paeckchen-cli  | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]   | [![dev][daviddm-dev-cli-image]][daviddm-dev-cli-url]
- gulp-paeckchen | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url] | [![dev][daviddm-dev-gulp-image]][daviddm-dev-gulp-url]
+ Package          | Version                                                | Dependencies                                   | DevDependencies
+------------------|:-------------------------------------------------------|:-----------------------------------------------|:------------------------------------------------------
+ [paeckchen-core] | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url] | [![dev][daviddm-dev-core-image]][daviddm-dev-core-url]
+ paeckchen-cli    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]   | [![dev][daviddm-dev-cli-image]][daviddm-dev-cli-url]
+ gulp-paeckchen   | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url] | [![dev][daviddm-dev-gulp-image]][daviddm-dev-gulp-url]
 
 ## Installation
 
@@ -96,6 +96,8 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [contributors](https://github.com/paeckchen/paeckchen/graphs/contributors) and released under the
 [MIT](./LICENSE) license.
 
+[paeckchen-core]: https://github.com/paeckchen/paeckchen-core
+
 [license-image]: https://img.shields.io/github/license/paeckchen/paeckchen.svg
 [license-url]: https://github.com/paeckchen/paeckchen
 
@@ -123,10 +125,10 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [npm-version-gulp-image]: https://img.shields.io/npm/v/gulp-paeckchen.svg
 [npm-version-gulp-url]: https://www.npmjs.com/package/gulp-paeckchen
 
-[daviddm-core-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/paeckchen-core
-[daviddm-core-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-core
-[daviddm-dev-core-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg?path=packages/paeckchen-core
-[daviddm-dev-core-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-core&type=dev
+[daviddm-core-image]: https://david-dm.org/paeckchen/paeckchen-core/status.svg
+[daviddm-core-url]: https://david-dm.org/paeckchen/paeckchen-core
+[daviddm-dev-core-image]: https://david-dm.org/paeckchen/paeckchen-core/dev-status.svg
+[daviddm-dev-core-url]: https://david-dm.org/paeckchen/paeckchen-core?type=dev
 [daviddm-cli-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/paeckchen-cli
 [daviddm-cli-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-cli
 [daviddm-dev-cli-image]: https://david-dm.org/paeckchen/paeckchen/dev-status.svg?path=packages/paeckchen-cli
