@@ -25,7 +25,7 @@ paeckchen is developed as a monorepository, this means all packages belonging to
  Package          | Version                                                | Dependencies
 ------------------|:-------------------------------------------------------|:-----------------------------------------------
  [paeckchen-core] | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url]
- paeckchen-cli    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]
+ [paeckchen-cli]    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]
  gulp-paeckchen   | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url]
 
 ## Installation
@@ -96,6 +96,7 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 [MIT](./LICENSE) license.
 
 [paeckchen-core]: https://github.com/paeckchen/paeckchen-core
+[paeckchen-cli]: https://github.com/paeckchen/paeckchen-cli
 
 [license-image]: https://img.shields.io/github/license/paeckchen/paeckchen.svg
 [license-url]: https://github.com/paeckchen/paeckchen
