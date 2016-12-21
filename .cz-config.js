@@ -17,7 +17,6 @@ module.exports = {
 
   scopes: [
     {name: 'paeckchen'},
-    {name: 'paeckchen-cli'},
     {name: 'gulp-paeckchen'}
   ],
 
