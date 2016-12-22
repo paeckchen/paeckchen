@@ -1,10 +1,6 @@
 # paeckchen
 
 [![license][license-image]][license-url]
-[![dep][daviddm-paeckchen-image]][daviddm-paeckchen-url]
-[![travis][travis-image]][travis-url]
-[![appveyor][appveyor-image]][appveyor-url]
-[![coveralls][coveralls-image]][coveralls-url]
 [![commitizen][commitizen-image]][commitizen-url]
 
 ## Rationale
@@ -101,18 +97,6 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 
 [license-image]: https://img.shields.io/github/license/paeckchen/paeckchen.svg
 [license-url]: https://github.com/paeckchen/paeckchen
-
-[daviddm-paeckchen-image]: https://img.shields.io/david/paeckchen/paeckchen.svg
-[daviddm-paeckchen-url]: https://david-dm.org/paeckchen/paeckchen
-
-[travis-image]: https://travis-ci.org/paeckchen/paeckchen.svg?branch=master
-[travis-url]: https://travis-ci.org/paeckchen/paeckchen
-
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/orjc50h3g8sh7x08/branch/master?svg=true
-[appveyor-url]: https://ci.appveyor.com/project/KnisterPeter/paeckchen/branch/master
-
-[coveralls-image]: https://img.shields.io/coveralls/paeckchen/paeckchen/master.svg
-[coveralls-url]: https://coveralls.io/github/paeckchen/paeckchen
 
 [commitizen-image]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
 [commitizen-url]: http://commitizen.github.io/cz-cli/
