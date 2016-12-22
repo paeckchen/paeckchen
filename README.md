@@ -20,13 +20,13 @@ paeckchen to do its job fast and efficiently.
 
 ## packages
 
-paeckchen is developed as a monorepository, this means all packages belonging to paeckchen live in this repository.
+paeckchen is developed in multiple repositories; This repository is the main entry point and documentation for paeckchen.
 
  Package          | Version                                                | Dependencies
 ------------------|:-------------------------------------------------------|:-----------------------------------------------
  [paeckchen-core] | [![npm][npm-version-core-image]][npm-version-core-url] | [![dep][daviddm-core-image]][daviddm-core-url]
- [paeckchen-cli]    | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]
- gulp-paeckchen   | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url]
+ [paeckchen-cli]  | [![npm][npm-version-cli-image]][npm-version-cli-url]   | [![dep][daviddm-cli-image]][daviddm-cli-url]
+ [gulp-paeckchen] | [![npm][npm-version-gulp-image]][npm-version-gulp-url] | [![dep][daviddm-gulp-image]][daviddm-gulp-url]
 
 ## Installation
 
@@ -97,6 +97,7 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 
 [paeckchen-core]: https://github.com/paeckchen/paeckchen-core
 [paeckchen-cli]: https://github.com/paeckchen/paeckchen-cli
+[gulp-paeckchen]: https://github.com/paeckchen/gulp-paeckchen
 
 [license-image]: https://img.shields.io/github/license/paeckchen/paeckchen.svg
 [license-url]: https://github.com/paeckchen/paeckchen
@@ -125,7 +126,7 @@ paeckchen is built by [KnisterPeter](https://github.com/KnisterPeter) and
 
 [daviddm-core-image]: https://img.shields.io/david/paeckchen/paeckchen-core.svg
 [daviddm-core-url]: https://david-dm.org/paeckchen/paeckchen-core
-[daviddm-cli-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/paeckchen-cli
-[daviddm-cli-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/paeckchen-cli
-[daviddm-gulp-image]: https://david-dm.org/paeckchen/paeckchen/status.svg?path=packages/gulp-paeckchen
-[daviddm-gulp-url]: https://david-dm.org/paeckchen/paeckchen?path=packages/gulp-paeckchen
+[daviddm-cli-image]: https://img.shields.io/david/paeckchen/paeckchen-cli.svg
+[daviddm-cli-url]: https://david-dm.org/paeckchen/paeckchen-cli
+[daviddm-gulp-image]: https://img.shields.io/david/paeckchen/gulp-paeckchen.svg
+[daviddm-gulp-url]: https://david-dm.org/paeckchen/gulp-paeckchen

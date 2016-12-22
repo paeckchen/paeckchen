@@ -1,20 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "prebootstrap": "npm install",
-    "bootstrap": "node task bootstrap",
-    "reset": "node task reset",
-    "#packages": "Script to run generic commands per package (e.g. npm run packages -- outdated)",
-    "packages": "node task npm",
-    "linter": "xo task.js && node task run linter",
-    "clean": "node task run clean",
-    "build": "node task run build",
-    "test": "node task run test",
-    "coverage": "node task run coverage",
-    "commitmsg": "conventional-changelog-lint -e",
-    "check-for-release": "node task testRelease",
-    "release": "node task release",
-    "publish": "node task publish"
+    "commitmsg": "conventional-changelog-lint -e"
   },
   "repository": {
     "type": "git",
@@ -31,19 +18,11 @@
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
     "@knisterpeter/standard-tslint": "1.0.3",
-    "common-tags": "1.4.0",
     "conventional-changelog-lint": "1.1.0",
-    "conventional-commits-parser": "1.3.0",
-    "coveralls": "2.11.15",
     "cz-customizable": "4.0.0",
-    "fs-extra": "1.0.0",
     "husky": "0.12.0",
-    "lcov-result-merger": "1.2.0",
-    "npm-registry-client": "7.4.5",
-    "semver": "5.3.0",
     "tslint": "4.1.1",
-    "typescript": "2.1.4",
-    "xo": "0.17.1"
+    "typescript": "2.1.4"
   },
   "dependencies": {},
   "config": {
@@ -53,9 +32,5 @@
     "cz-customizable": {
       "config": "./.cz-config.js"
     }
-  },
-  "xo": {
-    "esnext": true,
-    "space": 2
   }
 }

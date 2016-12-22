@@ -16,8 +16,7 @@ module.exports = {
   ],
 
   scopes: [
-    {name: 'paeckchen'},
-    {name: 'gulp-paeckchen'}
+    {}
   ],
 
   allowCustomScopes: false,
