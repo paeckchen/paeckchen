@@ -20,7 +20,7 @@
     "@knisterpeter/standard-tslint": "1.3.0",
     "conventional-changelog-lint": "1.1.7",
     "cz-customizable": "4.0.0",
-    "husky": "0.13.2",
+    "husky": "0.13.3-0",
     "tslint": "4.5.1",
     "typescript": "2.1.6"
   },
