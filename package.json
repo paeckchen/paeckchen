@@ -18,7 +18,7 @@
   "homepage": "https://github.com/paeckchen/paeckchen#readme",
   "devDependencies": {
     "@knisterpeter/standard-tslint": "1.4.0",
-    "conventional-changelog-lint": "1.1.8",
+    "conventional-changelog-lint": "1.1.9",
     "cz-customizable": "5.0.0",
     "husky": "0.13.3",
     "tslint": "4.5.1",
