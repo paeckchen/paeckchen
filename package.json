@@ -22,7 +22,7 @@
     "cz-customizable": "5.0.0",
     "husky": "0.13.3",
     "tslint": "5.2.0",
-    "typescript": "2.3.3"
+    "typescript": "2.3.4"
   },
   "dependencies": {},
   "config": {
